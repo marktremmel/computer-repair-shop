@@ -32,7 +32,11 @@
     suction_handles:{id: 'suction_handles', name: 'Suction handles', icon: '🫙', kind: 'hand',
                      hint: 'Two big cups so you can pull a whole glued display straight up without flexing it.' },
     extractor:     { id: 'extractor',   name: 'Screw extractor', icon: '🩹', kind: 'hand',
-                     hint: 'For screws that are already rounded. A reverse-threaded bit bites into the ruined head and backs it out. Slow, and the screw is scrap afterwards.' }
+                     hint: 'For screws that are already rounded. A reverse-threaded bit bites into the ruined head and backs it out. Slow, and the screw is scrap afterwards.' },
+    micro_tweezers:{ id: 'micro_tweezers', name: '0.2 mm tweezers', icon: '🧿', kind: 'hand',
+                     hint: 'Finer than the ESD pair and non-magnetic, for work you can only really see through the loupe. Socket contacts are about the thickness of a hair.' },
+    solder_iron:   { id: 'solder_iron',  name: 'Soldering station', icon: '🔥', kind: 'hand',
+                     hint: 'Temperature controlled. Board work means getting heat in and out fast enough to free a joint without lifting the pad underneath it.' }
   };
 
   /**
@@ -187,6 +191,38 @@
       software: true, labourHours: 0.5, costFt: 0,
       done: 'Process force quit, its LaunchAgent plist removed, and the browser notification permission revoked. It no longer comes back on reboot. Every photo untouched.',
       isFreeFix: true
+    },
+    straighten_pins: {
+      id: 'straighten_pins', label: 'Straighten the socket contacts', icon: '🧿', tool: 'micro_tweezers',
+      // Only machines with a socket to bend. A console's processor is soldered.
+      needsStep: 'cpu', onlyMachines: ['tower_pc'], labourHours: 1.6, costFt: 0,
+      done: 'Five contacts coaxed back upright under the loupe, one at a time, checked against the rows either side. Processor seated with the triangle in the corner where it belongs. It posts first try.',
+      isFreeFix: true
+    },
+    replace_caps: {
+      id: 'replace_caps', label: 'Desolder and replace the failed capacitors', icon: '🔥', tool: 'solder_iron',
+      needsStep: 'side_panel', onlyMachines: ['tower_pc'], needsPartCat: 'caps', labourHours: 2.2, costFt: 0,
+      done: 'Both domed capacitors out, pads cleaned, new low-ESR parts in with the polarity stripe the right way round. Ripple on the 12 V rail is back under 60 mV and it holds through an hour of load.'
+    },
+    reseat_sensor: {
+      id: 'reseat_sensor', label: 'Reseat the battery sensor flex', icon: '🌡️', tool: 'spudger',
+      // The sensor is on the battery flex, so this needs a machine with a pack.
+      needsStep: 'battery_connector', onlyMachines: ['mbp13_2012', 'mba_m1', 'mbp14_m3'],
+      labourHours: 0.7, costFt: 0,
+      done: 'The sensor flex was sitting half out of its socket. Reseated until it clicked, battery back on. The temperature reads again, kernel_task drops to nothing, and the machine is instantly quick.',
+      isFreeFix: true
+    },
+    revoke_notifications: {
+      id: 'revoke_notifications', label: 'Remove the site\'s notification permission', icon: '🔕',
+      software: true, labourHours: 0.4, costFt: 0,
+      done: 'Rogue origin found in the notification list and removed, and the customer shown where that list lives so they can check it themselves. Nothing was installed, so nothing had to be uninstalled.',
+      isFreeFix: true
+    },
+    clear_portal: {
+      id: 'clear_portal', label: 'Open the hotspot gateway over plain HTTP', icon: '🚪',
+      software: true, labourHours: 0.3, costFt: 0,
+      done: 'One deliberate unencrypted request, the login page appeared, terms accepted. Every site loads normally and the certificate warnings are gone — and they now know what the warning was actually telling them.',
+      isFreeFix: true
     }
   };
 
@@ -305,6 +341,42 @@
     newTicket: newTicket,
     flags: flags,
     canStep: canStep,
+
+    /**
+     * The teardown step an action actually needs *on this machine*.
+     *
+     * Actions name the step in laptop language, because most machines are
+     * laptops. A tower and a console reach the same place by a different
+     * route: their heatsink is the CPU cooler, and the way you make the board
+     * safe is switching the PSU off at the wall rather than lifting a battery
+     * connector. Same procedure, different noun.
+     *
+     * This lives here, alone, on purpose. The alias used to be written out at
+     * each call site, and a call site that forgot it silently hid the action.
+     */
+    resolveStep: function (action, machine) {
+      var want = action && action.needsStep;
+      if (!want || !machine || !machine.teardown) return want || null;
+      if (machine.teardown.indexOf(want) !== -1) return want;
+      if (want === 'heatsink' && machine.teardown.indexOf('cooler') !== -1) return 'cooler';
+      if (want === 'battery_connector' && !machine.battery
+          && machine.teardown.indexOf('psu_switch') !== -1) return 'psu_switch';
+      return want;
+    },
+
+    /**
+     * Does this machine have any route to that action's prerequisite step at
+     * all? `onlyMachines` additionally pins an action to the machines where it
+     * is physically meaningful — straightening socket contacts is not an
+     * option on a console whose processor is soldered down.
+     */
+    hasStepFor: function (action, machine) {
+      if (!action) return true;
+      if (action.onlyMachines && action.onlyMachines.indexOf(machine.id) === -1) return false;
+      var want = action.needsStep;
+      if (!want) return true;
+      return machine.teardown.indexOf(this.resolveStep(action, machine)) !== -1;
+    },
     customer: function (t) {
       return (t && (t.person || window.TechOpsCustomers.get(t.customerId))) || window.TechOpsCustomers.all[0];
     },
@@ -318,7 +390,7 @@
     canRunSoftware: function (t) {
       var m = this.machine(t);
       if (t.boardDamaged) return { ok: false, why: 'The board is dead. Nothing is going to boot.' };
-      if (m.kind === 'desktop') {
+      if (m.kind === 'desktop' || m.kind === 'console') {
         if (t.openSteps.indexOf('psu_switch') !== -1 && t.openSteps.indexOf('reconnect_power') === -1) {
           return { ok: false, why: 'You switched the power supply off at the wall to work on it safely. It will not boot until you plug it back in.' };
         }

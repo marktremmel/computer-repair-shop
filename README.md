@@ -46,6 +46,16 @@ Some things the game is built to make unavoidable:
 - **Sometimes the answer is no.** If the cheapest honest repair costs more than
   the machine is worth, saying so and charging for the diagnosis is a four-star
   outcome, not a failure.
+- **Some faults are the machine protecting itself.** A MacBook can be unusably
+  slow *because* it is cold: with a thermal sensor unplugged, macOS clamps the
+  processor rather than risk heat it cannot see. The fix is a ribbon cable, and
+  the lesson is that "it is broken" is often a safety behaviour over a fault
+  somewhere else.
+- **Some of it is not a fault at all.** A website that was granted notification
+  permission can deliver fake virus warnings through the same channel the
+  operating system uses, which is exactly why they look real. A public hotspot
+  makes every HTTPS page throw a certificate error, and the warning is correct.
+  Both are digital literacy wearing a repair ticket.
 
 ## For teachers
 
@@ -55,10 +65,22 @@ Some things the game is built to make unavoidable:
 - **Hand-in codes.** A student's whole shift compresses into one `SEK7K-…` code.
   Paste it into the teacher decoder (also under **Record**) and it decodes
   entirely in your browser. Nothing is uploaded anywhere.
-- **The report names which of the five judgements a student keeps losing**, and
-  suggests what to do about it next lesson. That is more useful than the star
-  average.
+- **Paste the whole class at once.** The decoder takes up to fifty codes in one
+  go and builds a roster: average stars, till, reputation and all five axes per
+  student, sortable by any column, with a CSV export for the register. It names
+  **the axis the class as a whole is weakest on** and what to do about it next
+  lesson — which is more useful than thirty individual star averages. The
+  “Load sample class” button shows you what it looks like before the lesson.
 - Everything prints. The shift report has a print stylesheet.
+- **It works off a USB stick with no server.** Open `index.html` straight from
+  the file system and everything still runs, including the character builder and
+  the chip-ID bench — the data those need is compiled into the page rather than
+  fetched, because a `file://` page has no origin to fetch from.
+- **Accessibility.** The precision gestures have a keyboard route (arrows or
+  space, one press at a time; Esc backs off), and it is held to the same standard
+  as the mouse — hammering the key stretches the adhesive tab just as snatching
+  it does. Board states carry a glyph and a dash pattern as well as a colour, so
+  they read without colour vision.
 
 ## Running it locally
 

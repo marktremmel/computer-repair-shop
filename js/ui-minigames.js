@@ -269,22 +269,35 @@
     },
 
     /** Which settings a reset will actually clear — and which it will not. */
-    toggles3: function (done) {
-      var items = [
-        { id: 'boot',  label: 'Startup disk choice',      lost: true },
-        { id: 'vol',   label: 'Speaker volume',           lost: true },
-        { id: 'tz',    label: 'Time zone',                lost: true },
-        { id: 'res',   label: 'Screen resolution',        lost: true },
-        { id: 'files', label: 'Their documents and photos', lost: false },
-        { id: 'apps',  label: 'Installed applications',   lost: false }
+    /**
+     * Pick the right set out of a list. Defaults to the NVRAM reset (what a
+     * customer actually loses), but any step can supply its own question, so
+     * a step is never stuck borrowing another job's wording.
+     */
+    toggles3: function (done, step) {
+      step = step || {};
+      var items = step.items || [
+        { id: 'boot',  label: 'Startup disk choice',        pick: true },
+        { id: 'vol',   label: 'Speaker volume',             pick: true },
+        { id: 'tz',    label: 'Time zone',                  pick: true },
+        { id: 'res',   label: 'Screen resolution',          pick: true },
+        { id: 'files', label: 'Their documents and photos', pick: false },
+        { id: 'apps',  label: 'Installed applications',     pick: false }
       ];
+      var title  = step.tgTitle  || 'What will this actually clear?';
+      var prompt = step.tgPrompt || 'Tick the things the customer will lose, so you can tell them before rather than after.';
+      var verb   = step.tgVerb   || 'Tell them';
+      var okText = step.tgOk     || 'Exactly right. Four small settings, no files. Now they know.';
+      var missLead  = step.tgMiss  || 'You missed: ';
+      var extraText = step.tgExtra || 'You have just told a customer they will lose their photographs. They will not \u2014 this reset never touches the drive.';
+
       var state = {};
-      var m = UI.modal(frame('What will this actually clear?',
-        '<p style="font-size:13px;color:var(--ink-2)">Tick the things the customer will lose, so you can tell them before rather than after.</p>'
+      var m = UI.modal(frame(title,
+        '<p style="font-size:13px;color:var(--ink-2)">' + esc(prompt) + '</p>'
         + '<div class="mg-toggles">' + items.map(function (it) {
             return '<button class="mg-toggle" data-tg="' + it.id + '"><span class="tg-box"></span>' + esc(it.label) + '</button>';
           }).join('') + '</div>'
-        + '<button class="btn btn-primary" id="mg-confirm" style="margin-top:12px">Tell them</button>'
+        + '<button class="btn btn-primary" id="mg-confirm" style="margin-top:12px">' + esc(verb) + '</button>'
         + '<div id="mg-say" class="mg-say"></div>'));
       m.el.querySelectorAll('[data-tg]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -296,18 +309,17 @@
       });
       document.getElementById('mg-confirm').addEventListener('click', function () {
         var say = document.getElementById('mg-say');
-        var missed = items.filter(function (i) { return i.lost && !state[i.id]; });
-        var scared = items.filter(function (i) { return !i.lost && state[i.id]; });
-        if (!missed.length && !scared.length) {
+        var missed = items.filter(function (i) { return i.pick && !state[i.id]; });
+        var extra  = items.filter(function (i) { return !i.pick && state[i.id]; });
+        if (!missed.length && !extra.length) {
           say.className = 'mg-say ok';
-          say.textContent = 'Exactly right. Four small settings, no files. Now they know.';
+          say.textContent = okText;
           audio('playSuccessChime');
           setTimeout(function () { m.close(); done(); }, 1300);
         } else {
           say.className = 'mg-say bad';
-          say.textContent = scared.length
-            ? 'You have just told a customer they will lose their photographs. They will not \u2014 this reset never touches the drive.'
-            : 'You missed: ' + missed.map(function (x) { return x.label.toLowerCase(); }).join(', ') + '. They will notice, and they will ring you.';
+          say.textContent = extra.length ? extraText
+            : missLead + missed.map(function (x) { return x.label.toLowerCase(); }).join(', ') + '.';
           audio('playErrorBuzz');
         }
       });

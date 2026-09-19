@@ -36,7 +36,7 @@
 
   var HEADS = {
     'phillips-00': phillips, 'phillips-0': phillips, 'phillips-1': phillips,
-    'torx-t5': torx, 'torx-t6': torx, 'torx-t20': torx,
+    'torx-t3': torx, 'torx-t5': torx, 'torx-t6': torx, 'torx-t8': torx, 'torx-t20': torx,
     'pentalobe-p2': pentalobe, 'pentalobe-p5': pentalobe,
     'tripoint-y000': tripoint
   };

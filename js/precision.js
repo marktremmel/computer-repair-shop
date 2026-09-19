@@ -64,14 +64,16 @@
       var pct = function (p) { return { x: p.x / 100 * rect.width, y: p.y / 100 * rect.height }; };
       var tolPx = (o.tolerance || 6) / 100 * rect.width;
 
-      var wrap = el('div', { class: 'precision' });
+      var wrap = el('div', { class: 'precision', tabindex: '0', role: 'dialog', 'aria-label': o.title });
       wrap.innerHTML =
         '<div class="prec-banner"><b>' + o.title + '</b><span>' + (o.hint || '') + '</span>'
+        + '<span class="prec-kb-hint">Keyboard: arrows or space, one press at a time \u00b7 Esc to back off</span>'
         + '<button class="prec-abort" title="Back off">Back off</button></div>'
         + '<svg class="prec-svg"></svg>'
         + '<div class="prec-meter"><div class="prec-meter-fill"></div></div>'
         + '<div class="prec-read"></div>';
       host.appendChild(wrap);
+      try { wrap.focus(); } catch (err) {}
       Precision.active = { wrap: wrap, o: o };
 
       var svg = wrap.querySelector('.prec-svg');
@@ -80,7 +82,11 @@
       svg.setAttribute('viewBox', '0 0 ' + rect.width + ' ' + rect.height);
 
       var path = (o.path || []).map(pct);
-      var start = pct(o.start || o.path[0]);
+      var targets = (o.targets || []).map(pct);
+      var start = pct(o.start || (targets.length ? o.targets[0] : o.path[0]));
+      // How far a nudge has to travel, and the point past which it is a break.
+      var nudgeMin = rect.height * 0.10, nudgeMax = rect.height * 0.22;
+      var pushDir = o.pushDir || 'up';
 
       // ── guide ──
       var guide = '';
@@ -102,6 +108,13 @@
       } else if (o.type === 'scrape') {
         guide += '<rect x="' + (start.x - tolPx) + '" y="' + (start.y - rect.height * 0.16) + '" width="' + (tolPx * 2)
                + '" height="' + (rect.height * 0.32) + '" rx="' + tolPx + '" class="prec-channel-rect"/>';
+      } else if (o.type === 'nudge') {
+        // Several tiny targets, worked one at a time. Each wants a short push
+        // in one direction: not far enough does nothing, too far snaps it off.
+        guide += targets.map(function (tg, i) {
+          return '<circle cx="' + tg.x.toFixed(1) + '" cy="' + tg.y.toFixed(1) + '" r="' + (tolPx * 0.9).toFixed(1)
+            + '" class="prec-pin" data-pin="' + i + '"/>';
+        }).join('');
       }
       guide += '<circle cx="' + start.x + '" cy="' + start.y + '" r="' + Math.max(13, tolPx * 0.8) + '" class="prec-handle"/>';
       svg.innerHTML = guide;
@@ -110,7 +123,7 @@
       var progressEl = svg.querySelector('.prec-progress');
 
       var st = {
-        dragging: false, quality: 1, progress: 0, strokes: 0,
+        dragging: false, quality: 1, progress: 0, strokes: 0, lastKeyT: 0, pin: 0, pushed: 0,
         lastPt: null, lastT: 0, dir: 1, maxT: 0, failed: null
       };
 
@@ -123,6 +136,8 @@
       say(o.type === 'pull' ? 'Press the tab and draw it out slowly and evenly.'
         : o.type === 'trace' ? 'Press on the marker and follow the channel.'
         : o.type === 'lift'  ? 'Press the connector and lift straight up.'
+        : o.type === 'nudge' ? 'One contact at a time. Press on the marked one and ease it '
+            + pushDir + ' \u2014 a short, straight push. Too little does nothing; too far and it comes off.'
         : 'Press the pick in, then work it in and out.');
 
       function local(ev) {
@@ -130,9 +145,40 @@
         return { x: ev.clientX - r.left, y: ev.clientY - r.top };
       }
 
+      /** For `nudge`: where the marker sits right now, and how a push is measured. */
+      function pinAt() { return targets[st.pin] || start; }
+      function pushAmount(p) {
+        var o0 = pinAt();
+        return pushDir === 'up' ? (o0.y - p.y)
+             : pushDir === 'down' ? (p.y - o0.y)
+             : pushDir === 'left' ? (o0.x - p.x)
+             : (p.x - o0.x);
+      }
+      function pushLateral(p) {
+        var o0 = pinAt();
+        return (pushDir === 'up' || pushDir === 'down') ? Math.abs(p.x - o0.x) : Math.abs(p.y - o0.y);
+      }
+      function markPinDone() {
+        var node = svg.querySelector('[data-pin="' + st.pin + '"]');
+        if (node) node.classList.add('done');
+        st.pin++;
+        st.pushed = 0;
+        st.progress = st.pin / targets.length;
+        setMeter(st.progress, st.quality < 0.6 ? 'bad' : '');
+        if (st.pin >= targets.length) return finish(true);
+        var n = pinAt();
+        handle.setAttribute('cx', n.x); handle.setAttribute('cy', n.y);
+        say('That one is upright. ' + (targets.length - st.pin) + ' to go.', 'ok');
+        if (window.sekAudio) window.sekAudio.playSuccessChime();
+      }
+
       function down(ev) {
         var p = local(ev);
-        if (dist(p, start) > Math.max(30, tolPx * 2.2)) { say('Start on the marker.', 'warn'); return; }
+        var from = o.type === 'nudge' ? pinAt() : start;
+        if (dist(p, from) > Math.max(30, tolPx * 2.2)) {
+          say(o.type === 'nudge' ? 'Not that one. The marked contact.' : 'Start on the marker.', 'warn');
+          return;
+        }
         st.dragging = true; st.lastPt = p; st.lastT = performance.now();
         wrap.classList.add('dragging');
         if (window.sekAudio) window.sekAudio.playKeyPop();
@@ -213,6 +259,32 @@
           st.progress = Math.min(1, st.strokes / 6);
           setMeter(st.progress);
           if (st.progress >= 1) return finish(true);
+
+        } else if (o.type === 'nudge') {
+          var fwd = pushAmount(p), side = pushLateral(p);
+          st.pushed = fwd;
+          if (side > tolPx) {
+            st.quality -= 0.05;
+            say('You are dragging it sideways. It wants lifting, not bending further.', 'bad');
+            wrap.classList.add('off');
+          } else if (fwd > nudgeMax) {
+            return finish(false, 'You pushed straight through it. That contact is now lying on the one next to it, '
+              + 'and this is where a straightenable board becomes a scrap one.');
+          } else if (speed > 0.42) {
+            st.quality -= 0.07;
+            say('Slower. These move about the width of a hair.', 'bad');
+            wrap.classList.add('off');
+          } else {
+            wrap.classList.remove('off');
+            say(fwd < nudgeMin
+              ? 'Keep going \u2014 it has not come up yet.'
+              : 'That is it. Let go there.', 'ok');
+          }
+          if (st.quality <= 0.32) {
+            return finish(false, 'Between the slips and the over-bending there is not enough of that corner left to seat a processor on.');
+          }
+          var shown = Math.min(1, Math.max(0, fwd / nudgeMin));
+          setMeter((st.pin + shown * 0.9) / targets.length, st.quality < 0.6 ? 'bad' : '');
         }
 
         st.lastPt = p; st.lastT = now;
@@ -222,6 +294,23 @@
         if (!st.dragging || st.failed) return;
         st.dragging = false;
         wrap.classList.remove('dragging');
+
+        if (o.type === 'nudge') {
+          var n = pinAt();
+          if (st.pushed >= nudgeMin && st.pushed <= nudgeMax) return markPinDone();
+          if (st.pushed > 0.02 * rect.height) {
+            st.quality -= 0.03;
+            say('Not far enough \u2014 it sprang back. Try again, a little further.', 'warn');
+          }
+          st.pushed = 0;
+          handle.setAttribute('cx', n.x); handle.setAttribute('cy', n.y);
+          setMeter(st.pin / targets.length, st.quality < 0.6 ? 'bad' : '');
+          if (st.quality <= 0.32) {
+            return finish(false, 'Too many attempts on the same contact. The metal has work-hardened and snapped.');
+          }
+          return;
+        }
+
         if (st.progress > 0.02 && st.progress < 0.98) {
           if (o.type === 'pull') {
             st.quality -= 0.14;
@@ -249,9 +338,100 @@
         }, ok ? 340 : 700);
       }
 
+      /**
+       * The keyboard route through a gesture.
+       *
+       * It is not a shortcut. Holding a key down and letting it repeat is the
+       * keyboard version of snatching the tab, and it costs quality on exactly
+       * the same terms the pointer does — you can tear an adhesive strip with
+       * the space bar. The work is the same work: press, wait, press.
+       */
+      var KEYS = {
+        lift:   { keys: ['ArrowUp'],                   step: 0.16, gap: 190, hurry: 'Jerking it up. Straight and slow, one press at a time.' },
+        pull:   { keys: ['ArrowDown'],                 step: 0.14, gap: 240, hurry: 'Too fast — the tab is stretching.' },
+        trace:  { keys: ['ArrowRight', 'ArrowDown'],   step: 0.09, gap: 150, hurry: 'You are running the wheel too fast to keep the depth.' },
+        scrape: { keys: ['ArrowUp', 'ArrowDown'],      step: 0,    gap: 180, hurry: 'Scrubbing at it. Let the pick bite between passes.' },
+        // Four presses lift a contact; a fifth on the same one bends it past
+        // saving, so the keyboard route can overshoot exactly as a drag can.
+        nudge:  { keys: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], step: 0, gap: 260, hurry: 'Slower. These move about the width of a hair.' }
+      };
+
+      function onKeyDown(ev) {
+        if (st.failed) return;
+
+        if (ev.key === 'Escape') {
+          ev.preventDefault();
+          Precision.cancel();
+          if (o.onDone) o.onDone({ ok: false, aborted: true, quality: 1 });
+          return;
+        }
+
+        var K = KEYS[o.type];
+        if (!K) return;
+        var isAdvance = K.keys.indexOf(ev.key) !== -1 || ev.key === ' ' || ev.key === 'Enter';
+        if (!isAdvance) return;
+        ev.preventDefault();
+
+        var now = Date.now();
+        var since = st.lastKeyT ? (now - st.lastKeyT) : K.gap;
+        st.lastKeyT = now;
+
+        // Auto-repeat from a held key, or hammering, is hurrying it.
+        var hurried = ev.repeat || since < K.gap;
+        if (hurried) {
+          st.quality -= (o.type === 'pull' ? 0.09 : 0.055);
+          say(K.hurry, 'bad');
+          wrap.classList.add('off');
+          if (st.quality <= 0.32) {
+            return finish(false, o.type === 'pull'
+              ? 'The tab stretched thin and snapped off flush with the battery.'
+              : 'You forced it. That is damage you cannot undo from here.');
+          }
+        } else {
+          wrap.classList.remove('off');
+          say(o.type === 'trace' ? 'Good line. Keep the depth steady.'
+            : o.type === 'scrape' ? 'Another pass. It is coming loose.'
+            : o.type === 'pull' ? 'Slow and steady. Keep going.'
+            : 'Straight up. That is it.', 'ok');
+        }
+
+        if (o.type === 'nudge') {
+          st.pushed++;
+          if (st.pushed > 5) {
+            return finish(false, 'One press too many. That contact is now lying on the one next to it, '
+              + 'and this is where a straightenable board becomes a scrap one.');
+          }
+          if (window.sekAudio) window.sekAudio.playKeyPop();
+          if (st.pushed >= 4) return markPinDone();
+          say('Coming up. ' + (4 - st.pushed) + ' more, gently.', 'ok');
+          setMeter((st.pin + st.pushed / 4 * 0.9) / targets.length, st.quality < 0.6 ? 'bad' : '');
+          return;
+        }
+
+        if (o.type === 'scrape') {
+          st.strokes++;
+          st.progress = Math.min(1, st.strokes / 6);
+          if (window.sekAudio) window.sekAudio.playScrew();
+        } else {
+          st.progress = Math.min(1, st.progress + K.step);
+          if (window.sekAudio) window.sekAudio.playKeyPop();
+          if (o.type === 'lift' && handle) {
+            handle.setAttribute('cy', start.y - (st.progress * rect.height * 0.26));
+          } else if (o.type === 'pull' && handle) {
+            handle.setAttribute('cy', start.y + (st.progress * rect.height * 0.3));
+          } else if (o.type === 'trace' && progressEl) {
+            progressEl.style.strokeDasharray = (st.progress * 3000) + ' 3000';
+          }
+        }
+
+        setMeter(st.progress, st.quality < 0.6 ? 'bad' : '');
+        if (st.progress >= (o.type === 'trace' ? 0.985 : 1)) finish(true);
+      }
+
       wrap.addEventListener('pointerdown', down);
       window.addEventListener('pointermove', move);
       window.addEventListener('pointerup', up);
+      window.addEventListener('keydown', onKeyDown);
       wrap.querySelector('.prec-abort').addEventListener('click', function () {
         Precision.cancel();
         if (o.onDone) o.onDone({ ok: false, aborted: true, quality: 1 });
@@ -260,6 +440,7 @@
       Precision.active.teardown = function () {
         window.removeEventListener('pointermove', move);
         window.removeEventListener('pointerup', up);
+        window.removeEventListener('keydown', onKeyDown);
       };
     },
 

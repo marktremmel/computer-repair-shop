@@ -68,7 +68,7 @@
   }
 
   function openStepId(machine) {
-    if (machine.kind === 'desktop') return 'side_panel';
+    if (machine.kind === 'desktop' || machine.kind === 'console') return 'side_panel';
     if (machine.kind === 'aio' || machine.kind === 'tablet') return 'lift_display';
     if (machine.kind === 'phone') return 'screen_lift';
     return 'bottom_case';
@@ -144,7 +144,9 @@
     battery:    ['battl', 'battc', 'battch', 'battcs', 'battcp', 'battct'],
     battery_connector: ['battl', 'battc', 'battch', 'battcs', 'battcp', 'battct'],
     charge_port:['usbcp', 'usbch', 'usbcs', 'usbct', 'usbcl', 'usbc', 'usbc1'],
-    display_flex:['displ', 'disp', 'dispp', 'dispd', 'dispt', 'bright']
+    display_flex:['displ', 'disp', 'dispp', 'dispd', 'dispt', 'bright'],
+    cpu:        ['socket', 'cpu', 'apu', 'soc', 'die'],
+    psu_switch: ['atx24', 'io', 'vrm']
   };
 
   /** region id -> the chip this machine's board actually has for it. */
@@ -182,6 +184,58 @@
     return undone[0];
   }
 
+  /**
+   * Where a region actually sits on the board the player is looking at.
+   *
+   * The drawn board comes from `data-boards.js`; precision gestures are
+   * positioned in percentages of the bench stage. The SVG letterboxes inside
+   * that stage, so the two only line up if you measure. Gestures used to be
+   * placed from a second, schematic set of coordinates in `board.js`, which
+   * meant the marker was near the right component rather than on it.
+   *
+   * Returns { x, y } as percentages of the stage, or null if this machine's
+   * board has nothing for that region.
+   */
+  function boardMap(machine) {
+    var L = window.TechOpsBoards.forMachine(machine);
+    var stage = document.querySelector('#view-bench .board-stage');
+    var svg = stage && stage.querySelector('svg.board-svg');
+    var sr = stage && stage.getBoundingClientRect();
+    var vr = svg && svg.getBoundingClientRect();
+    if (!sr || !vr || !sr.width || !vr.width) {
+      // No rendered board to measure — fall back to raw viewBox proportions.
+      return { L: L, to: function (x, y) { return { x: x / L.w * 100, y: y / L.h * 100 }; } };
+    }
+    // preserveAspectRatio="xMidYMid meet": the drawing is centred and scaled
+    // to fit, so there is dead space on one axis. Account for it.
+    var scale = Math.min(vr.width / L.w, vr.height / L.h);
+    var ox = (vr.left - sr.left) + (vr.width - L.w * scale) / 2;
+    var oy = (vr.top - sr.top) + (vr.height - L.h * scale) / 2;
+    return {
+      L: L,
+      to: function (x, y) {
+        return { x: (ox + x * scale) / sr.width * 100, y: (oy + y * scale) / sr.height * 100 };
+      }
+    };
+  }
+
+  function chipCentre(machine, regionId) {
+    var cid = chipForRegion(machine, regionId);
+    if (!cid) return null;
+    var map = boardMap(machine);
+    var c = map.L.chips.filter(function (x) { return x.id === cid; })[0];
+    if (!c) return null;
+    return map.to(c.x + c.w / 2, c.y + c.h / 2);
+  }
+
+  /** The drawn board's outline in stage percentages, inset by `pad` percent. */
+  function boardEdge(machine, pad) {
+    var map = boardMap(machine);
+    var a = map.to(map.L.w * (pad / 100), map.L.h * (pad / 100));
+    var b = map.to(map.L.w * (1 - pad / 100), map.L.h * (1 - pad / 100));
+    return { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
+  }
+
   function bayList(ticket) {
     var m = J.machine(ticket);
     var defs = [
@@ -200,44 +254,42 @@
    * runs over. Percentages are relative to the board stage.
    */
   function gestureFor(stepId, machine) {
-    var reg = window.TechOpsBoard.region(machine, stepId === 'battery' ? 'battery' : stepId);
-    var L = window.TechOpsBoard.layoutFor(machine);
-    var pc = function (r, fx, fy) {
-      return { x: (r.x + r.w * fx) / L.w * 100, y: (r.y + r.h * fy) / L.h * 100 };
-    };
+    // Positioned on the board the player can actually see — see boardMap().
+    var at = chipCentre(machine, stepId === 'battery' ? 'battery' : stepId);
 
-    if (stepId === 'battery_connector' && reg) {
-      return { type: 'lift', start: pc(reg, 0.5, 0.5), tolerance: 4.5,
+    if (stepId === 'battery_connector' && at) {
+      return { type: 'lift', start: at, tolerance: 4.5,
         title: 'Lift the battery connector',
         hint: 'Get the spudger tip under it and lift straight up. Lever it sideways and you bend the pins flat.' };
     }
-    if (stepId === 'display_flex' && reg) {
-      return { type: 'lift', start: pc(reg, 0.5, 0.5), tolerance: 4,
+    if (stepId === 'display_flex' && at) {
+      return { type: 'lift', start: at, tolerance: 4,
         title: 'Unclip the display flex',
         hint: 'These pop straight up off the board. Pull along the cable instead and you tear the traces.' };
     }
-    if (stepId === 'battery' && reg) {
-      return { type: 'pull', start: pc(reg, 0.28, 0.0), tolerance: 5,
+    if (stepId === 'battery' && at) {
+      // The tab is at the top edge of the pack, not its middle.
+      var pack = boardMap(machine);
+      var cid = chipForRegion(machine, 'battery');
+      var c = cid && pack.L.chips.filter(function (x) { return x.id === cid; })[0];
+      var tab = c ? pack.to(c.x + c.w * 0.28, c.y) : at;
+      return { type: 'pull', start: tab, tolerance: 5,
         title: 'Draw out the adhesive tab',
         hint: 'Slow and even, in line with the tab. Snatch it and it snaps off flush under the battery.' };
     }
     if (stepId === 'cut_adhesive') {
-      var h = L.hull, pad = 4;
-      var x0 = h.x / L.w * 100 + pad, x1 = (h.x + h.w) / L.w * 100 - pad;
-      var y0 = h.y / L.h * 100 + pad, y1 = (h.y + h.h) / L.h * 100 - pad;
+      var e = boardEdge(machine, 5);
       return { type: 'trace', tolerance: 4.5,
-        path: [{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1},{x:x0,y:y0}],
-        start: { x: x0, y: y0 },
+        path: [{x:e.x0,y:e.y0},{x:e.x1,y:e.y0},{x:e.x1,y:e.y1},{x:e.x0,y:e.y1},{x:e.x0,y:e.y0}],
+        start: { x: e.x0, y: e.y0 },
         title: 'Cut the display adhesive',
         hint: 'Run the wheel all the way round inside the channel. Wander out of it and you are cutting the display cable.' };
     }
     if (stepId === 'pick_seam') {
-      var h2 = L.hull;
-      var a = h2.x / L.w * 100 + 3, b = (h2.x + h2.w) / L.w * 100 - 3;
-      var top = h2.y / L.h * 100 + 3;
+      var e2 = boardEdge(machine, 4);
       return { type: 'trace', tolerance: 5,
-        path: [{x:a,y:top},{x:b,y:top}],
-        start: { x: a, y: top },
+        path: [{x:e2.x0,y:e2.y0},{x:e2.x1,y:e2.y0}],
+        start: { x: e2.x0, y: e2.y0 },
         title: 'Work the picks along the seam',
         hint: 'Keep them shallow and moving. Dig in and you crack the digitiser you are trying to save.' };
     }
@@ -464,6 +516,7 @@
 
   function doAction(actionId) {
     var t = Shop.state.ticket;
+    var m = J.machine(t);
     var a = J.ACTIONS[actionId];
     if (t.actionsDone.indexOf(actionId) !== -1) return;
 
@@ -501,16 +554,23 @@
       return render();
     }
 
+    if (a.onlyMachines && a.onlyMachines.indexOf(m.id) === -1) {
+      state.msg = 'Not on this machine — there is nothing here that this applies to.';
+      audio('playErrorBuzz');
+      UI.toast('Not applicable', '“' + a.label + '” is not something a ' + m.name + ' has.', 'bad');
+      return render();
+    }
     if (a.tool && state.tool !== a.tool) {
       state.msg = 'That needs the ' + J.TOOLS[a.tool].name + ' in hand.';
       audio('playErrorBuzz');
       UI.toast('Wrong tool', '“' + a.label + '” needs the ' + J.TOOLS[a.tool].name + '.', 'bad');
       return render();
     }
-    if (a.needsStep && t.openSteps.indexOf(a.needsStep) === -1) {
-      state.msg = 'You cannot reach it yet — ' + J.STEPS[a.needsStep].label.toLowerCase() + ' first.';
+    var reqStep = J.resolveStep(a, m);
+    if (reqStep && t.openSteps.indexOf(reqStep) === -1) {
+      state.msg = 'You cannot reach it yet — ' + J.STEPS[reqStep].label.toLowerCase() + ' first.';
       audio('playErrorBuzz');
-      UI.toast('Cannot reach it', 'You have to ' + J.STEPS[a.needsStep].label.toLowerCase() + ' before you can get at that.', 'bad');
+      UI.toast('Cannot reach it', 'You have to ' + J.STEPS[reqStep].label.toLowerCase() + ' before you can get at that.', 'bad');
       return render();
     }
     if (a.needsAction && t.actionsDone.indexOf(a.needsAction) === -1) {
@@ -533,11 +593,14 @@
             var p = window.TechOpsParts.get(e.partId);
             return p && p.cat === a.needsPartCat;
           });
+          var what = a.needsPartCat === 'thermal' ? 'thermal compound'
+                   : a.needsPartCat === 'caps' ? 'replacement capacitors'
+                   : a.needsPartCat;
           state.msg = onWay
-            ? 'Your thermal compound is still in transit. Wait for the delivery in the Parts market.'
-            : 'Nothing to apply — you have no thermal compound. Buy some in the Parts market.';
+            ? 'Your ' + what + ' is still in transit. Wait for the delivery in the Parts market.'
+            : 'Nothing to fit — you have no ' + what + '. Buy some in the Parts market.';
           audio('playErrorBuzz');
-          UI.toast(onWay ? 'Still in transit' : 'Nothing to apply', state.msg, 'bad');
+          UI.toast(onWay ? 'Still in transit' : 'Nothing to fit', state.msg, 'bad');
           return render();
         }
       }
@@ -552,15 +615,92 @@
       UI.toast('Applied', usedPart.name + ' — used on this machine.', 'good');
     }
 
+    // Board work that is a hand skill, not a click. Each runs its gesture once,
+    // then falls back through to the normal completion path.
+    if (actionId === 'straighten_pins' && !t._pinsDone) {
+      var stageP = document.querySelector('#view-bench .board-stage');
+      if (stageP) {
+        var atP = chipCentre(m, 'cpu') || { x: 50, y: 45 };
+        // Five folded contacts along one edge of the socket, worked one at a
+        // time. Spaced so they read as five separate things to fix.
+        var spread = [[-7.2, 1.2], [-3.6, -1.4], [0, 2.0], [3.6, -1.2], [7.2, 1.4]];
+        window.TechOpsPrecision.run({
+          type: 'nudge', host: stageP, tolerance: 2.6, pushDir: 'up',
+          targets: spread.map(function (d) { return { x: atP.x + d[0], y: atP.y + d[1] }; }),
+          title: 'Straighten the socket contacts',
+          hint: 'Under the loupe, one at a time. Ease each one up until it stands level with its neighbours — far enough to stand, not far enough to snap.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Backed off. The socket is exactly as you found it.'; return render(); }
+            if (!res.ok) {
+              t.boardRework = (t.boardRework || 0) + 1;
+              t.labourHours += 1.0;
+              state.msg = res.reason;
+              UI.toast('Contact broken', res.reason + ' You get the rest upright and it posts, but that corner is now a repair.', 'bad');
+              t._pinsDone = true;
+              return doAction('straighten_pins');
+            }
+            t._pinsDone = true;
+            if (res.quality < 0.75) t.sloppySteps = (t.sloppySteps || 0) + 1;
+            doAction('straighten_pins');
+          }
+        });
+        return;
+      }
+    }
+
+    if (actionId === 'replace_caps' && !t._capsDone) {
+      var stageC = document.querySelector('#view-bench .board-stage');
+      if (stageC) {
+        var atC = chipCentre(m, 'psu_switch') || chipCentre(m, 'cooler') || { x: 66, y: 50 };
+        window.TechOpsPrecision.run({
+          type: 'nudge', host: stageC, tolerance: 3.2, pushDir: 'up',
+          targets: [{ x: atC.x - 5.5, y: atC.y }, { x: atC.x + 5.5, y: atC.y }],
+          title: 'Lift the failed capacitors off the board',
+          hint: 'Heat both legs together and draw the can straight up. Rock it out and the pad comes with it — and a lifted pad is a much longer afternoon than a capacitor.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Iron back in the stand. Nothing changed.'; return render(); }
+            if (!res.ok) {
+              t.boardRework = (t.boardRework || 0) + 1;
+              t.labourHours += 1.4;
+              UI.toast('Pad lifted', 'You tore a pad off with the capacitor. A jumper wire brings it back, but it cost an extra hour and a half and it will always be a repair.', 'bad');
+            } else if (res.quality < 0.75) {
+              t.sloppySteps = (t.sloppySteps || 0) + 1;
+            }
+            t._capsDone = true;
+            doAction('replace_caps');
+          }
+        });
+        return;
+      }
+    }
+
+    if (actionId === 'reseat_sensor' && !t._sensorDone) {
+      var stageS = document.querySelector('#view-bench .board-stage');
+      if (stageS) {
+        var atS = chipCentre(m, 'battery_connector') || { x: 50, y: 62 };
+        window.TechOpsPrecision.run({
+          type: 'lift', host: stageS, start: atS, tolerance: 4,
+          title: 'Reseat the sensor flex',
+          hint: 'Lift it clear first, straight up, so you can line the contacts up before you press it home. Lever it sideways and you crease the flex.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Left it as it was.'; return render(); }
+            t._sensorDone = true;
+            if (!res.ok || res.quality < 0.75) t.sloppySteps = (t.sloppySteps || 0) + 1;
+            if (!res.ok) {
+              t.labourHours += 0.5;
+              UI.toast('Creased the flex', 'It still seats, but you have put a fold in a ribbon that did not have one.', 'bad');
+            }
+            doAction('reseat_sensor');
+          }
+        });
+        return;
+      }
+    }
+
     if (actionId === 'clean_port') {
       var stage = document.querySelector('#view-bench .board-stage');
       if (stage && !t._scraped) {
-        var mm = J.machine(t);
-        var port = window.TechOpsBoard.region(mm, 'charge_port');
-        var LL = window.TechOpsBoard.layoutFor(mm);
-        var at = port
-          ? { x: (port.x + port.w / 2) / LL.w * 100, y: (port.y + port.h / 2) / LL.h * 100 }
-          : { x: 50, y: 88 };
+        var at = chipCentre(m, 'charge_port') || { x: 50, y: 88 };
         window.TechOpsPrecision.run({
           type: 'scrape', host: stage, start: at, tolerance: 5,
           title: 'Scrape the lint out',
@@ -770,6 +910,23 @@
     if (m.kind === 'phone') toolIds = toolIds.concat(['suction_cup', 'heat_pad']);
     if (m.kind === 'tablet') toolIds = toolIds.concat(['heat_pad', 'thin_picks', 'suction_handles']);
     if (m.kind === 'aio') toolIds = toolIds.concat(['cutting_wheel', 'suction_handles']);
+    // Anything an action on this machine needs, whether or not the list above
+    // happened to mention it. A new action used to mean a tool nobody could
+    // pick up, and an action button that refused every time it was clicked.
+    Object.keys(J.ACTIONS).forEach(function (aid) {
+      var a = J.ACTIONS[aid];
+      if (!a.tool || a.software) return;
+      if (!J.hasStepFor(a, m)) return;
+      if (toolIds.indexOf(a.tool) === -1) toolIds.push(a.tool);
+    });
+    // Teardown steps name tools too.
+    (m.teardown || []).forEach(function (sid) {
+      var st = J.STEPS[sid];
+      if (!st) return;
+      [st.tool].concat(st.alsoNeeds || []).forEach(function (tid) {
+        if (tid && J.TOOLS[tid] && toolIds.indexOf(tid) === -1) toolIds.push(tid);
+      });
+    });
     var rack = '<div class="rack"><h4>Tool rack</h4>';
     toolIds.forEach(function (id) {
       var tl = J.TOOLS[id];
@@ -817,9 +974,11 @@
       if (flags.interior && !s.stripped) return;
       var style = Object.keys(s.pos).map(function (k) { return k + ':' + s.pos[k]; }).join(';');
       var fx = (Math.random() * 40 + 140) + 'px';
+      var sLabel = (s.stripped ? 'Rounded screw — needs extractor' : J.TOOLS[s.type].name + ' screw') + (s.out ? ' (removed)' : '');
       chassis += '<div class="screw' + (s.out ? ' out' : '') + (s.stripped ? ' stripped' : '')
         + (s.skated && !s.stripped ? ' skated' : '') + '" data-screw="' + s.i + '" '
         + 'data-type="' + s.type + '" title="' + esc(J.TOOLS[s.type].name + ' head') + '" '
+        + 'tabindex="0" role="button" aria-label="' + esc(sLabel) + '" '
         + 'style="' + style + ';--fx:' + fx + ';--fy:-90px">'
         + window.TechOpsScrewHeads.svg(s.type, s.stripped ? 'stripped' : 'normal')
         + '<span class="screw-tag">' + esc(s.stripped ? 'rounded — needs extractor' : J.TOOLS[s.type].name) + '</span></div>';
@@ -932,7 +1091,7 @@
       if (a.software) return;
       if (aid === 'reconnect_battery' && !(t.batteryDisconnected && m.battery)) return;
       if (aid === 'lever_battery' && !((t.snappedTabs || 0) >= 2 && t.openSteps.indexOf('battery') === -1)) return;
-      if (a.needsStep && m.teardown.indexOf(a.needsStep) === -1) return;
+      if (!J.hasStepFor(a, m)) return;
       if (aid === 'clean_port' && ['port_lint'].indexOf(J.fault(t).id) === -1 && m.kind !== 'phone' && m.teardown.indexOf('charge_port') === -1) {
         // still offer it — cleaning a port is never wrong, just sometimes pointless
       }
@@ -940,7 +1099,8 @@
       var want = [];
       if (!done) {
         if (a.tool && state.tool !== a.tool) want.push(J.TOOLS[a.tool].icon + ' needs the ' + J.TOOLS[a.tool].name);
-        if (a.needsStep && t.openSteps.indexOf(a.needsStep) === -1) want.push('🔒 ' + J.STEPS[a.needsStep].label.toLowerCase() + ' first');
+        var resolvedStep = J.resolveStep(a, m);
+        if (resolvedStep && t.openSteps.indexOf(resolvedStep) === -1) want.push('🔒 ' + J.STEPS[resolvedStep].label.toLowerCase() + ' first');
         if (a.needsAction && t.actionsDone.indexOf(a.needsAction) === -1) want.push('🔒 ' + J.ACTIONS[a.needsAction].label.toLowerCase() + ' first');
         if (a.needsPartCat && !t.installed.some(function (i) { return i.cat === a.needsPartCat; })
             && !Shop.state.shelf.some(function (e) { var p = window.TechOpsParts.get(e.partId); return p && p.cat === a.needsPartCat; })) {
@@ -1024,9 +1184,16 @@
       b.addEventListener('click', function () { selectTool(b.getAttribute('data-tool')); });
     });
     host.querySelectorAll('[data-screw]').forEach(function (b) {
-      b.addEventListener('click', function () {
+      var act = function () {
         var t = Shop.state.ticket;
         turnScrew(screwPlan(J.machine(t), t)[+b.getAttribute('data-screw')]);
+      };
+      b.addEventListener('click', act);
+      b.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          act();
+        }
       });
     });
     host.querySelectorAll('[data-step]').forEach(function (b) {

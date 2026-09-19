@@ -119,6 +119,83 @@
       noise:   { w: 'warm', t: 'Just the fan, constantly.' },
       storage: { w: 'cold', t: 'No warnings about space.' },
       drop:    { w: 'cold', t: 'Never dropped.' }
+    },
+
+    bent_socket_pins: {
+      history: { w: 'hot',  t: 'We built it ourselves on Saturday. It is the first one I have ever put together. The processor was fiddly — it did not want to sit down, so my cousin held the lever and I pushed.', s: ['visual', 'power'] },
+      when:    { w: 'hot',  t: 'It has never worked. Not once, not for a second. Straight out of the box and into this.', s: ['visual'] },
+      power:   { w: 'warm', t: 'The fans move. Half a second, maybe less, then a click and everything stops. Over and over if you let it.' },
+      trigger: { w: 'warm', t: 'Pressing the power button. That is the whole story.' },
+      installed: { w: 'cold', t: 'There is no operating system on it yet. It has never got that far.' },
+      heat:    { w: 'cold', t: 'Stone cold. It is never on long enough to warm up.' },
+      noise:   { w: 'cold', t: 'Just the half-second of fan and the click.' },
+      drop:    { w: 'cold', t: 'No — it has been on the table since we built it.' }
+    },
+
+    blown_caps: {
+      trigger: { w: 'hot',  t: 'Games. Only games. He starts one and within a couple of minutes it just goes off and comes back on.', s: ['power', 'visual'] },
+      when:    { w: 'hot',  t: 'It crept up on us. Once a month, then once a week, and now it is every single time he plays.', s: ['power'] },
+      history: { w: 'warm', t: 'I bought a bigger power supply and fitted it myself, because a forum said that was it. It made no difference at all.' },
+      heat:    { w: 'cold', t: 'Not especially. It has always run warm under a game, but no more than it used to.' },
+      noise:   { w: 'cold', t: 'The fans get louder in a game, but they always did. Nothing grinding.' },
+      installed: { w: 'cold', t: 'Nothing new. It does it on old games too.' },
+      storage: { w: 'cold', t: 'Half empty. No warnings.' },
+      drop:    { w: 'cold', t: 'It lives under the desk and never moves.' }
+    },
+
+    kernel_task_panic: {
+      heat:    { w: 'hot',  t: 'That is the strange part. It is cold. Properly cold, all over, even after an hour. And it is still crawling.', s: ['thermal', 'activity'] },
+      when:    { w: 'hot',  t: 'It started the morning after I had it open to change the battery myself. I thought I had put everything back.', s: ['activity', 'battery'] },
+      history: { w: 'hot',  t: 'I did. I watched a video and replaced the battery. There was a little ribbon I had to move and I am not sure it went back properly.', s: ['visual', 'battery'] },
+      trigger: { w: 'warm', t: 'Nothing in particular. Typing. Moving the mouse. All of it is slow.' },
+      noise:   { w: 'cold', t: 'No. Very quiet, actually. Quieter than it used to be.' },
+      installed: { w: 'cold', t: 'Nothing new.' },
+      storage: { w: 'cold', t: 'Plenty of space.' },
+      drop:    { w: 'cold', t: 'Never dropped, never wet.' }
+    },
+
+    browser_push_spam: {
+      trigger: { w: 'hot',  t: 'They come in from the top right corner. Same place the real messages come from. "5 SYSTEM THREATS FOUND", and a button that says renew.', s: ['activity'] },
+      installed: { w: 'hot',  t: 'No, and I have been very careful. I never clicked the download. Though there was a film site my nephew used, and it asked me something and I pressed the blue one.', s: ['activity'] },
+      when:    { w: 'warm', t: 'About two weeks. It was fine before that.' },
+      usage:   { w: 'warm', t: 'Email, the news, photographs of the grandchildren. Nothing clever.' },
+      heat:    { w: 'cold', t: 'Not hot at all. It behaves perfectly otherwise.' },
+      noise:   { w: 'cold', t: 'Silent.' },
+      storage: { w: 'cold', t: 'Nearly empty, I should think.' },
+      drop:    { w: 'cold', t: 'Never.' }
+    },
+
+    captive_portal_loop: {
+      trigger: { w: 'hot',  t: 'Only at the caf\u00e9 and only at the hotel. At home it is perfect. Every site gives the same red warning about the connection not being private.', s: ['activity'] },
+      when:    { w: 'warm', t: 'Every time I go somewhere with free Wi-Fi, so — always, but only there.' },
+      installed: { w: 'cold', t: 'Nothing new on it.' },
+      heat:    { w: 'cold', t: 'No, it is fine.' },
+      noise:   { w: 'cold', t: 'Nothing.' },
+      storage: { w: 'cold', t: 'Plenty free.' },
+      drop:    { w: 'cold', t: 'Never dropped.' },
+      history: { w: 'cold', t: 'Nobody has ever opened it.' }
+    },
+
+    console_full: {
+      storage: { w: 'hot',  t: 'It says there is not enough space. It has been saying that for months and he just deletes something and reinstalls it later.', s: ['storage_used'] },
+      trigger: { w: 'hot',  t: 'Installing the new game. It downloads the whole thing and then refuses at the very end.', s: ['storage_used'] },
+      when:    { w: 'warm', t: 'This has been building up for about a year, if I am honest. It has got worse and worse.' },
+      usage:   { w: 'warm', t: 'He plays two games. The rest are from sales, and I do not think he has opened most of them.' },
+      heat:    { w: 'cold', t: 'No hotter than it ever was.' },
+      noise:   { w: 'cold', t: 'The fan comes on in a game. Always has.' },
+      installed: { w: 'cold', t: 'Only games. It will not let him install the new one, which is the whole problem.' },
+      drop:    { w: 'cold', t: 'Never moved off the shelf.' }
+    },
+
+    charge_port_dead: {
+      power:   { w: 'hot',  t: 'You have to hold the cable at exactly the right angle or it does not charge at all. If I nudge the table it stops.', s: ['power', 'visual'] },
+      drop:    { w: 'hot',  t: 'Not dropped exactly — it was charging on the table and the dog walked through the cable and pulled the whole thing off. It was fine for a week after that.', s: ['visual', 'power'] },
+      when:    { w: 'warm', t: 'A month or so. It has got steadily worse rather than failing all at once.' },
+      trigger: { w: 'warm', t: 'Plugging it in. Or rather, plugging it in and it not doing anything.' },
+      heat:    { w: 'cold', t: 'Normal. Warm in a game, like always.' },
+      noise:   { w: 'cold', t: 'Nothing new.' },
+      installed: { w: 'cold', t: 'Nothing new installed.' },
+      storage: { w: 'cold', t: 'Loads of room.' }
     }
   };
 

@@ -57,7 +57,17 @@
       ram_starved: ['activity'], bad_ram_stick: ['memtest'],
       thermal_paste_dead: ['thermal', 'visual'], fan_seized: ['thermal', 'visual'],
       battery_swollen: ['battery', 'visual'], port_lint: ['power', 'visual'],
-      cracked_screen: ['visual'], runaway_process: ['activity']
+      cracked_screen: ['visual'], runaway_process: ['activity'],
+      sd_formatted: ['storage_used', 'smart'], os_wrecked: ['smart', 'bench'],
+      migration: ['storage_used', 'visual'], no_backup: ['smart', 'listen'],
+      water_damage: ['visual', 'power', 'thermal'], dead_no_power: ['power', 'battery'],
+      no_internet: ['activity'], router_down: ['activity'],
+      smc_confused: ['thermal', 'visual'], nvram_lost: ['visual', 'smart'],
+      locked_out: ['storage_used', 'visual'], sticky_keys: ['visual', 'thermal'],
+      bent_socket_pins: ['visual', 'power'], blown_caps: ['visual', 'power'],
+      kernel_task_panic: ['activity', 'thermal'], browser_push_spam: ['activity', 'storage_used'],
+      captive_portal_loop: ['activity', 'visual'], console_full: ['storage_used', 'bench'],
+      charge_port_dead: ['power', 'visual', 'battery']
     };
     var need = REVEALED_BY[t.theory] || [];
     var have = need.filter(function (i) { return t.testsRun.indexOf(i) !== -1; });

@@ -160,6 +160,60 @@
       + '<div class="note teach" style="margin-top:12px">An almost-full SSD gets slower for a physical reason: flash can only write into erased blocks, so a full drive has to erase before every write. Free about 15% and the speed returns on its own.</div>';
   }
 
+  /**
+   * A console has no desktop to log into, but "it will not install" is a real
+   * job and the decision in it is the interesting part: what is actually on
+   * there, and does anyone play it.
+   */
+  function bodyConsoleStorage(t) {
+    var ran = t.testsRun.indexOf('storage_used') !== -1;
+    if (!ran) {
+      return '<div style="text-align:center;padding:30px 20px"><div style="font-size:34px;margin-bottom:10px">\ud83c\udfae</div>'
+        + '<p style="color:var(--ink-2)">Open the storage list and see what is actually installed.</p>'
+        + '<button class="btn btn-primary" data-run="storage_used">Read the storage · 0.2 h</button></div>';
+    }
+    var r = reading('storage_used');
+    var done = t.actionsDone.indexOf('free_space') !== -1;
+    var GAMES = [
+      ['Call of Duty', 248, 'yesterday'],
+      ['EA FC', 96, 'last week'],
+      ['Horizon', 118, '14 months ago'],
+      ['Assassin\'s Creed', 142, '11 months ago'],
+      ['Gran Turismo', 132, '2 years ago'],
+      ['Cyberpunk', 84, '18 months ago'],
+      ['Elden Ring', 61, '16 months ago'],
+      ['Returnal', 58, 'never launched']
+    ];
+    var stale = function (g) { return /year|months|never/.test(g[2]); };
+    var reclaim = GAMES.filter(stale).reduce(function (n, g) { return n + g[1]; }, 0);
+
+    var rows = GAMES.map(function (g) {
+      var old = stale(g);
+      return '<div class="hop" style="align-items:center">'
+        + '<div class="hop-main"><b>' + esc(g[0]) + '</b> <span class="hop-addr">' + g[1] + ' GB</span>'
+        + '<div class="hop-why">Last played ' + esc(g[2]) + '</div></div>'
+        + (old && !done ? '<span class="chip mono" style="color:var(--amber)">unplayed</span>' : '')
+        + (done && old ? '<span class="chip mono" style="color:var(--green)">removed</span>' : '')
+        + '</div>';
+    }).join('');
+
+    return '<div style="font-size:13px;margin-bottom:8px"><b>' + (done ? 50 : r.usedPct) + '% full</b> · '
+      + (done ? (r.freeGB + reclaim) : r.freeGB) + ' GB free of 2 TB</div>'
+      + '<div class="hops">' + rows + '</div>'
+      + '<div class="note ' + (done ? 'good' : 'warn') + '" style="margin-top:10px">'
+      + esc(done
+          ? 'Six unplayed titles removed, ' + reclaim + ' GB back, and the new game installed. Every one of them can be downloaded again from the account at any time — the licences did not go anywhere.'
+          : r.note) + '</div>'
+      + (!done
+          ? '<div style="margin-top:12px"><div style="font-size:12px;color:var(--ink-2);margin-bottom:8px">'
+            + 'Six of these have not been launched in over a year. Together they are ' + reclaim + ' GB — and deleting a game does not take it off the account.</div>'
+            + '<button class="btn btn-primary btn-sm" data-act="free_space">\ud83d\uddd1\ufe0f Show them the list and delete the unplayed ones</button></div>'
+          : '')
+      + '<div class="note teach" style="margin-top:12px">An expansion drive is a perfectly good upgrade and sometimes the right answer. '
+      + 'But fitting one without showing the customer that a terabyte of it has never been opened is selling hardware to avoid a two-minute conversation. '
+      + 'Show them first, then let them choose.</div>';
+  }
+
   function bodyTerminal() {
     var t = Shop.state.ticket;
     var f = J.fault(t);
@@ -244,7 +298,8 @@
 
     var tested = Object.keys(t.net).length;
     var f2 = J.fault(t);
-    var netJob = f2.fixedBy.kind === 'action' && (f2.fixedBy.id === 'fix_dns' || f2.fixedBy.id === 'confirm_isp');
+    var netJob = f2.fixedBy.kind === 'action'
+      && ['fix_dns', 'confirm_isp'].indexOf(f2.fixedBy.id) !== -1;
     var verdict = '';
     if (tested >= 3) {
       var b = HOPS.filter(function (h) { return h.id === breakAt; })[0];
@@ -252,6 +307,7 @@
         + 'Everything before it answers, nothing after it does. That is the link to work on \u2014 and it means '
         + (breakAt === 'router' ? 'the problem is in this building, not with the provider.'
            : breakAt === 'dns'  ? 'the connection itself is fine; the machine just cannot turn names into addresses.'
+           : breakAt === 'site' ? 'every link works right up to the last one. The network is not broken \u2014 something is answering for the site instead of letting you reach it.'
            : 'the fault is upstream of anything you can touch here.')
         + '</div>';
       if (netJob && t.actionsDone.indexOf(f2.fixedBy.id) === -1) {
@@ -415,6 +471,56 @@
       { id: 'verify', t: 'Open a few files from the copy',
         d: 'A backup nobody has opened is a rumour. Open an invoice and a photo from the copy before you tell them it is safe.',
         game: 'verify', verb: 'Verify the copy' }
+    ],
+    revoke_notifications: [
+      { id: 'prove', t: 'Show them nothing is installed',
+        d: 'Before touching a setting, open Activity Monitor together and look. No unknown process, no installer, nothing running. That is the reassurance they actually came in for \u2014 and it is also the evidence.',
+        game: 'settings', verb: 'Check what is running', path: ['Activity Monitor', 'CPU', 'All Processes'] },
+      { id: 'findsite', t: 'Find who was given permission',
+        d: 'Browser settings keep a list of every site allowed to send notifications. The culprit is a name in that list, not a virus on the disk.',
+        game: 'settings', verb: 'Open the notification list', path: ['Safari', 'Settings', 'Websites', 'Notifications'] },
+      { id: 'revoke', t: 'Remove it, and show them the list',
+        d: 'Deny is not enough on its own \u2014 remove it so the entry is gone. Then leave the list open and show them what Allow actually grants, because the next site will ask too.',
+        game: 'toggles3', verb: 'Remove the permission',
+        tgTitle: 'What actually stops the pop-ups?',
+        tgPrompt: 'Tick everything that is part of the fix. Leave the rest \u2014 charging for work nobody needs is the other way to get this job wrong.',
+        tgVerb: 'Do those',
+        tgOk: 'Right. One permission removed, one list explained, nothing installed and nothing charged for hardware.',
+        tgMiss: 'Not finished yet. You have not: ',
+        tgExtra: 'That is work the machine does not need. Nothing was installed here, so there is nothing to uninstall \u2014 and a clean install would take their photographs with it.',
+        items: [
+          { id: 'remove',  label: 'Remove the rogue site from the notification list', pick: true },
+          { id: 'show',    label: 'Show them where that list lives',                  pick: true },
+          { id: 'explain', label: 'Explain what pressing Allow actually granted',     pick: true },
+          { id: 'wipe',    label: 'Reinstall the operating system',                   pick: false },
+          { id: 'av',      label: 'Sell them an antivirus subscription',              pick: false },
+          { id: 'drive',   label: 'Replace the drive',                                pick: false }
+        ] }
+    ],
+    clear_portal: [
+      { id: 'chain', t: 'Prove the connection itself is fine',
+        d: 'Ping along the chain first. Address, router, gateway, DNS \u2014 all answer. It is only the last step that fails, which already rules out the wireless card they were about to pay for.',
+        game: 'settings', verb: 'Walk the chain', path: ['Network Utility', 'Ping', 'Trace the chain'] },
+      { id: 'http', t: 'Make one deliberate unencrypted request',
+        d: 'The gateway can only redirect a request it is allowed to read. HTTPS refuses to be read \u2014 correctly \u2014 so nothing can redirect it and every site fails. A plain HTTP address gives the portal something to intercept.',
+        game: 'type', verb: 'Open the probe address', cmd: 'http://captive.apple.com' },
+      { id: 'explain', t: 'Explain the warning before you clear it',
+        d: 'The certificate warning was right. Somebody really was answering for a site they do not own. Worth thirty seconds, because the next time they see that warning it might not be a caf\u00e9.',
+        game: 'toggles3', verb: 'Talk it through',
+        tgTitle: 'What is true about that warning?',
+        tgPrompt: 'Tick the statements you would actually stand behind. This is the part they take home with them.',
+        tgVerb: 'Say those',
+        tgOk: 'That is the honest version: the warning was doing its job, the caf\u00e9 is not sinister, and clicking through it somewhere that matters is the real risk.',
+        tgMiss: 'You have left out something worth saying: ',
+        tgExtra: 'You just taught somebody to ignore certificate warnings. The next one might be a bank.',
+        items: [
+          { id: 'right',   label: 'The warning was correct \u2014 something really was answering for that site', pick: true },
+          { id: 'gateway', label: 'It was the hotspot login page, not an attack',                     pick: true },
+          { id: 'careful', label: 'Clicking through it on a bank or email site is the dangerous case', pick: true },
+          { id: 'ignore',  label: 'These warnings are always a false alarm \u2014 just click through',   pick: false },
+          { id: 'virus',   label: 'The laptop has picked something up',                               pick: false },
+          { id: 'card',    label: 'The wireless card needs replacing',                                pick: false }
+        ] }
     ]
   };
 
@@ -474,12 +580,24 @@
     }
 
     var m = J.machine(t);
+    if (m.kind === 'console' || m.kind === 'handheld') {
+      host.innerHTML = '<div class="view-head"><h2>Console software</h2>'
+        + '<p>No desktop to log into on this one. What it does have is a storage list, '
+        + 'and reading it before you sell anybody a drive is the whole job.</p></div>'
+        + '<div style="max-width:720px"><div class="card"><div class="card-head">Storage</div>'
+        + bodyConsoleStorage(t) + '</div></div>';
+      bind(host);
+      return;
+    }
     if (m.kind === 'phone' || m.kind === 'tablet') {
       host.innerHTML = '<div class="view-head"><h2>' + (m.kind === 'tablet' ? 'Tablet' : 'Phone') + ' procedures</h2>'
         + '<p>No Mac to log into here \u2014 but the software side of a handset is still a job, and the order you do it in is the whole skill.</p></div>'
         + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;max-width:1080px">'
         + '<div class="card"><div class="card-head">Card &amp; photo recovery</div>' + bodyRecovery(t) + '</div>'
         + '<div class="card"><div class="card-head">Wipe it safely for the next owner</div>' + bodyPhoneReset(t) + '</div>'
+        // A tablet still has settings, a browser and a network stack, so the
+        // software jobs that live in those belong here too.
+        + bodySoftwareJob(t)
         + '</div>';
       bind(host);
       return;

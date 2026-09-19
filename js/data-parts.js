@@ -499,6 +499,71 @@
       spec: { fastCharge: true },
       pitch: 'Correct antenna tuning, correct microphone.',
       catch: 'Expensive for a connector.'
+    },
+    {
+      id: 'flex_usbc17_sz', cat: 'flex', vendor: 'sz_direct',
+      name: 'iPhone 17 USB-C port flex (compatible)',
+      priceFt: 5400, deliveryDays: 17, warrantyMonths: 0, risk: 0.28,
+      fits: ['iphone17'],
+      spec: { fastCharge: false },
+      pitch: 'Half the price of the service part, and a port is a port.',
+      catch: 'Most of these negotiate 9 W and stop. The customer plugs in their 30 W charger and wonders why it takes all night.'
+    },
+    {
+      id: 'flex_usbc17_oem', cat: 'flex', vendor: 'oem_service',
+      name: 'iPhone 17 USB-C port flex (genuine)',
+      priceFt: 16900, deliveryDays: 4, warrantyMonths: 12, risk: 0.02,
+      fits: ['iphone17'],
+      spec: { fastCharge: true },
+      pitch: 'Full charge negotiation and the correct antenna tuning through the flex.',
+      catch: 'Expensive for a connector — but it is the connector that broke.'
+    },
+    {
+      id: 'flex_usbc_ipad', cat: 'flex', vendor: 'ipon',
+      name: 'iPad Air USB-C port board',
+      priceFt: 8900, deliveryDays: 3, warrantyMonths: 12, risk: 0.05,
+      fits: ['ipad_air'],
+      spec: { fastCharge: true },
+      pitch: 'In stock in Budapest, warranty, full charge rate.',
+      catch: 'On an iPad the port board sits under the battery, so the labour is the real cost.'
+    },
+    {
+      id: 'flex_usbc_deck', cat: 'flex', vendor: 'hardverapro',
+      name: 'Steam Deck USB-C daughterboard (pulled)',
+      priceFt: 4200, deliveryDays: 2, warrantyMonths: 0, risk: 0.22,
+      fits: ['steamdeck'],
+      spec: { fastCharge: true },
+      pitch: 'Pulled from a cracked-screen unit, tested working, collect in Zugl\u00f3.',
+      catch: 'Pulled from a machine that had already been dropped once. No comeback if it fails.'
+    },
+    {
+      id: 'flex_usbc_switch', cat: 'flex', vendor: 'ipon',
+      name: 'Switch 2 USB-C charge port assembly',
+      priceFt: 7600, deliveryDays: 3, warrantyMonths: 12, risk: 0.05,
+      fits: ['switch2'],
+      spec: { fastCharge: true },
+      pitch: 'The dock puts real current through this port — worth having the right one.',
+      catch: 'Nothing much, other than the price of doing it properly.'
+    },
+
+    // ───────────────────── BOARD-LEVEL COMPONENTS ──────────────────────
+    {
+      id: 'caps_generic', cat: 'caps', vendor: 'sz_direct',
+      name: '16 V 1500 \u00b5F electrolytic capacitors (10 pack)',
+      priceFt: 1200, deliveryDays: 16, warrantyMonths: 0, risk: 0.30,
+      fits: ['tower_pc'],
+      spec: { esr: 'unspecified', tempC: 85, hours: 2000 },
+      pitch: 'Ten for the price of a coffee.',
+      catch: 'No brand, 85 \u00b0C rating and no ESR figure. These are the same class of part that failed in the first place — in a hot case beside a VRM they will dome again in a couple of years.'
+    },
+    {
+      id: 'caps_polymer', cat: 'caps', vendor: 'ipon',
+      name: 'Nichicon 16 V 1500 \u00b5F low-ESR, 105 \u00b0C (pair)',
+      priceFt: 2400, deliveryDays: 2, warrantyMonths: 6, risk: 0.03,
+      fits: ['tower_pc'],
+      spec: { esr: 'low', tempC: 105, hours: 10000 },
+      pitch: 'Named manufacturer, low ESR, rated to 105 \u00b0C for 10 000 hours.',
+      catch: 'Twice the price of the bag of ten, for two of them.'
     }
   ];
 

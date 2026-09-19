@@ -23,9 +23,20 @@
 
   function load() {
     if (DATA) return Promise.resolve(DATA);
+    if (window.TechOpsChipData) {
+      DATA = window.TechOpsChipData;
+      return Promise.resolve(DATA);
+    }
     return fetch('js/chipid-data.json?v=' + (window.TECHOPS_BUILD || '1'))
       .then(function (r) { return r.json(); })
-      .then(function (j) { DATA = j; return j; });
+      .then(function (j) { DATA = j; return j; })
+      .catch(function (e) {
+        if (window.TechOpsChipData) {
+          DATA = window.TechOpsChipData;
+          return DATA;
+        }
+        throw e;
+      });
   }
 
   /** Deterministic positions so a board looks the same every time you open it. */

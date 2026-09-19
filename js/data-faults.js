@@ -316,7 +316,7 @@
     water_damage: {
       id: 'water_damage',
       title: 'Liquid damage',
-      appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'iphone12', 'iphone17', 'switch2', 'steamdeck', 'ipad_air'],
+      appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'iphone12', 'iphone17', 'switch2', 'steamdeck', 'ipad_air', 'tower_pc'],
       severity: 'critical',
       complaints: [
         'A glass of orange juice went over it. I dried it with a hairdryer and put it in rice and it worked for two days.',
@@ -340,7 +340,7 @@
     dead_no_power: {
       id: 'dead_no_power',
       title: 'No sign of life',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'steamdeck', 'switch2'],
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'steamdeck', 'switch2', 'tower_pc', 'ps5pro'],
       severity: 'high',
       noPartNeeded: true,
       complaints: [
@@ -530,6 +530,187 @@
         ram: 'More RAM to feed a process that should not be running. The fan is still at full speed.'
       },
       explain: 'A pop-up claiming your computer has exactly three viruses and giving you a phone number is never real. The actual damage is a launch agent that restarts the process on every boot — remove the agent, not the operating system.'
+    },
+
+    bent_socket_pins: {
+      id: 'bent_socket_pins',
+      title: 'Bent socket contacts',
+      appliesTo: ['tower_pc'],
+      severity: 'critical',
+      noPartNeeded: true,
+      complaints: [
+        'My cousin and I built it on Saturday. You press the button, the fans spin for about half a second, and it clicks off.',
+        'There is a little red light on the board next to where it says CPU. We bought the wrong motherboard, did we not.'
+      ],
+      customerTheory: 'They are sure the board arrived faulty and want you to confirm it so they can send it back.',
+      readings: {
+        visual: { note: 'Lift the processor and look into the socket under a light: three of the gold contacts in one corner are folded flat and two of them are touching each other. The little triangle on the chip is not where the triangle on the socket is — it went in a quarter turn out and the clamp was forced shut on top of it.' },
+        power: { watts: 14, negotiated: 'none', seats: true, note: 'The supply reaches 14 W and cuts. Short-circuit protection trips on the standby rail before anything can boot.' },
+        thermal: { idleC: 23, loadC: 23, fanRpm: 0, note: 'Room temperature. It never stays on long enough to make heat.' },
+        memtest: { passes: 0, errors: 0, note: 'Cannot run. The memory controller lives in the processor and the processor never comes up.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2, note: 'Brand new drive, two hours on it from the shop test.' }
+      },
+      fixedBy: { kind: 'action', id: 'straighten_pins' },
+      wrongFix: {
+        ram: 'New memory in a socket the processor cannot talk to. Same half-second, same red light.',
+        storage: 'A different drive in a machine that never reaches the drive.'
+      },
+      explain: 'An LGA socket is a bed of several hundred gold springs, each about the thickness of a hair. The processor has no pins at all — the socket does. Force the clamp shut with the chip a quarter turn out and the corner contacts fold flat, and two folded together is a dead short the supply refuses to power. They are straightenable under magnification with a fine tip, patiently, one at a time. It is not a new board, and it is not the customer\'s fault for not knowing that a triangle in a corner was load-bearing.'
+    },
+
+    blown_caps: {
+      id: 'blown_caps',
+      title: 'Failed filter capacitors',
+      appliesTo: ['tower_pc'],
+      severity: 'high',
+      complaints: [
+        'It is perfect in the morning. Email, spreadsheets, hours of it. The second my son starts a game it restarts — no warning, no blue screen, just off and back on.',
+        'Someone told me the power supply is too small, so I bought a bigger one. It did exactly the same thing.'
+      ],
+      customerTheory: 'They have already replaced the power supply and are now convinced the graphics card is dying.',
+      readings: {
+        visual: { note: 'Two of the small aluminium cans in the row beside the processor socket are domed on top instead of flat, and one has crusted brown residue around the vent scoring. The rest of the row is flat and clean, which is what makes these two obvious.' },
+        bench: { seqMBps: 505, randIops: 71000, latencyMs: 0.1, note: 'Storage is fine — when it stays on long enough to test.' },
+        power: { watts: 410, negotiated: 'ATX 12V', seats: true, ripplemV: 460, note: 'Ripple on the 12 V rail reaches 460 mV under load. The ATX specification allows 120 mV. At idle it sits at 40 mV, which is why it is fine all morning.' },
+        thermal: { idleC: 38, loadC: 79, fanRpm: 1500, note: 'Cooling is doing its job. Temperature is not the problem.' },
+        memtest: { passes: 2, errors: 0, note: 'Two clean passes, then the machine restarted mid-test. The restart is the symptom, not a memory error.' }
+      },
+      fixedBy: { kind: 'action', id: 'replace_caps' },
+      wrongFix: {
+        ram: 'New memory, same restart the moment the graphics card draws current. The memory was never failing — it was being browned out along with everything else.',
+        thermal: 'Fresh paste on a machine that is not overheating.'
+      },
+      explain: 'Those little cans smooth the supply. Under a heavy, spiky load — which is what a game is — a worn capacitor cannot hold the rail steady and the voltage dips below what the processor needs, so the board protects itself and resets. It only shows under load, which is exactly why "it is fine for email" is a clue and not a contradiction. A domed top means the electrolyte inside has boiled and vented. Two capacitors cost about the price of a coffee; the customer had already spent forty thousand forint on a power supply that was never faulty.'
+    },
+
+    kernel_task_panic: {
+      id: 'kernel_task_panic',
+      title: 'Thermal sensor failure',
+      // The sensor in question lives on the battery flex, so this is a portable
+      // fault. An iMac has no battery and would fail a different sensor entirely.
+      appliesTo: ['mbp13_2012', 'mba_m1', 'mbp14_m3'],
+      severity: 'high',
+      noPartNeeded: true,
+      complaints: [
+        'It has gone treacle slow. I type and the letters arrive five seconds later. Everything does.',
+        'A shop told me it is overheating and needs a new fan. But feel it — it is stone cold. It is cold and it is slow.'
+      ],
+      customerTheory: 'They have been told it is overheating, and they can feel for themselves that it is not, so they have stopped trusting anybody.',
+      readings: {
+        activity: { memPressurePct: 34, swapGB: 0.4, topProc: 'kernel_task', topProcMemGB: 1.2, topProcCpuPct: 720, note: 'kernel_task is using 720% CPU. It is not a virus and it is not a runaway app — it is part of the system, and this is what it does on purpose.' },
+        thermal: { idleC: 24, loadC: 26, fanRpm: 1100, throttleMhz: 400, note: 'Twenty-four degrees, and the clock is pinned at 400 MHz anyway. The machine is throttling itself hard while being completely cold.' },
+        visual: { note: 'No dust, no damage, fins clear, fan spins freely. Nothing here explains anything.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 6100, note: 'Drive fine.' },
+        memtest: { passes: 4, errors: 0, note: 'Memory clean.' },
+        battery: { cycles: 340, healthPct: 88, condition: 'Normal', designMah: 6700, currentMah: 5896, note: 'Battery health is fine, but the reported temperature field is blank.' }
+      },
+      fixedBy: { kind: 'action', id: 'reseat_sensor' },
+      wrongFix: {
+        fan: 'A new fan on a machine whose old fan was perfect. Still cold, still 400 MHz, still unusable.',
+        thermal: 'Fresh paste solves an overheating problem. This machine is twenty-four degrees.'
+      },
+      explain: 'When macOS cannot read a temperature sensor it does not guess and it does not ignore it — it assumes the worst and clamps the processor down to almost nothing so that whatever it cannot see cannot cook. kernel_task eating 700% is the system deliberately occupying the cores so nothing else can generate heat. So the machine is slow *because* it is cold: the sensor on the battery flex has come loose, the reading is missing, and the safety behaviour is working exactly as designed. This is worth knowing in general — a lot of "it is broken" is a protection doing its job over a fault somewhere else entirely.'
+    },
+
+    browser_push_spam: {
+      id: 'browser_push_spam',
+      title: 'Fake system alerts from a website',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3', 'ipad_air'],
+      severity: 'medium',
+      noPartNeeded: true,
+      complaints: [
+        'Every twenty seconds a warning slides in from the corner. "5 SYSTEM THREATS FOUND. Renew your antivirus now." It looks exactly like the ones from the computer itself.',
+        'I have not clicked it. But my granddaughter says I should pay it before it spreads, and it says my subscription expired, and I never had a subscription.'
+      ],
+      customerTheory: 'They believe the machine is infected and are frightened of losing everything on it.',
+      readings: {
+        activity: { memPressurePct: 33, swapGB: 0.2, topProc: 'Safari', topProcMemGB: 1.4, topProcCpuPct: 9, note: 'Nothing is running away. No unusual process, no launch agent, no background installer. The machine is idle.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3800, note: 'Drive fine.' },
+        storage_used: { usedPct: 41, freeGB: 290, biggest: 'Photos Library — 44 GB', note: 'Nothing has been dumped onto the disk.' },
+        visual: { note: 'Nothing physical. There is a sticker on the lid from a shop in a shopping centre.' },
+        thermal: { idleC: 40, loadC: 72, fanRpm: 2900, note: 'Normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'revoke_notifications' },
+      wrongFix: {
+        storage: 'A new drive and a clean install to remove software that was never installed. Every photo gone with it.',
+        ram: 'More memory for a machine that is doing nothing.'
+      },
+      explain: 'Nothing was installed and nothing is infected. At some point somebody clicked Allow on a website\'s request to send notifications, and that site now delivers adverts through the same channel the operating system uses for its own messages — which is exactly why they look identical. That resemblance is the whole scam. The fix is one setting: find the site in the browser\'s notification permissions and remove it. Worth showing the customer where that list lives, because the next site will ask too, and now they know what Allow actually grants.'
+    },
+
+    captive_portal_loop: {
+      id: 'captive_portal_loop',
+      title: 'Stuck behind a hotspot login',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'ipad_air'],
+      severity: 'low',
+      noPartNeeded: true,
+      netBreak: 'site',
+      complaints: [
+        'It works at home. At the caf\u00e9 downstairs it says connected, full signal, and then every single website gives me a certificate warning. A big red one.',
+        'It tells me the connection is not private and somebody might be stealing my information, so I close the laptop. My phone is fine on the same Wi-Fi.'
+      ],
+      customerTheory: 'They think the caf\u00e9 network is hacked and are worried something has already been taken.',
+      readings: {
+        activity: { memPressurePct: 30, swapGB: 0.1, topProc: 'Safari', topProcMemGB: 0.9, topProcCpuPct: 4, note: 'Idle, waiting on the network.' },
+        visual: { note: 'Nothing physical. The wireless card is seated and the antenna leads are on.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2900, note: 'Drive fine.' },
+        power: { watts: 30, negotiated: 'USB-PD 9V/3.3A', seats: true, note: 'Charging normally.' },
+        thermal: { idleC: 39, loadC: 70, fanRpm: 2600, note: 'Normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'clear_portal' },
+      wrongFix: {
+        flex: 'A new wireless card for a connection that was working the whole time.'
+      },
+      explain: 'The network is not hacked — it is holding them at the door. A public hotspot intercepts the first request the machine makes and answers with its own login page. That works fine over plain HTTP. Over HTTPS it cannot: the browser asks for the caf\u00e9\'s bank and gets an answer signed by the caf\u00e9\'s router instead, which is precisely the situation a certificate warning exists to report. So the warning is correct and the network is not malicious, and the way out is to make one deliberate unencrypted request so the gateway has something to redirect. The lesson worth leaving them with is the opposite of "ignore the warning": it is *why* it appeared, and that clicking through it on a page that actually matters is the dangerous half.'
+    },
+
+    console_full: {
+      id: 'console_full',
+      title: 'No room left for the game',
+      appliesTo: ['ps5pro', 'switch2'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'He got the game for his birthday and it will not install. It downloads for two hours and then says there is not enough space.',
+        'The shop said we need the bigger console. We are not buying a second one.'
+      ],
+      customerTheory: 'They have been told the console is too small and are about to replace a perfectly good machine.',
+      readings: {
+        storage_used: { usedPct: 97, freeGB: 24, biggest: 'Call of Duty — 248 GB', note: 'Twenty-four gigabytes free out of two terabytes. One shooter is taking 248 GB on its own, and eleven of the installed games have not been launched in over a year.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3100, note: 'The internal drive is healthy. It is full, which is a different thing.' },
+        bench: { seqMBps: 5200, randIops: 210000, latencyMs: 0.05, note: 'Reading and writing at full speed. Nothing wrong with the drive.' },
+        thermal: { idleC: 41, loadC: 74, fanRpm: 2100, note: 'Cooling normal.' },
+        visual: { note: 'Clean inside. The expansion bay is empty, with the cover still on it.' }
+      },
+      fixedBy: { kind: 'action', id: 'free_space' },
+      wrongFix: {
+        storage: 'An expansion drive does work — and it is a real option worth offering. But fitting one without mentioning that eleven unplayed games are taking a terabyte, and letting them believe they had no choice, is selling hardware to avoid a conversation.'
+      },
+      explain: 'A console that will not install a game is almost never broken. Modern titles are enormous, deleting one is reversible because the licence stays on the account, and a game can be reinstalled any time from the store. Fitting an expansion drive is a legitimate upgrade and sometimes the right call — but the honest order is to show them what is on there first, delete what nobody has opened in a year, and then let them decide whether they still want to spend the money. The difference between an upsell and a good sale is whether they knew they had a choice.'
+    },
+
+    charge_port_dead: {
+      id: 'charge_port_dead',
+      title: 'Damaged charge port',
+      appliesTo: ['iphone12', 'iphone17', 'ipad_air', 'switch2', 'steamdeck'],
+      severity: 'high',
+      complaints: [
+        'You have to hold the cable at an angle and not breathe. Last night it did not charge at all and I got to work on four percent.',
+        'It started after I left the cable plugged in and the dog pulled the whole thing off the table.'
+      ],
+      customerTheory: 'They assume the battery has gone, because the thing they notice is that it runs out.',
+      readings: {
+        power: { watts: 3, negotiated: 'USB 5V/0.5A only', seats: false, note: 'The plug rocks in the socket instead of clicking home, and it only ever negotiates the slowest possible charge. Push it sideways and the wattage jumps, then dies.' },
+        visual: { note: 'Under magnification the port shell is splayed on one side and two of the contacts inside are pushed back out of line. This is mechanical damage, not dirt — there is nothing in there to clean out.' },
+        battery: { cycles: 260, healthPct: 91, condition: 'Normal', designMah: 3240, currentMah: 2948, note: 'Ninety-one percent health. The battery is in good shape — it is just rarely getting a full charge into it.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4100, note: 'Storage fine.' },
+        thermal: { idleC: 33, loadC: 61, fanRpm: 0, note: 'Normal.' }
+      },
+      fixedBy: { kind: 'part', cat: 'flex' },
+      wrongFix: {
+        battery: 'A new battery in a device that cannot charge it. It lasts exactly as long as the old one did, because the old one was never the problem — and they have paid for a battery and still cannot plug it in.'
+      },
+      explain: 'A battery that runs out and a port that will not take charge look identical from the outside, and the customer will almost always name the battery. The two readings that separate them are sitting right next to each other: battery health is fine, and the port will not negotiate more than the fallback half-amp. Pull on a plugged-in cable hard enough and you splay the port shell — after that it makes contact at an angle or not at all. On most phones and handhelds the port is on its own small flex board precisely because it is the part that wears out, so this is a replaceable component and not a new device.'
     }
   };
 

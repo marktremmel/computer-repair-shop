@@ -239,6 +239,18 @@
       findings.push({ axis: 'safety', good: false, text: ticket.snappedTabs + ' adhesive pull-tab snapped off under the battery, so the pack had to be levered out. '
         + 'Whoever opens this next has no tabs left to pull.' });
     }
+    if (ticket.boardRework > 0) {
+      // Short of a dead board, but permanent: a snapped socket contact or a
+      // pad torn off with the component. It works, and it is never new again.
+      safety -= ticket.boardRework * 22;
+      findings.push({ axis: 'safety', good: false, text: ticket.boardRework
+        + (ticket.boardRework === 1 ? ' piece of board damage' : ' pieces of board damage')
+        + ' you caused and then repaired. It posts and it runs \u2014 but you handed back a board with a repair on it '
+        + 'that did not have one when it arrived, and you should say so.' });
+      lessons.push('Board-level work has a point of no return, and it comes sooner than it feels like it should. '
+        + 'A socket contact bends about the width of a hair before it snaps; a pad lifts the moment you rock a '
+        + 'component instead of drawing it straight up. Slow is not caution here \u2014 it is the only speed that works.');
+    }
     if (ticket.strippedScrews > 0) {
       safety -= ticket.strippedScrews * 14;
       findings.push({ axis: 'safety', good: false, text: ticket.strippedScrews + ' stripped screw' + (ticket.strippedScrews === 1 ? '' : 's') + ' from using the wrong driver. The next person to open this will not thank you.' });

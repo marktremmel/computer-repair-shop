@@ -33,8 +33,18 @@
 
   function loadManifest() {
     if (manifest) return Promise.resolve(manifest);
+    if (window.TechOpsPixelManifest) {
+      manifest = window.TechOpsPixelManifest;
+      return Promise.resolve(manifest);
+    }
     return fetch('js/pixel-manifest.json?v=' + (window.TECHOPS_BUILD || '1')).then(function (r) { return r.json(); }).then(function (m) {
       manifest = m; return m;
+    }).catch(function (e) {
+      if (window.TechOpsPixelManifest) {
+        manifest = window.TechOpsPixelManifest;
+        return manifest;
+      }
+      throw e;
     });
   }
 

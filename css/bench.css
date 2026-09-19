@@ -492,16 +492,18 @@
 
 .reg.target .board-body, .reg.target .batt-body, .reg.target .slot-body,
 .reg.target .conn-body, .reg.target .hs-body, .reg.target .fan-housing {
-  stroke: var(--amber); stroke-width: 3.5;
+  stroke: var(--amber); stroke-width: 3.5; stroke-dasharray: 8 4;
   filter: drop-shadow(0 0 10px rgba(240,168,48,.6));
 }
 .reg.faulty .batt-body, .reg.faulty .fan-housing, .reg.faulty .slot-body,
 .reg.faulty .conn-body, .reg.faulty .hs-body, .reg.faulty .board-body {
-  stroke: var(--red); stroke-width: 3;
+  stroke: var(--red); stroke-width: 3.5; stroke-dasharray: 4 3;
 }
 .reg.faulty { animation: faultPulse 1.7s ease-in-out infinite; }
 @keyframes faultPulse { 50% { filter: drop-shadow(0 0 12px rgba(255,95,109,.55)); } }
-.reg.done .batt-body, .reg.done .slot-body, .reg.done .conn-body, .reg.done .fan-housing { stroke: var(--green); }
+.reg.done .batt-body, .reg.done .slot-body, .reg.done .conn-body, .reg.done .fan-housing {
+  stroke: var(--green); stroke-width: 3; stroke-dasharray: none;
+}
 
 .reg.drop-hot { filter: drop-shadow(0 0 14px rgba(240,168,48,.85)) brightness(1.3); }
 
@@ -698,16 +700,30 @@
   filter: drop-shadow(0 0 7px rgba(240,168,48,.5));
 }
 .bchip.big .bpkg { fill: #262630; }
-.bchip.done .bpkg, .bchip.done .bslot, .bchip.done .barray { stroke: var(--green); }
+.bchip.done .bpkg, .bchip.done .bslot, .bchip.done .barray { stroke: var(--green); stroke-width: 2.5; stroke-dasharray: none; }
 .bchip.target .bpkg, .bchip.target .bslot, .bchip.target .barray,
 .bchip.target .bcoin {
-  stroke: var(--amber); stroke-width: 3;
+  stroke: var(--amber); stroke-width: 3; stroke-dasharray: 6 3;
   filter: drop-shadow(0 0 11px rgba(240,168,48,.65));
 }
 .bchip.faulty .bpkg, .bchip.faulty .bslot, .bchip.faulty .barray {
-  stroke: var(--red); stroke-width: 2.6;
+  stroke: var(--red); stroke-width: 3; stroke-dasharray: 3 2;
   animation: faultPulse 1.7s ease-in-out infinite;
 }
+
+/* ── Accessibility Badges (Non-color cue indicators) ── */
+.reg-badge { pointer-events: none; }
+.reg-badge-bg { fill: #0b1118; stroke: rgba(255,255,255,0.25); stroke-width: 1.2; }
+.reg-badge-text {
+  text-anchor: middle; dominant-baseline: central;
+  font-family: var(--sans); font-size: 11px; font-weight: 900;
+}
+.reg-badge-faulty .reg-badge-bg { stroke: var(--red); fill: #220808; }
+.reg-badge-faulty .reg-badge-text { fill: var(--red); }
+.reg-badge-done .reg-badge-bg { stroke: var(--green); fill: #082210; }
+.reg-badge-done .reg-badge-text { fill: var(--green); }
+.reg-badge-target .reg-badge-bg { stroke: var(--amber); fill: #221808; }
+.reg-badge-target .reg-badge-text { fill: var(--amber); }
 .bchip-label {
   font-family: var(--mono); font-size: 11px; fill: #bcd7c6;
   paint-order: stroke; stroke: rgba(8,16,11,.85); stroke-width: 3.5; stroke-linejoin: round;
@@ -726,3 +742,17 @@
   color: var(--amber); border: 1px solid rgba(240,168,48,.45);
   border-radius: 999px; padding: 2px 9px; background: rgba(240,168,48,.1);
 }
+
+/* The keyboard route through a precision gesture — same work, different hand. */
+.prec-kb-hint {
+  font-size: 11px; color: var(--ink-3); margin-left: 8px;
+  font-family: var(--mono); letter-spacing: .01em;
+}
+@media (max-width: 720px) { .prec-kb-hint { display: none; } }
+
+/* Nudge targets: the individual contacts you work one at a time. */
+.prec-pin {
+  fill: rgba(240,168,48,.14); stroke: var(--amber); stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.prec-pin.done { fill: rgba(70,200,120,.16); stroke: var(--green); stroke-dasharray: none; }

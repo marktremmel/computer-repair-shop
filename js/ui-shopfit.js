@@ -56,7 +56,7 @@
     var ownedCount = Object.keys(S.upgrades).length;
 
     host.innerHTML = '<div class="view-head"><h2>Fitting out the shop</h2>'
-      + '<p>Everything you earn beyond the parts bill ends up here. None of it buys a better review \\u2014 '
+      + '<p>Everything you earn beyond the parts bill ends up here. None of it buys a better review — '
       + 'it buys <b>hours</b>, <b>stock</b> and <b>footfall</b>, so that doing the job properly stops being so expensive. '
       + 'You still have to pick the right part.</p></div>'
       + '<div class="note" style="margin-bottom:18px;display:flex;gap:18px;flex-wrap:wrap">'

@@ -82,10 +82,12 @@
   function comebackFault(cat, t) {
     var map = { storage: 'dying_hdd', ram: 'bad_ram_stick', battery: 'battery_swollen',
                 screen: 'cracked_screen', fan: 'fan_seized', thermal: 'thermal_paste_dead', flex: 'port_lint' };
-    var id = map[cat] || 'thermal_paste_dead';
+    var id = map[cat];
     var m = J.machine(t);
-    var f = window.TechOpsFaults.get(id);
-    return (f && f.appliesTo.indexOf(m.id) !== -1) ? id : 'thermal_paste_dead';
+    var f = id ? window.TechOpsFaults.get(id) : null;
+    if (f && f.appliesTo.indexOf(m.id) !== -1) return id;
+    var candidates = window.TechOpsFaults.forMachine(m);
+    return (candidates && candidates.length) ? candidates[0].id : 'thermal_paste_dead';
   }
 
   function showDebrief(t, res, p) {
