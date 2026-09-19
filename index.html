@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="cache-control" content="no-cache, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechOps Budapest · Repair Shop Simulator</title>
+<meta name="description" content="Run an IT repair shop. Diagnose hidden faults with real instruments, choose between cheap, used, retail and genuine parts, and answer to the customer who has to live with your decision.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
+<link rel="stylesheet" href="css/shop.css?v=bdbec537">
+<link rel="stylesheet" href="css/bench.css?v=bdbec537">
+</head>
+<body>
+<script>window.TECHOPS_BUILD="bdbec537";</script>
+
+<div id="shopdrop"></div>
+
+<header class="topbar">
+  <a class="brand" href="./" title="TechOps Budapest">
+    <span class="brand-mark"><i data-ic="bench"></i></span>
+    <span>
+      <span class="brand-name">TechOps <span>Budapest</span></span><br>
+      <span class="brand-sub">Repair shop simulator</span>
+    </span>
+  </a>
+
+  <div class="hud">
+    <div class="hud-stat"><i data-ic="calendar"></i><span class="lbl">Day</span><b id="hud-day">1</b></div>
+    <div class="hud-stat" title="The working day burns down as you spend bench hours"><i data-ic="clock"></i><b class="hud-clock" id="hud-clock">09:00</b><span id="hud-phase">morning</span></div>
+    <div class="hud-stat hud-cash" id="hud-cash"><i data-ic="coin"></i><span class="lbl">Till</span><b>—</b></div>
+    <div class="hud-stat"><span class="lbl">Jobs</span><b id="hud-jobs">0</b></div>
+    <div class="hud-stat"><i data-ic="star"></i><span class="lbl">Avg</span><b id="hud-stars">—</b></div>
+    <div class="hud-stat" title="Reputation decides who walks through the door">
+      <span class="lbl">Rep</span>
+      <span class="rep-meter"><span class="rep-fill" id="rep-fill" style="width:50%"></span></span>
+      <b id="hud-rep-n">50</b>
+    </div>
+    <div class="hud-stat" id="player-chip" style="display:none;gap:7px"></div>
+    <button class="icon-btn" id="btn-report" title="Shift report &amp; hand-in code"><i data-ic="report"></i></button>
+    <button class="icon-btn" id="btn-badges" title="Shop record and badges"><i data-ic="medal"></i></button>
+    <button class="icon-btn" id="btn-breather" title="Take five">☕</button>
+    <button class="icon-btn" id="btn-hints" title="Hints"><i data-ic="search"></i></button>
+    <button class="icon-btn" id="btn-help" title="How the shop works"><i data-ic="question"></i></button>
+    <button class="icon-btn" id="btn-mute" title="Sound"><i data-ic="speaker"></i></button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <aside class="rail" id="rail"></aside>
+
+  <section class="stage">
+    <nav class="stage-nav">
+      <button class="snav active" data-view="counter"><i data-ic="counter"></i><span>Counter</span></button>
+      <button class="snav" data-view="intake"><i data-ic="chat"></i><span>The sit-down</span></button>
+      <button class="snav" data-view="bench"><i data-ic="bench"></i><span>Workbench</span></button>
+      <button class="snav" data-view="mac"><i data-ic="laptop"></i><span>macOS lab</span></button>
+      <button class="snav" data-view="market"><i data-ic="parts"></i><span>Parts market</span></button>
+      <button class="snav" data-view="handover"><i data-ic="handover"></i><span>Handover</span></button>
+      <button class="snav" data-view="chipid"><i data-ic="memory"></i><span>Chip ID</span></button>
+      <button class="snav" data-view="shopfit"><i data-ic="box"></i><span>The shop</span></button>
+    </nav>
+
+    <div class="stage-body">
+      <div class="view active" id="view-counter"></div>
+      <div class="view" id="view-intake"></div>
+      <div class="view" id="view-bench"></div>
+      <div class="view" id="view-mac"></div>
+      <div class="view" id="view-market"></div>
+      <div class="view" id="view-handover"></div>
+      <div class="view" id="view-chipid"></div>
+      <div class="view" id="view-shopfit"></div>
+    </div>
+  </section>
+
+</div>
+
+<div id="toasts"></div>
+
+<script src="shared/js/sek-audio.js?v=bdbec537"></script>
+<script src="shared/js/sek-code.js?v=bdbec537"></script>
+
+<script src="js/screw-heads.js?v=bdbec537"></script>
+<script src="js/data-machines.js?v=bdbec537"></script>
+<script src="js/data-parts.js?v=bdbec537"></script>
+<script src="js/data-faults.js?v=bdbec537"></script>
+<script src="js/data-customers.js?v=bdbec537"></script>
+<script src="js/data-upgrades.js?v=bdbec537"></script>
+<script src="js/data-chiproles.js?v=bdbec537"></script>
+<script src="js/data-people.js?v=bdbec537"></script>
+<script src="js/data-interview.js?v=bdbec537"></script>
+
+<script src="js/sim-state.js?v=bdbec537"></script>
+<script src="js/sim-ticket.js?v=bdbec537"></script>
+<script src="js/sim-score.js?v=bdbec537"></script>
+<script src="js/sim-interlude.js?v=bdbec537"></script>
+
+<script src="js/pixel-portrait.js?v=bdbec537"></script>
+<script src="js/ui-shell.js?v=bdbec537"></script>
+<script src="js/ui-counter.js?v=bdbec537"></script>
+<script src="js/ui-charbuild.js?v=bdbec537"></script>
+<script src="js/ui-character.js?v=bdbec537"></script>
+<script src="js/ambience.js?v=bdbec537"></script>
+<script src="js/icons.js?v=bdbec537"></script>
+<script src="js/voice.js?v=bdbec537"></script>
+<script src="js/data-boards.js?v=bdbec537"></script>
+<script src="js/board.js?v=bdbec537"></script>
+<script src="js/precision.js?v=bdbec537"></script>
+<script src="js/ui-intake.js?v=bdbec537"></script>
+<script src="js/ui-bench.js?v=bdbec537"></script>
+<script src="js/ui-macos.js?v=bdbec537"></script>
+<script src="js/ui-market.js?v=bdbec537"></script>
+<script src="js/ui-handover.js?v=bdbec537"></script>
+<script src="js/ui-report.js?v=bdbec537"></script>
+<script src="js/ui-dossier.js?v=bdbec537"></script>
+<script src="js/ui-minigames.js?v=bdbec537"></script>
+<script src="js/ui-shopfit.js?v=bdbec537"></script>
+<script src="js/ui-breather.js?v=bdbec537"></script>
+<script src="js/ui-chipid.js?v=bdbec537"></script>
+<script src="js/app.js?v=bdbec537"></script>
+
+<footer class="credits">
+  <span>TechOps Budapest &middot; SEK Budapest</span>
+  <span class="sep">&middot;</span>
+  <span>Character portraits built with
+    <a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">Pixel Portrait Creator by Lyime</a>
+  </span>
+</footer>
+</body>
+</html>

@@ -1,0 +1,337 @@
+/**
+ * TechOps Budapest — boot and navigation.
+ */
+(function (window) {
+  'use strict';
+
+  var Shop = window.TechOpsShop;
+  var UI   = window.TechOpsUI;
+  var esc  = function (s) { return UI.esc(s); };
+
+  var BADGES = {
+    honest_tech: { icon: '🤝', name: 'Told them the truth', desc: 'Found a fault that needed no parts and said so, instead of selling hardware.' },
+    no_upsell:   { icon: '🪙', name: 'No upsell',           desc: 'Did it twice. This is the habit the whole shop is built on.' },
+    five_star:   { icon: '⭐', name: 'Five stars',          desc: 'A job that was right on every axis at once.' },
+    five_jobs:   { icon: '🔧', name: 'Five machines in',    desc: 'Five jobs closed.' },
+    chip_reader: { icon: '🔬', name: 'Reads boards',        desc: 'Five chips identified in a row on the Chip ID bench.' }
+  };
+
+  var VIEWS = ['counter', 'intake', 'bench', 'mac', 'market', 'handover', 'chipid', 'shopfit'];
+
+  /**
+   * Curated starting words. Nothing special about them mechanically — any word
+   * seeds a shop — but these are hand-checked to open with a useful lesson, so
+   * a teacher can hand one to a class and know roughly what turns up.
+   */
+  var SHIFT_CODES = [
+    { code: 'BUDAPEST', note: 'The default. A broad mix — good for a first lesson.' },
+    { code: 'DUNA',     note: 'Opens on tight deadlines. Teaches that delivery time is part of the price.' },
+    { code: 'FILLER',   note: 'Low budgets throughout. Forces the cheap-versus-lasting argument.' },
+    { code: 'PARLAMENT',note: 'Older machines. Lots of "is this even worth fixing?".' },
+    { code: 'METRO',    note: 'Phones and tablets. Glued-shut teardowns and screen choices.' },
+    { code: 'SZIGET',   note: 'Money about, deadlines loose. Over-specification is the trap here.' },
+    { code: 'LANCHID',  note: 'Heavy on the faults that need no parts at all.' },
+    { code: 'KELETI',   note: 'Busy and mixed. Good once the class knows the loop.' }
+  ];
+
+  var App = {
+    current: 'counter',
+
+    go: function (id) {
+      App.current = id;
+      document.body.setAttribute('data-view', id);
+      VIEWS.forEach(function (v) {
+        document.getElementById('view-' + v).classList.toggle('active', v === id);
+        var nav = document.querySelector('[data-view="' + v + '"]');
+        if (nav) nav.classList.toggle('active', v === id);
+      });
+      App.renderCurrent();
+      if (window.sekAudio) window.sekAudio.playKeyPop();
+    },
+
+    renderCurrent: function () {
+      ({
+        counter: window.TechOpsCounter,
+        intake: window.TechOpsIntake,
+        bench: window.TechOpsBench,
+        mac: window.TechOpsMac,
+        market: window.TechOpsMarket,
+        handover: window.TechOpsHandover,
+        chipid: window.TechOpsChipID,
+        shopfit: window.TechOpsShopfit
+      })[App.current].render();
+      App.paintIcons();
+      App.paintFaces();
+      App.refreshPlayerChip();
+      UI.refresh();
+    },
+
+    /**
+     * Hints, graded. The first two are procedure and cost nothing; the last one
+     * points at the fault and costs bench time, because in the shop the way you
+     * buy an answer is by spending time on it.
+     */
+    hints: function () {
+      var t = Shop.state.ticket;
+      if (!t) {
+        UI.modal('<div class="modal-head"><h3>Hints</h3></div><div class="modal-body">'
+          + '<p style="color:var(--ink-2)">Take a job first \u2014 hints are about the machine in front of you.</p>'
+          + '</div><div class="modal-foot"><button class="btn" data-close>Close</button></div>');
+        return;
+      }
+      var J = window.TechOpsJobs;
+      var f = J.fault(t), m = J.machine(t), uc = J.useCase(t);
+      t.hintsUsed = t.hintsUsed || 0;
+
+      var steps = [];
+      // 0 — can this even be done? Checked first, because a student stuck on an
+      // unaffordable job will otherwise hunt for a part that does not exist.
+      var cat = f.fixedBy.kind === 'part' ? f.fixedBy.cat : f.fixedBy.needsPartCat;
+      if (cat) {
+        var fits = window.TechOpsParts.byCat(cat).filter(function (pp) {
+          return window.TechOpsParts.compat(pp, m).ok;
+        });
+        var min = fits.length ? Math.min.apply(null, fits.map(function (pp) { return pp.priceFt; })) : Infinity;
+        if (!isFinite(min) || min > t.budgetFt) {
+          steps.push({
+            cost: 0, title: 'Can this job even be done?',
+            body: !isFinite(min)
+              ? 'No. Nothing in the catalogue both fits this machine and fixes this fault. Go to <b>Handover</b> and tell them so \u2014 there is a button for it.'
+              : 'Not for their money. The cheapest part that fits and fixes it is <b>' + window.techOpsFmt(min)
+                + '</b> and they have <b>' + window.techOpsFmt(t.budgetFt) + '</b>.<br><br>'
+                + 'Go to <b>Handover</b> and tell them honestly. Charging a diagnosis fee and sending them away is a four-star outcome, not a failure.'
+          });
+        }
+      }
+
+      // 1 — what to do next, free.
+      steps.push({
+        cost: 0, title: 'What should I do next?',
+        body: !t.asked.length
+          ? 'You have not asked them anything. Go to <b>The sit-down</b> \u2014 a question costs 0.1 h and an instrument costs up to 1.5 h.'
+          : !t.testsRun.length
+            ? 'You have their story but no measurements. Run the instruments the answers pointed at, on the bench or in the macOS lab.'
+            : (!t.installed.length && !t.actionsDone.length)
+              ? 'You have readings. Decide what they mean, then either fit a part from the market or do the work on the bench \u2014 remember some faults need no parts at all.'
+              : 'Re-run the test that found the fault to confirm the repair, then go to <b>Handover</b>.'
+      });
+      // 2 — how to read this machine, free.
+      steps.push({
+        cost: 0, title: 'What should I know about this machine?',
+        body: esc(m.name) + ' \u2014 ' + esc(m.blurb)
+          + '<br><br>Storage: <b>' + (m.storageSoldered ? 'soldered, not replaceable' : window.TechOpsMachines.busLabel(window.TechOpsMachines.bestBus(m))) + '</b>. '
+          + 'Memory: <b>' + (m.ramSoldered ? 'soldered, not replaceable' : m.ramType.toUpperCase() + ', ' + m.ramSlots + ' slot(s)') + '</b>.'
+          + '<br><br>' + esc(J.customer(t).name) + ' uses it for <b>' + esc(uc.label.toLowerCase()) + '</b>. ' + esc(uc.blurb)
+      });
+      // 3 — narrow the field, free but only after measuring.
+      steps.push({
+        cost: 0, title: 'Narrow it down for me', locked: !t.testsRun.length,
+        lockedWhy: 'Measure something first. There is nothing to narrow down from a complaint alone.',
+        body: (function () {
+          var all = window.TechOpsFaults.forMachine(m);
+          var ruled = all.filter(function (x) { return x.id !== f.id; }).slice(0, Math.max(1, all.length - 3));
+          return 'On what you have measured so far you can set aside: '
+            + ruled.map(function (x) { return '<b>' + esc(x.title) + '</b>'; }).join(', ')
+            + '.<br><br>That still leaves more than one answer. The instrument that settles it is the one your interview pointed at.';
+        })()
+      });
+      // 4 — the actual answer, paid for in time.
+      steps.push({
+        cost: 0.8, title: 'Just tell me what is wrong',
+        body: '<b>' + esc(f.title) + '.</b><br><br>' + esc(f.explain)
+          + '<br><br>' + (f.noPartNeeded
+              ? 'This one needs <b>no parts at all</b>. Selling hardware for it is the expensive mistake.'
+              : 'Fix: fit a <b>' + (f.fixedBy.cat || f.fixedBy.needsPartCat) + '</b> part that suits this machine and this person.')
+      });
+
+      var html = steps.map(function (st, i) {
+        var opened = (t.hintsOpen || {})[i];
+        return '<div class="hint-card' + (st.locked ? ' locked' : '') + (opened ? ' open' : '') + '">'
+          + '<button class="hint-head" data-hint="' + i + '"' + (st.locked ? ' disabled' : '') + '>'
+          + '<span>' + st.title + '</span>'
+          + '<span class="hint-cost">' + (st.locked ? 'locked' : st.cost ? '+' + st.cost + ' h' : 'free') + '</span></button>'
+          + (opened ? '<div class="hint-body">' + st.body + '</div>'
+                    : st.locked ? '<div class="hint-body muted">' + st.lockedWhy + '</div>' : '')
+          + '</div>';
+      }).join('');
+
+      UI.modal('<div class="modal-head"><h3>Hints</h3>'
+        + '<div style="font-size:12.3px;color:var(--ink-3)">The first three are free. The last one costs bench time \u2014 the same way buying an answer works in a real shop.</div></div>'
+        + '<div class="modal-body">' + html + '</div>'
+        + '<div class="modal-foot"><button class="btn" data-close>Close</button></div>');
+
+      document.querySelectorAll('[data-hint]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var i = +b.getAttribute('data-hint');
+          t.hintsOpen = t.hintsOpen || {};
+          if (!t.hintsOpen[i]) {
+            t.hintsOpen[i] = true;
+            if (steps[i].cost) {
+              t.labourHours += steps[i].cost;
+              t.hintsUsed++;
+              UI.toast('Hint taken', steps[i].cost + ' h of bench time. It counts against the turnaround.', 'bad');
+            }
+            Shop.emit('change');
+          }
+          document.querySelector('.modal-veil').remove();
+          App.hints();
+        });
+      });
+    },
+
+    briefing: function () {
+      UI.modal('<div class="modal-head"><h3>TechOps Budapest</h3>'
+        + '<div style="font-size:12.5px;color:var(--ink-3)">You are running the repair shop.</div></div><div class="modal-body">'
+        + '<p style="font-size:13.5px;color:var(--ink-2)">Somebody hands you a machine and tells you what they think is wrong. '
+        + 'They are often wrong — that is not a trick, it is what actually happens at a counter.</p>'
+        + '<div class="note" style="margin:14px 0"><b>The loop</b><br>'
+        + '<b>1 · Counter</b> — pick a job. The budget and the deadline are part of the puzzle.<br>'
+        + '<b>2 · The sit-down</b> — ask them questions before you open anything. A question costs 0.1 h, a memory test costs 1.5 h.<br>'
+        + '<b>3 · Bench &amp; macOS lab</b> — measure only what the answers pointed at. Testing everything costs the customer a day.<br>'
+        + '<b>4 · Market</b> — buy only what your measurements justify. Cheap, used, retail and genuine are four real answers.<br>'
+        + '<b>5 · Bench</b> — right driver, battery disconnected first, part into the bay.<br>'
+        + '<b>6 · Handover</b> — set your price and find out what they thought.</div>'
+        + '<div class="note teach"><b>The one thing worth knowing before you start:</b> three of the ten faults in this shop '
+        + 'need no parts at all. Selling somebody a drive to fix a full Downloads folder works, and it is still the worst thing you can do to them.</div>'
+        + '<div class="note" style="margin-top:14px;font-size:12.2px"><b>Credits.</b> '
+        + 'Character portraits are built from the <a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">'
+        + 'Pixel Portrait Creator</a> by <b>Lyime</b>. The shop art, sounds and everything else are part of this material.</div>'
+        + '</div><div class="modal-foot"><button class="btn btn-primary" data-close>Open the shop</button></div>');
+      try { localStorage.setItem('techops-seen-briefing', '1'); } catch (e) {}
+    },
+
+    /**
+     * Your face and name in the top bar, and the way into everything about you.
+     * Repainted whenever it might have changed rather than once on an event
+     * that may already have fired.
+     */
+    refreshPlayerChip: function () {
+      var p = Shop.state.player;
+      var host = document.getElementById('player-chip');
+      if (!host) return;
+      if (!p) { host.style.display = 'none'; return; }
+      var sig = p.name + '|' + p.avatar;
+      if (host.dataset.sig !== sig) {
+        host.dataset.sig = sig;
+        host.innerHTML = '<div class="pface" data-seed="' + esc(p.avatar) + '" data-size="22"></div>'
+          + '<span>' + esc(p.name) + '</span>';
+        App.paintFaces(host);
+      }
+      host.style.display = 'flex';
+      host.style.cursor = 'pointer';
+      host.title = (p.shop || 'Your shop') + ' — click for your character, record and how it all works';
+      host.onclick = function () { window.TechOpsDossier.book('you'); };
+    },
+
+    /**
+     * Repaint the whole interface from current state. Used after anything that
+     * changes how things look rather than what they are — building a face, for
+     * instance — so nobody has to reload the page to see their own character.
+     */
+    refreshAll: function () {
+      document.querySelectorAll('.pface').forEach(function (n) {
+        delete n.dataset.painted;
+        n.innerHTML = '';
+      });
+      App.refreshPlayerChip();
+      App.renderCurrent();
+      App.paintIcons();
+      App.paintFaces();
+      UI.refresh();
+    },
+
+    /** Fill every .pface slot with its pixel portrait once sprites are ready. */
+    paintFaces: function (root) {
+      if (!window.TechOpsPixel) return;
+      window.TechOpsPixel.load().then(function () {
+        (root || document).querySelectorAll('.pface').forEach(function (n) {
+          if (n.dataset.painted) return;
+          n.dataset.painted = '1';
+          var px = +(n.dataset.size || 44);
+          n.style.width = px + 'px'; n.style.height = px + 'px';
+          window.TechOpsPixel.mount(n, n.dataset.seed, px * 2, {
+            archetype: n.dataset.arch || undefined,
+            age: n.dataset.age ? +n.dataset.age : undefined
+          });
+        });
+      });
+    },
+
+    /** Replace every <i data-ic="name"> placeholder with its drawn icon. */
+    paintIcons: function (root) {
+      (root || document).querySelectorAll('i[data-ic]').forEach(function (n) {
+        if (n.firstChild) return;
+        n.innerHTML = window.TechOpsIcons.icon(n.getAttribute('data-ic'), +(n.dataset.size || 18));
+      });
+    },
+
+    boot: function () {
+      Shop.init();
+      Shop.state.pendingComebacks = Shop.state.pendingComebacks || [];
+      Shop.state.upgrades = Shop.state.upgrades || {};
+      // Hand-built faces are stored whole, so they survive a reload.
+      if (Shop.state.customFaces && window.TechOpsPixel) {
+        Object.keys(Shop.state.customFaces).forEach(function (k) {
+          window.TechOpsPixel.remember(k, Shop.state.customFaces[k]);
+          if (window.TechOpsPeople && window.TechOpsPeople.FACE_PRESETS.indexOf(k) === -1) {
+            window.TechOpsPeople.FACE_PRESETS.unshift(k);
+          }
+        });
+      }
+      if (window.TechOpsUpgrades) window.TechOpsUpgrades.rebuildPerks(Shop.state);
+
+      document.querySelectorAll('[data-view]').forEach(function (b) {
+        b.addEventListener('click', function () { App.go(b.getAttribute('data-view')); });
+      });
+      document.getElementById('btn-badges').addEventListener('click', function () {
+        window.TechOpsDossier.book('record');
+      });
+      document.getElementById('btn-report').addEventListener('click', function () { window.TechOpsReport.show(); });
+
+      Shop.on('change', App.refreshPlayerChip);
+      document.getElementById('btn-help').addEventListener('click', function () {
+        window.TechOpsDossier.book('guide');
+      });
+      var br = document.getElementById('btn-breather');
+      if (br) br.addEventListener('click', function () { window.TechOpsBreather.show(); });
+
+      var hb = document.getElementById('btn-hints');
+      if (hb) hb.addEventListener('click', App.hints);
+
+      var mute = document.getElementById('btn-mute');
+      mute.addEventListener('click', function () {
+        if (!window.sekAudio) return;
+        window.sekAudio.toggleMute();
+        if (window.sekAudio.muted && window.TechOpsVoice) window.TechOpsVoice.stop();
+        if (window.sekAudio.muted && window.TechOpsBreather) window.TechOpsBreather.stop();
+        mute.innerHTML = window.TechOpsIcons.icon(window.sekAudio.muted ? 'speakerOff' : 'speaker', 18);
+      });
+
+      Shop.on('badge', function (id) {
+        var b = BADGES[id];
+        if (b) UI.toast(b.icon + ' ' + b.name, b.desc, 'good');
+      });
+      Shop.on('change', function () { UI.refresh(); App.paintFaces(); });
+
+      App.paintIcons();
+      App.paintFaces();
+      App.refreshPlayerChip();
+      UI.refresh();
+      App.go(Shop.state.ticket ? (Shop.state.ticket.asked && Shop.state.ticket.asked.length ? 'bench' : 'intake') : 'counter');
+
+      if (!Shop.state.player) {
+        setTimeout(function () {
+          window.TechOpsCharacter.show(function () {
+            App.refreshAll();
+            App.briefing();
+          });
+        }, 260);
+      }
+    }
+  };
+
+  App.BADGES = BADGES;
+  App.SHIFT_CODES = SHIFT_CODES;
+  window.TechOpsApp = App;
+  document.addEventListener('DOMContentLoaded', App.boot);
+})(window);

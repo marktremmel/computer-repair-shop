@@ -1,0 +1,256 @@
+/**
+ * TechOps Budapest — the intake interview.
+ *
+ * Before you touch a screwdriver you sit down with the person and ask.
+ * Questions cost a fraction of the bench time an instrument costs, so a
+ * good interview is the cheapest diagnosis in the shop — ask the right
+ * three things and you know which two instruments to reach for, instead
+ * of running all ten and losing the customer a day.
+ *
+ * Customers are not reliable narrators. Some answers are decisive, some
+ * are noise, and a few point confidently in the wrong direction.
+ */
+(function (window) {
+  'use strict';
+
+  var QUESTIONS = [
+    { id: 'when',      icon: '📅', hours: 0.1, q: 'When did this start?' },
+    { id: 'trigger',   icon: '🎬', hours: 0.1, q: 'What were you doing when it happened?' },
+    { id: 'drop',      icon: '💥', hours: 0.1, q: 'Has it been dropped, or got wet?' },
+    { id: 'noise',     icon: '👂', hours: 0.1, q: 'Is it making any new noises?' },
+    { id: 'installed', icon: '📥', hours: 0.1, q: 'Have you installed anything new lately?' },
+    { id: 'heat',      icon: '🔥', hours: 0.1, q: 'Does it get hot? When?' },
+    { id: 'power',     icon: '🔌', hours: 0.1, q: 'How is it on battery, and while charging?' },
+    { id: 'history',   icon: '🧰', hours: 0.1, q: 'Has anyone else worked on it before me?' },
+    { id: 'storage',   icon: '🗄️', hours: 0.1, q: 'How full is it? Do you get warnings?' },
+    { id: 'usage',     icon: '💼', hours: 0.15, q: 'What do you actually use it for most?' }
+  ];
+
+  /**
+   * Per fault, only the answers that carry information are written out.
+   * `w` — hot (decisive), warm (suggestive), cold (rules things out), red (misleading but honest).
+   * `s` — which instruments this answer points at.
+   */
+  var ANSWERS = {
+    dying_hdd: {
+      when:    { w: 'warm', t: 'It has been getting slower for months, but the last two weeks it has been unbearable.' },
+      noise:   { w: 'hot',  t: 'Now that you mention it — there is a little click. Click… click… and then it goes quiet for a bit. I thought that was normal.', s: ['listen', 'smart'] },
+      trigger: { w: 'cold', t: 'Nothing special. Just turning it on. That is the thing — it is everything, all the time.' },
+      installed: { w: 'cold', t: 'No. I have not put anything new on it in years.' },
+      heat:    { w: 'cold', t: 'No hotter than it ever was.' },
+      storage: { w: 'cold', t: 'No warnings. There is plenty of room, I hardly keep anything on it.' },
+      history: { w: 'cold', t: 'Never been opened. It is exactly as it came.' }
+    },
+    disk_full: {
+      when:    { w: 'warm', t: 'The warnings started maybe three weeks ago and now it will not save at all.' },
+      storage: { w: 'hot',  t: 'It says "Your disk is almost full" every single day. I keep clicking it away.', s: ['storage_used'] },
+      trigger: { w: 'warm', t: 'It happens when I try to save. Or export. Anything that writes, really.' },
+      noise:   { w: 'cold', t: 'No, it is silent.' },
+      usage:   { w: 'hot',  t: 'I export videos for the club. I keep every version in case they want changes. I never delete any of them.', s: ['storage_used'] },
+      history: { w: 'cold', t: 'Nobody has touched it.' },
+      heat:    { w: 'cold', t: 'It is cool.' }
+    },
+    ram_starved: {
+      when:    { w: 'warm', t: 'Since I started doing bigger projects. Small ones are still fine.' },
+      trigger: { w: 'hot',  t: 'Only when I have the editor open with everything else. On its own it is fine. Add a browser and it dies.', s: ['activity'] },
+      heat:    { w: 'warm', t: 'The fans get loud when it is struggling, but it does not overheat or switch off.' },
+      noise:   { w: 'cold', t: 'Just the fan. No clicking or grinding.' },
+      storage: { w: 'cold', t: 'Loads of space free. I checked.' },
+      installed: { w: 'cold', t: 'Nothing new, no.' },
+      usage:   { w: 'hot',  t: 'Editing, mostly. Big timelines, lots of layers, and I always have a hundred tabs open too.', s: ['activity'] }
+    },
+    bad_ram_stick: {
+      when:    { w: 'warm', t: 'Hard to say. Weeks? It is so random I cannot pin it down.' },
+      trigger: { w: 'hot',  t: 'That is what is maddening — nothing. It has crashed while I was reading a page. It has crashed doing nothing at all.', s: ['memtest'] },
+      installed: { w: 'hot', t: 'I reinstalled the entire operating system from scratch to fix it. It made no difference whatsoever.', s: ['memtest'] },
+      noise:   { w: 'cold', t: 'No, nothing.' },
+      heat:    { w: 'cold', t: 'Normal temperature. It is not a heat thing.' },
+      history: { w: 'warm', t: 'My cousin put more memory in it a while back. He got it cheap off the internet.', s: ['memtest'] },
+      storage: { w: 'cold', t: 'Plenty free.' }
+    },
+    thermal_paste_dead: {
+      when:    { w: 'warm', t: 'Around spring, I think. It used to be silent. Now it is a hairdryer.' },
+      trigger: { w: 'hot',  t: 'It is fine for about a minute, then the fan screams and everything goes slow. Then sometimes it just switches off.', s: ['thermal'] },
+      heat:    { w: 'hot',  t: 'Very. You cannot rest your hands on it after ten minutes. Underneath it is worse.', s: ['thermal', 'visual'] },
+      noise:   { w: 'warm', t: 'The fan, constantly, at full speed. But no grinding — it spins fine, it is just always working.' },
+      history: { w: 'cold', t: 'Never been opened.' },
+      installed: { w: 'cold', t: 'Nothing new.' },
+      storage: { w: 'cold', t: 'Half empty.' }
+    },
+    fan_seized: {
+      when:    { w: 'hot',  t: 'There was a horrible grinding for about a week. Then it went quiet — and that is when it started getting too hot to hold.', s: ['thermal', 'visual'] },
+      noise:   { w: 'hot',  t: 'It used to grind. Now — nothing at all. Completely silent. That is better, surely?', s: ['thermal', 'visual'] },
+      heat:    { w: 'hot',  t: 'Burning. Straight away, even just sitting on the desk doing nothing.', s: ['thermal'] },
+      trigger: { w: 'warm', t: 'It does not need a trigger any more. It is hot from the moment it turns on.' },
+      history: { w: 'cold', t: 'Nobody has been inside it.' },
+      installed: { w: 'cold', t: 'No.' }
+    },
+    battery_swollen: {
+      when:    { w: 'warm', t: 'The clicking stopped working maybe a month ago. The battery has been bad much longer.' },
+      drop:    { w: 'cold', t: 'Never dropped. It lives on a desk.' },
+      power:   { w: 'hot',  t: 'Forty minutes if I am lucky, and it used to be all day. It is basically a desktop now.', s: ['battery', 'visual'] },
+      trigger: { w: 'hot',  t: 'The trackpad just will not click. It moves the cursor fine — it will not press down. And the bottom is... bulging? It wobbles on the table.', s: ['visual', 'battery'] },
+      heat:    { w: 'warm', t: 'Warmer than it was, especially around the middle underneath.' },
+      noise:   { w: 'cold', t: 'No noises.' },
+      history: { w: 'cold', t: 'Never opened.' }
+    },
+    port_lint: {
+      when:    { w: 'warm', t: 'It has been getting fussier for months. Now it is basically impossible.' },
+      power:   { w: 'hot',  t: 'It only charges if I hold the cable at exactly the right angle and weigh it down with a book. Let go and it stops.', s: ['power', 'visual'] },
+      trigger: { w: 'hot',  t: 'I have bought three new cables. Three! None of them work properly either.', s: ['power', 'visual'] },
+      drop:    { w: 'cold', t: 'No, never dropped. It lives in my pocket.' },
+      noise:   { w: 'cold', t: 'No.' },
+      heat:    { w: 'cold', t: 'It does not get hot.' },
+      history: { w: 'cold', t: 'Nobody has opened it.' }
+    },
+    cracked_screen: {
+      drop:    { w: 'hot',  t: 'Straight out of my pocket onto the tram tracks. I picked the glass out of my thumb afterwards.', s: ['visual'] },
+      when:    { w: 'hot',  t: 'Tuesday. Very precisely Tuesday.', s: ['visual'] },
+      trigger: { w: 'warm', t: 'The bottom third does not respond to touch at all now. The rest works.' },
+      power:   { w: 'cold', t: 'Charges perfectly fine. Battery is as good as it ever was.' },
+      noise:   { w: 'cold', t: 'No.' },
+      heat:    { w: 'cold', t: 'No.' }
+    },
+    runaway_process: {
+      when:    { w: 'hot',  t: 'Last Tuesday. It was completely fine on Monday.', s: ['activity'] },
+      installed: { w: 'hot', t: 'There was a window saying my Mac had three viruses and I needed to install a cleaner. So I did. Was that... was that bad?', s: ['activity'] },
+      trigger: { w: 'hot',  t: 'A pop-up keeps appearing telling me to ring a phone number about the viruses.', s: ['activity'] },
+      heat:    { w: 'warm', t: 'The fan is on all the time now, even when I am not doing anything.' },
+      noise:   { w: 'warm', t: 'Just the fan, constantly.' },
+      storage: { w: 'cold', t: 'No warnings about space.' },
+      drop:    { w: 'cold', t: 'Never dropped.' }
+    }
+  };
+
+  ANSWERS.sd_formatted = {
+    when:    { w: 'hot',  t: 'Yesterday. I have not put it back in the camera since, I was too scared to.', s: ['storage_used'] },
+    trigger: { w: 'hot',  t: 'The camera asked something about formatting and I said yes without reading it.', s: ['storage_used'] },
+    storage: { w: 'warm', t: 'It says the card is empty now. Completely empty. That is the whole problem.' },
+    drop:    { w: 'cold', t: 'No, nothing happened to it. It has never even been out of the bag.' },
+    history: { w: 'cold', t: 'Nobody has touched it but me, and I wish I had not.' }
+  };
+  ANSWERS.os_wrecked = {
+    when:    { w: 'hot',  t: 'It installed an update overnight and in the morning there was a folder with a question mark.', s: ['smart'] },
+    trigger: { w: 'hot',  t: 'Nothing. It did it to itself while I was asleep.', s: ['smart'] },
+    noise:   { w: 'cold', t: 'No noises at all. It sounds completely normal.' },
+    drop:    { w: 'cold', t: 'Never dropped.' },
+    installed: { w: 'warm', t: 'Only the update it installed on its own.' },
+    storage: { w: 'cold', t: 'It was about two-thirds full. I had not run out of space.' }
+  };
+  ANSWERS.migration = {
+    when:    { w: 'hot',  t: 'I bought it on Saturday. I have not been able to bring myself to open the old one since.', s: ['storage_used'] },
+    trigger: { w: 'cold', t: 'Nothing is wrong with it. That is the thing \u2014 it works perfectly, it is just empty.' },
+    usage:   { w: 'hot',  t: 'Everything. Photos going back fifteen years, all my letters, the lot. It is all on the old one.', s: ['storage_used'] },
+    noise:   { w: 'cold', t: 'Silent.' },
+    history: { w: 'cold', t: 'Brand new, out of the box.' }
+  };
+  ANSWERS.no_backup = {
+    noise:   { w: 'hot',  t: 'Just a little tick now and then. Probably nothing, right?', s: ['smart', 'listen'] },
+    when:    { w: 'warm', t: 'A couple of weeks. It has got slower too, but everything gets slower.' },
+    usage:   { w: 'hot',  t: 'It is my business. Invoices, quotes, photos of every job I have done.', s: ['storage_used'] },
+    history: { w: 'cold', t: 'Never been opened.' },
+    storage: { w: 'cold', t: 'Plenty of room left on it.' },
+    drop:    { w: 'cold', t: 'It lives on a desk. Never been dropped.' }
+  };
+
+  ANSWERS.water_damage = {
+    drop:    { w: 'hot',  t: 'Orange juice, about three weeks ago. I dried it with a hairdryer and left it in rice overnight.', s: ['visual'] },
+    when:    { w: 'warm', t: 'It was completely fine for two days afterwards. That is why I did not think it mattered.' },
+    heat:    { w: 'hot',  t: 'It gets warm in one particular corner now. Only that corner.', s: ['visual', 'thermal'] },
+    trigger: { w: 'warm', t: 'Keys type by themselves sometimes. Just a letter or two, at random.' },
+    noise:   { w: 'cold', t: 'No noises.' },
+    history: { w: 'cold', t: 'Only the hairdryer and the rice.' }
+  };
+  ANSWERS.dead_no_power = {
+    when:    { w: 'warm', t: 'Tuesday morning. It was fine when I shut it on Monday night.' },
+    power:   { w: 'hot',  t: 'Nothing at all. No charging light, no sound, no warmth. I have tried two chargers and three sockets.', s: ['power', 'battery'] },
+    trigger: { w: 'hot',  t: 'Nothing happened. I opened it and it was just dead.', s: ['power'] },
+    drop:    { w: 'cold', t: 'Never dropped, never wet.' },
+    noise:   { w: 'cold', t: 'Nothing to hear. That is rather the point.' },
+    heat:    { w: 'cold', t: 'Stone cold, always.' }
+  };
+
+  ANSWERS.no_internet = {
+    trigger: { w: 'hot',  t: 'It shows full bars and says connected. Nothing loads. Not one page.', s: ['activity'] },
+    when:    { w: 'warm', t: 'Since Thursday. Nothing changed that I know of.' },
+    installed: { w: 'cold', t: 'I have not installed anything.' },
+    history: { w: 'hot',  t: 'My other devices are fine on the same Wi-Fi. It is only this one.', s: ['activity'] },
+    noise:   { w: 'cold', t: 'No noises.' },
+    heat:    { w: 'cold', t: 'Normal temperature.' }
+  };
+  ANSWERS.router_down = {
+    trigger: { w: 'hot',  t: 'Nothing in the house works. The telly, my phone, all of it \u2014 unless I use mobile data.', s: ['activity'] },
+    when:    { w: 'warm', t: 'This morning. All at once.' },
+    history: { w: 'hot',  t: 'Everything went at the same moment, which is what worried me.', s: ['activity'] },
+    installed: { w: 'cold', t: 'Nothing installed.' },
+    heat:    { w: 'cold', t: 'Cool as anything.' }
+  };
+
+  ANSWERS.smc_confused = {
+    when:    { w: 'warm', t: 'A few weeks. It started after the battery went completely flat one night.' },
+    trigger: { w: 'hot',  t: 'From the second I press the power button. Full speed fans, cold machine, nothing running.', s: ['thermal'] },
+    heat:    { w: 'hot',  t: 'That is the strange part \u2014 it is not hot at all. It is cool and screaming.', s: ['thermal'] },
+    power:   { w: 'warm', t: 'The charging light does odd things too. Sometimes orange when it should be green.' },
+    noise:   { w: 'warm', t: 'Only the fan. No grinding, just relentless.' },
+    installed: { w: 'cold', t: 'Nothing new installed.' }
+  };
+  ANSWERS.nvram_lost = {
+    trigger: { w: 'hot',  t: 'Every single start-up. It asks which disk to boot from and the volume is at maximum.', s: ['visual'] },
+    when:    { w: 'warm', t: 'A month or so. It has got more insistent.' },
+    installed: { w: 'cold', t: 'I have not installed anything.' },
+    storage: { w: 'cold', t: 'Loads of space.' },
+    history: { w: 'warm', t: 'It is quite an old machine. Does that matter?' },
+    noise:   { w: 'cold', t: 'Quiet as anything.' }
+  };
+  ANSWERS.locked_out = {
+    when:    { w: 'hot',  t: 'I changed it in the summer and wrote it somewhere I have since lost.', s: ['storage_used'] },
+    trigger: { w: 'warm', t: 'It just will not take the password. I have tried every version of it I can think of.' },
+    usage:   { w: 'hot',  t: 'Everything is on there. Twenty years of photographs. Please do not wipe it.', s: ['storage_used'] },
+    history: { w: 'warm', t: 'My daughter set it up originally. She does not remember either.' },
+    noise:   { w: 'cold', t: 'Nothing wrong with the machine itself.' }
+  };
+  ANSWERS.sticky_keys = {
+    drop:    { w: 'hot',  t: 'A splash of lemonade, weeks ago. I mopped it straight up and thought nothing more of it.', s: ['visual'] },
+    when:    { w: 'warm', t: 'Since the lemonade. It has got worse, not better.' },
+    trigger: { w: 'hot',  t: 'Three keys need a proper thump to register. The rest are perfect.', s: ['visual'] },
+    heat:    { w: 'cold', t: 'Normal temperature.' },
+    power:   { w: 'cold', t: 'Charges fine.' }
+  };
+
+  /** When a fault says nothing about a question, the customer still answers. */
+  var DEFAULTS = {
+    when:      'A while ago now. I am honestly not sure exactly.',
+    trigger:   'Nothing I can put my finger on. It just does it.',
+    drop:      'No, never dropped, never wet.',
+    noise:     'No unusual noises, no.',
+    installed: 'Nothing new that I can think of.',
+    heat:      'It gets a bit warm, but nothing alarming.',
+    power:     'Battery and charging are both fine as far as I can tell.',
+    history:   'No, you are the first person to look at it.',
+    storage:   'I have not had any warnings about space.',
+    usage:     null   // filled from the customer's use case
+  };
+
+  function answerFor(faultId, questionId, useCase) {
+    var a = (ANSWERS[faultId] || {})[questionId];
+    if (a) return a;
+    if (questionId === 'usage') {
+      return { w: 'warm', t: 'Mostly ' + useCase.label.toLowerCase() + '. ' + useCase.blurb.split('.')[0] + '.' };
+    }
+    return { w: 'cold', t: DEFAULTS[questionId] };
+  }
+
+  window.TechOpsInterview = {
+    QUESTIONS: QUESTIONS,
+    answerFor: answerFor,
+    /** Instruments the answers heard so far are pointing at. */
+    leads: function (ticket, faultId, useCase) {
+      var out = {};
+      (ticket.asked || []).forEach(function (qid) {
+        var a = answerFor(faultId, qid, useCase);
+        (a.s || []).forEach(function (i) { out[i] = true; });
+      });
+      return Object.keys(out);
+    }
+  };
+})(window);
