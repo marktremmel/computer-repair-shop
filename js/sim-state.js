@@ -113,6 +113,13 @@
       this.emit('change');
     },
 
+    reseed: function (seed, calls) {
+      if (seed !== undefined) this.state.seed = seed;
+      if (calls !== undefined) this.state.rngCalls = calls;
+      this._rng = makeRng(this.state.seed);
+      for (var i = 0; i < (this.state.rngCalls || 0); i++) this._rng();
+    },
+
     // ── money ──────────────────────────────────────────────────────────
     spend: function (ft, why) {
       this.state.cashFt -= ft;

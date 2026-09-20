@@ -422,7 +422,7 @@
      * than building anything — which is how word of mouth actually behaves.
      * Recovery is still quick: five good jobs undo a bad week.
      */
-    var REP_BY_STARS = { 1: -16, 2: -9, 3: -1, 4: 4, 5: 8 };
+    var REP_BY_STARS = { 1: -18, 2: -11, 3: -3, 4: 4, 5: 8 };
     var repDelta = REP_BY_STARS[stars] === undefined ? 0 : REP_BY_STARS[stars];
     if (ticket.warranty) repDelta -= 3;
 

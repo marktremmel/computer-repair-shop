@@ -36,7 +36,9 @@
     micro_tweezers:{ id: 'micro_tweezers', name: '0.2 mm tweezers', icon: '🧿', kind: 'hand',
                      hint: 'Finer than the ESD pair and non-magnetic, for work you can only really see through the loupe. Socket contacts are about the thickness of a hair.' },
     solder_iron:   { id: 'solder_iron',  name: 'Soldering station', icon: '🔥', kind: 'hand',
-                     hint: 'Temperature controlled. Board work means getting heat in and out fast enough to free a joint without lifting the pad underneath it.' }
+                     hint: 'Temperature controlled. Board work means getting heat in and out fast enough to free a joint without lifting the pad underneath it.' },
+    multimeter:    { id: 'multimeter',   name: 'Digital multimeter', icon: '📟', kind: 'hand',
+                     hint: 'Tests continuity and rail voltages. A continuity beep to ground tells you a rail is shorted before you even power it on.' }
   };
 
   /**
@@ -228,6 +230,30 @@
       id: 'clear_portal', label: 'Open the hotspot gateway over plain HTTP', icon: '🚪',
       software: true, labourHours: 0.3, costFt: 0,
       done: 'One deliberate unencrypted request, the login page appeared, terms accepted. Every site loads normally and the certificate warnings are gone — and they now know what the warning was actually telling them.',
+      isFreeFix: true
+    },
+    swap_gpu_cable: {
+      id: 'swap_gpu_cable', label: 'Move HDMI cable to dedicated graphics card port', icon: '🔌',
+      needsOpen: false, onlyMachines: ['tower_pc'], labourHours: 0.2, costFt: 0,
+      done: 'Cable moved down 15 cm from the motherboard iGPU port to the dedicated graphics card port. Dedicated GPU renders display output at full frame rates.',
+      isFreeFix: true
+    },
+    set_keyboard_layout: {
+      id: 'set_keyboard_layout', label: 'Switch keyboard layout back to Hungarian QWERTZ', icon: '⌨️',
+      software: true, labourHours: 0.2, costFt: 0,
+      done: 'Input source switched from English US (QWERTY) back to Hungarian (QWERTZ). Z and Y return to their labeled places, accents and numbers match keycaps, login succeeds.',
+      isFreeFix: true
+    },
+    restore_brightness: {
+      id: 'restore_brightness', label: 'Restore display brightness slider / FN backlight', icon: '☀️',
+      software: true, labourHours: 0.1, costFt: 0,
+      done: 'Brightness level restored from 0% back to 80%. Backlight LED illuminates the panel brightly, full picture visible.',
+      isFreeFix: true
+    },
+    set_audio_device: {
+      id: 'set_audio_device', label: 'Switch audio output device to internal speakers', icon: '🔊',
+      software: true, labourHours: 0.2, costFt: 0,
+      done: 'Default sound output switched from disconnected HDMI audio back to internal stereo speakers, unmuted. Audio playback restored clearly.',
       isFreeFix: true
     }
   };

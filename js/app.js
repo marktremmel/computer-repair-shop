@@ -289,6 +289,10 @@
       document.querySelectorAll('[data-view]').forEach(function (b) {
         b.addEventListener('click', function () { App.go(b.getAttribute('data-view')); });
       });
+      var pChip = document.getElementById('player-chip');
+      if (pChip) pChip.addEventListener('click', function () { window.TechOpsDossier.book('you'); });
+      var btnSave = document.getElementById('btn-save');
+      if (btnSave) btnSave.addEventListener('click', function () { window.TechOpsDossier.book('save'); });
       document.getElementById('btn-badges').addEventListener('click', function () {
         window.TechOpsDossier.book('record');
       });

@@ -126,21 +126,52 @@
   }
 
   /** Everything about you, your shop and the rules, behind one set of tabs. */
-  function book() {
+  function book(initialTab) {
+    if (initialTab) TAB = initialTab;
     var S = Shop.state;
-    var tabs = [['you', 'You &amp; the shop'], ['record', 'Record'], ['guide', 'How it works']];
-    var body = TAB === 'guide' ? '<div class="modal-body">' + guideBody() + '</div>'
+    var tabs = [['you', 'You &amp; the shop'], ['save', 'Save &amp; load'], ['record', 'Record &amp; badges'], ['guide', 'How it works']];
+    var body = TAB === 'guide'  ? '<div class="modal-body">' + guideBody() + '</div>'
+             : TAB === 'save'   ? saveBody()
              : TAB === 'record' ? recordBody()
              : playerCard();
 
-    return (TAB === 'you' ? '' : '<div class="modal-head"><h3>' + (TAB === 'record' ? 'Shop record' : 'How the shop works') + '</h3></div>')
+    var title = TAB === 'record' ? 'Shop record &amp; badges'
+              : TAB === 'save'   ? 'Save &amp; load shift'
+              : TAB === 'guide'  ? 'How the shop works'
+              : 'You &amp; your shop';
+
+    return '<div class="modal-head"><h3>' + title + '</h3></div>'
       + '<div class="book-tabs">' + tabs.map(function (t) {
           return '<button class="book-tab' + (TAB === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>';
         }).join('') + '</div>'
       + body
       + '<div class="modal-foot">'
-      + '<button class="btn" id="dossier-report">Shift report &amp; hand-in code</button>'
+      + '<button class="btn" id="dossier-report">Teacher report &amp; hand-in code</button>'
       + '<button class="btn btn-primary" data-close>Close</button></div>';
+  }
+
+  function saveBody() {
+    return '<div class="modal-body">'
+      + '<div class="card-head">Carry this shift to another computer (Save Code)</div>'
+      + '<div class="note good" style="margin-bottom:12px"><b>Two-way save code.</b> '
+      + 'Restores who you are, your till balance, day, reputation, shop fittings, and job history on another computer or after a browser profile wipe.</div>'
+      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
+      + 'The shop automatically saves itself in this browser. To carry on at home or on another computer, '
+      + 'copy this code and paste it into TechOps over there.</p>'
+      + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
+      + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:11px;resize:vertical"></textarea>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+      + '<button class="btn btn-primary btn-sm" id="d-savecopy">Copy my save code</button>'
+      + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
+      + '</div>'
+      + '<div id="d-savemsg" style="margin-top:8px"></div>'
+
+      + '<div class="card-head" style="margin-top:22px">Handing in to your teacher?</div>'
+      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-bottom:10px">'
+      + 'The hand-in code is a <b>one-way grade report</b> for your teacher. It grades your whole shift '
+      + 'and cannot be used to restore or edit marks. Save codes cannot be submitted as hand-in codes.</p>'
+      + '<button class="btn btn-sm" id="d-goteacher">Open Teacher Report &amp; Hand-in Code</button>'
+      + '</div>';
   }
 
   function recordBody() {
@@ -166,7 +197,7 @@
       + '<div class="card-head" style="margin-top:16px">Badges</div>'
       + '<div class="badge-row">' + badgeList() + '</div>'
 
-      + '<div class="card-head" style="margin-top:18px">Shift code</div>'
+      + '<div class="card-head" style="margin-top:18px">Shift seed</div>'
       + '<p style="font-size:12.3px;color:var(--ink-2)">Any word seeds its own shop, and everyone who types the same word meets the same '
       + 'people and the same faults \u2014 so a class can compare decisions instead of luck.</p>'
       + '<div class="shift-picks">' + (window.TechOpsApp.SHIFT_CODES || []).map(function (sc) {
@@ -179,22 +210,6 @@
       + '<button class="btn btn-danger" id="btn-newshift">Start a new shift</button></div>'
       + '<p style="font-size:12px;color:var(--ink-3);margin-top:6px">A new shift wipes the till, the jobs and the shop fittings. '
       + 'Your face and name are kept.</p>'
-
-      + '<div class="card-head" style="margin-top:18px">Carry this shop to another computer</div>'
-      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
-      + 'The shop saves itself in this browser. To carry on at home, on another machine, or after '
-      + 'the computers get wiped, copy this code and paste it back in there. It is a <b>different</b> code '
-      + 'from the hand-in one \u2014 that one reports a finished shift and cannot restore it.</p>'
-      + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
-      + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:11px;resize:vertical"></textarea>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
-      + '<button class="btn btn-primary btn-sm" id="d-savecopy">Copy my save code</button>'
-      + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
-      + '</div>'
-      + '<div id="d-savemsg" style="margin-top:8px"></div>'
-
-      + '<div class="card-head" style="margin-top:18px">For the teacher</div>'
-      + '<button class="btn" id="d-teacher">Decode a student\u2019s shift code</button>'
       + '</div>';
   }
 
@@ -247,6 +262,8 @@
     });
     var rep = m.el.querySelector('#dossier-report');
     if (rep) rep.addEventListener('click', function () { m.close(); window.TechOpsReport.show(); });
+    var goTeach = m.el.querySelector('#d-goteacher');
+    if (goTeach) goTeach.addEventListener('click', function () { m.close(); window.TechOpsReport.show(); });
 
     function openBuilder() {
       var cur = Shop.state.player || {};

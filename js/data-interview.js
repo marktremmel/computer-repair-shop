@@ -293,6 +293,30 @@
     heat:    { w: 'cold', t: 'Normal temperature.' },
     power:   { w: 'cold', t: 'Charges fine.' }
   };
+  ANSWERS.gpu_cable_wrong_port = {
+    trigger: { w: 'hot',  t: 'I dusted behind the desk on Sunday and plugged the monitor back in. Web browsing is fine, but as soon as I start a 3D game it drops to 3 frames per second and stutters like a slideshow.', s: ['visual', 'bench'] },
+    history: { w: 'warm', t: 'I unplugged and moved the PC to clean behind the desk last weekend.' },
+    noise:   { w: 'cold', t: 'Fans spin quietly, no clicking or grinding.' },
+    heat:    { w: 'cold', t: 'Stays cool, the graphics card fans do not even turn on.' }
+  };
+  ANSWERS.keyboard_layout_swap = {
+    trigger: { w: 'hot',  t: 'My password fails every time at the login screen, even though I know it by heart! It starts with "Zebra" and ends with "0".', s: ['visual', 'activity'] },
+    when:    { w: 'warm', t: 'Started yesterday afternoon right after my classmate borrowed it to write an English essay.' },
+    drop:    { w: 'cold', t: 'Never dropped or spilled on. Keys physically press down smoothly.' },
+    noise:   { w: 'cold', t: 'Silent and smooth.' }
+  };
+  ANSWERS.display_brightness_zero = {
+    trigger: { w: 'hot',  t: 'The screen looks completely dead and pitch black, but when I shine my phone flashlight right up against the glass, I can faintly see my desktop wallpaper and cursor moving!', s: ['visual', 'power'] },
+    when:    { w: 'warm', t: 'Happened while I was adjusting volume and screen settings in the dark during a lecture.' },
+    power:   { w: 'warm', t: 'Power LED is solid on and the fans are running normally.' },
+    drop:    { w: 'cold', t: 'Never dropped, glass is completely uncracked.' }
+  };
+  ANSWERS.audio_device_swapped = {
+    trigger: { w: 'hot',  t: 'All sound vanished completely. YouTube videos play, games run, but the built-in speakers produce zero sound, not even a click.', s: ['activity', 'visual'] },
+    when:    { w: 'warm', t: 'Right after I unplugged my USB headset and external gaming monitor on Sunday.' },
+    noise:   { w: 'cold', t: 'Completely quiet.' },
+    drop:    { w: 'cold', t: 'No drops, no water.' }
+  };
 
   /** When a fault says nothing about a question, the customer still answers. */
   var DEFAULTS = {

@@ -8,11 +8,11 @@
 <title>TechOps Budapest · Repair Shop Simulator</title>
 <meta name="description" content="Run an IT repair shop. Diagnose hidden faults with real instruments, choose between cheap, used, retail and genuine parts, and answer to the customer who has to live with your decision.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>">
-<link rel="stylesheet" href="css/shop.css?v=8f7936be">
-<link rel="stylesheet" href="css/bench.css?v=8f7936be">
+<link rel="stylesheet" href="css/shop.css?v=0668bd42">
+<link rel="stylesheet" href="css/bench.css?v=0668bd42">
 </head>
 <body>
-<script>window.TECHOPS_BUILD="8f7936be";</script>
+<script>window.TECHOPS_BUILD="0668bd42";</script>
 
 <div id="title-screen" class="title"></div>
 
@@ -38,9 +38,10 @@
       <span class="rep-meter"><span class="rep-fill" id="rep-fill" style="width:50%"></span></span>
       <b id="hud-rep-n">50</b>
     </div>
-    <div class="hud-stat" id="player-chip" style="display:none;gap:7px"></div>
-    <button class="icon-btn" id="btn-report" title="Shift report &amp; hand-in code"><i data-ic="report"></i></button>
-    <button class="icon-btn" id="btn-badges" title="Shop record and badges"><i data-ic="medal"></i></button>
+    <div class="hud-stat" id="player-chip" style="display:none;gap:7px;cursor:pointer" title="You &amp; your shop — profile, appearance and sign"></div>
+    <button class="icon-btn" id="btn-save" title="Save &amp; load shift (carry progress to another computer)"><i data-ic="save"></i></button>
+    <button class="icon-btn" id="btn-report" title="Teacher report &amp; hand-in code"><i data-ic="report"></i></button>
+    <button class="icon-btn" id="btn-badges" title="Shop record, history &amp; badges"><i data-ic="medal"></i></button>
     <button class="icon-btn" id="btn-breather" title="Take five"><i data-ic="coffee"></i></button>
     <button class="icon-btn" id="btn-hints" title="Hints"><i data-ic="search"></i></button>
     <button class="icon-btn" id="btn-help" title="How the shop works"><i data-ic="question"></i></button>
@@ -81,54 +82,54 @@
 
 <div id="toasts"></div>
 
-<script src="shared/js/sek-audio.js?v=8f7936be"></script>
-<script src="shared/js/sek-code.js?v=8f7936be"></script>
+<script src="shared/js/sek-audio.js?v=0668bd42"></script>
+<script src="shared/js/sek-code.js?v=0668bd42"></script>
 
-<script src="js/a11y.js?v=8f7936be"></script>
-<script src="js/screw-heads.js?v=8f7936be"></script>
-<script src="js/data-machines.js?v=8f7936be"></script>
-<script src="js/data-parts.js?v=8f7936be"></script>
-<script src="js/data-faults.js?v=8f7936be"></script>
-<script src="js/data-customers.js?v=8f7936be"></script>
-<script src="js/data-upgrades.js?v=8f7936be"></script>
-<script src="js/data-chiproles.js?v=8f7936be"></script>
-<script src="js/data-people.js?v=8f7936be"></script>
-<script src="js/data-interview.js?v=8f7936be"></script>
+<script src="js/a11y.js?v=0668bd42"></script>
+<script src="js/screw-heads.js?v=0668bd42"></script>
+<script src="js/data-machines.js?v=0668bd42"></script>
+<script src="js/data-parts.js?v=0668bd42"></script>
+<script src="js/data-faults.js?v=0668bd42"></script>
+<script src="js/data-customers.js?v=0668bd42"></script>
+<script src="js/data-upgrades.js?v=0668bd42"></script>
+<script src="js/data-chiproles.js?v=0668bd42"></script>
+<script src="js/data-people.js?v=0668bd42"></script>
+<script src="js/data-interview.js?v=0668bd42"></script>
 
-<script src="js/sim-state.js?v=8f7936be"></script>
-<script src="js/sim-ticket.js?v=8f7936be"></script>
-<script src="js/sim-score.js?v=8f7936be"></script>
-<script src="js/sim-interlude.js?v=8f7936be"></script>
-<script src="js/sim-save.js?v=8f7936be"></script>
+<script src="js/sim-state.js?v=0668bd42"></script>
+<script src="js/sim-ticket.js?v=0668bd42"></script>
+<script src="js/sim-score.js?v=0668bd42"></script>
+<script src="js/sim-interlude.js?v=0668bd42"></script>
+<script src="js/sim-save.js?v=0668bd42"></script>
 
-<script src="js/pixel-manifest.js?v=8f7936be"></script>
-<script src="js/pixel-portrait.js?v=8f7936be"></script>
-<script src="js/ui-shell.js?v=8f7936be"></script>
-<script src="js/ui-counter.js?v=8f7936be"></script>
-<script src="js/ui-charbuild.js?v=8f7936be"></script>
-<script src="js/ui-character.js?v=8f7936be"></script>
-<script src="js/ambience.js?v=8f7936be"></script>
-<script src="js/icons.js?v=8f7936be"></script>
-<script src="js/voice.js?v=8f7936be"></script>
-<script src="js/data-boards.js?v=8f7936be"></script>
-<script src="js/board.js?v=8f7936be"></script>
-<script src="js/precision.js?v=8f7936be"></script>
-<script src="js/ui-intake.js?v=8f7936be"></script>
-<script src="js/ui-bench.js?v=8f7936be"></script>
-<script src="js/ui-macos.js?v=8f7936be"></script>
-<script src="js/ui-market.js?v=8f7936be"></script>
-<script src="js/ui-handover.js?v=8f7936be"></script>
-<script src="js/ui-report.js?v=8f7936be"></script>
-<script src="js/ui-dossier.js?v=8f7936be"></script>
-<script src="js/ui-minigames.js?v=8f7936be"></script>
-<script src="js/ui-shopfit.js?v=8f7936be"></script>
-<script src="js/ui-breather.js?v=8f7936be"></script>
-<script src="js/chipid-data.js?v=8f7936be"></script>
-<script src="js/ui-chipid.js?v=8f7936be"></script>
-<script src="js/shop-identity.js?v=8f7936be"></script>
-<script src="js/ui-title.js?v=8f7936be"></script>
-<script src="js/ui-tour.js?v=8f7936be"></script>
-<script src="js/app.js?v=8f7936be"></script>
+<script src="js/pixel-manifest.js?v=0668bd42"></script>
+<script src="js/pixel-portrait.js?v=0668bd42"></script>
+<script src="js/ui-shell.js?v=0668bd42"></script>
+<script src="js/ui-counter.js?v=0668bd42"></script>
+<script src="js/ui-charbuild.js?v=0668bd42"></script>
+<script src="js/ui-character.js?v=0668bd42"></script>
+<script src="js/ambience.js?v=0668bd42"></script>
+<script src="js/icons.js?v=0668bd42"></script>
+<script src="js/voice.js?v=0668bd42"></script>
+<script src="js/data-boards.js?v=0668bd42"></script>
+<script src="js/board.js?v=0668bd42"></script>
+<script src="js/precision.js?v=0668bd42"></script>
+<script src="js/ui-intake.js?v=0668bd42"></script>
+<script src="js/ui-bench.js?v=0668bd42"></script>
+<script src="js/ui-macos.js?v=0668bd42"></script>
+<script src="js/ui-market.js?v=0668bd42"></script>
+<script src="js/ui-handover.js?v=0668bd42"></script>
+<script src="js/ui-report.js?v=0668bd42"></script>
+<script src="js/ui-dossier.js?v=0668bd42"></script>
+<script src="js/ui-minigames.js?v=0668bd42"></script>
+<script src="js/ui-shopfit.js?v=0668bd42"></script>
+<script src="js/ui-breather.js?v=0668bd42"></script>
+<script src="js/chipid-data.js?v=0668bd42"></script>
+<script src="js/ui-chipid.js?v=0668bd42"></script>
+<script src="js/shop-identity.js?v=0668bd42"></script>
+<script src="js/ui-title.js?v=0668bd42"></script>
+<script src="js/ui-tour.js?v=0668bd42"></script>
+<script src="js/app.js?v=0668bd42"></script>
 
 <footer class="credits">
   <span>TechOps Budapest &middot; SEK Budapest</span>

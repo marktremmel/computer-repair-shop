@@ -711,6 +711,103 @@
         battery: 'A new battery in a device that cannot charge it. It lasts exactly as long as the old one did, because the old one was never the problem — and they have paid for a battery and still cannot plug it in.'
       },
       explain: 'A battery that runs out and a port that will not take charge look identical from the outside, and the customer will almost always name the battery. The two readings that separate them are sitting right next to each other: battery health is fine, and the port will not negotiate more than the fallback half-amp. Pull on a plugged-in cable hard enough and you splay the port shell — after that it makes contact at an angle or not at all. On most phones and handhelds the port is on its own small flex board precisely because it is the part that wears out, so this is a replaceable component and not a new device.'
+    },
+
+    gpu_cable_wrong_port: {
+      id: 'gpu_cable_wrong_port',
+      title: 'Monitor plugged into motherboard HDMI',
+      appliesTo: ['tower_pc'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'I cleaned behind my desk on Sunday and plugged everything back in. Now all my games run at 4 FPS like a slideshow, but YouTube and email are fine!',
+        'I think my graphics card burned out when I vacuumed.'
+      ],
+      customerTheory: 'They are convinced the dedicated graphics card is dead and are bracing to buy a new GPU.',
+      readings: {
+        visual: { note: 'Looking at the back of the case settles it immediately: the HDMI cable is plugged into the top motherboard port, while the dedicated NVIDIA RTX graphics card at the bottom sits completely empty.' },
+        thermal: { idleC: 36, loadC: 62, fanRpm: 1200, note: 'CPU runs normally; GPU fans are idling at zero RPM because it is not being asked to render anything.' },
+        power: { watts: 85, negotiated: 'ATX 12V', seats: true, note: 'Tower draws barely 85 W under 3D games — the dedicated card is never engaging.' },
+        bench: { seqMBps: 3400, randIops: 180000, latencyMs: 0.05, note: 'Storage is fast and healthy.' }
+      },
+      fixedBy: { kind: 'action', id: 'swap_gpu_cable' },
+      wrongFix: {
+        ram: 'More RAM for a machine that is running games on the CPU graphics chip.',
+        thermal: 'New paste on a graphics card that was never plugged in.'
+      },
+      explain: 'When a PC has a dedicated graphics card, the monitor cable must plug directly into the GPU ports at the bottom of the case, not the motherboard video output at the top. Plugging into the motherboard forces games to run on weak integrated graphics. Moving the cable takes ten seconds and costs zero forints.'
+    },
+
+    keyboard_layout_swap: {
+      id: 'keyboard_layout_swap',
+      title: 'Keyboard layout switched in software',
+      appliesTo: ['thinkpad_t480', 'inspiron15', 'mba_m1'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'My password fails every time, but I know it is right! I tried twenty times and it locked me out. The keyboard must be broken.',
+        'It happened right after my little brother was playing around with the buttons.'
+      ],
+      customerTheory: 'They think the keyboard controller has died or keys are sending ghost keystrokes.',
+      readings: {
+        activity: { memPressurePct: 29, swapGB: 0.1, topProc: 'SystemSettings', topProcMemGB: 0.8, note: 'Settings shows current active input source is US English (QWERTY), while the physical keyboard is Hungarian (QWERTZ).' },
+        visual: { note: 'The physical keyboard is in perfect condition. Every keycap is clean, switches rebound crisply, zero liquid residue.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2400, note: 'Drive fine.' },
+        power: { watts: 28, negotiated: 'USB-PD 9V/3A', seats: true, note: 'Normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'set_keyboard_layout' },
+      wrongFix: {
+        flex: 'A new keyboard assembly that will type with the exact same swapped letters because the layout is in software.'
+      },
+      explain: 'On Hungarian keyboards, Z and Y are inverted compared to English QWERTY, and number keys carry accented characters (ö, ü, ó). Accidentally pressing Alt+Shift or Windows+Space switches the software layout, causing passwords to fail silently. Toggling it back in Settings solves it with zero parts.'
+    },
+
+    display_brightness_zero: {
+      id: 'display_brightness_zero',
+      title: 'Backlight brightness dimmed to zero',
+      appliesTo: ['inspiron15', 'thinkpad_t480'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'The screen went completely pitch black yesterday. The green power light is on and I hear the fan, but nothing appears on screen.',
+        'The shop near the station told me the LCD screen is dead and quoted 55,000 Ft.'
+      ],
+      customerTheory: 'They expect to buy an expensive replacement display panel.',
+      readings: {
+        visual: { note: 'Shining a phone flashlight at an angle against the black glass reveals desktop icons, folders and the cursor moving underneath! The LCD matrix is generating images, but the LED backlight brightness is set to 0%.' },
+        power: { watts: 22, negotiated: 'USB-PD 20V/1.1A', seats: true, note: 'Machine is awake, booted and drawing power normally.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3100, note: 'Drive healthy.' },
+        thermal: { idleC: 38, loadC: 65, fanRpm: 1800, note: 'Temperatures normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'restore_brightness' },
+      wrongFix: {
+        screen: 'Replacing a perfectly working display panel because the brightness shortcut key was pressed.'
+      },
+      explain: 'Modern LED displays can dim down to complete darkness. Shining a bright light at the panel shows whether the LCD crystals are still displaying content. Pressing the FN brightness key or moving the brightness slider in software illuminates the screen immediately without spending fifty thousand forint on a screen.'
+    },
+
+    audio_device_swapped: {
+      id: 'audio_device_swapped',
+      title: 'Sound muted or routed to phantom device',
+      appliesTo: ['tower_pc', 'mbp13_2012', 'inspiron15'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'No sound at all. Games, YouTube and Discord are totally silent. Even the startup chime stopped.',
+        'I unplugged my gaming headset on Sunday and since then the speakers have never worked.'
+      ],
+      customerTheory: 'They think the audio DAC or amplifier chip on the motherboard is fried.',
+      readings: {
+        activity: { memPressurePct: 32, swapGB: 0.2, topProc: 'coreaudiod', topProcMemGB: 0.5, topProcCpuPct: 1, note: 'Sound settings show default output device is set to disconnected HDMI Digital Audio (Muted), instead of Internal Speakers.' },
+        visual: { note: 'Speaker cones are intact, audio jack has zero debris or bent contacts.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4400, note: 'Storage fine.' },
+        power: { watts: 45, negotiated: 'ATX/DC', seats: true, note: 'Power delivery normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'set_audio_device' },
+      wrongFix: {
+        caps: 'Soldering new audio capacitors on a motherboard whose audio was simply muted in software.'
+      },
+      explain: 'Operating systems switch default audio output when HDMI monitors or headsets are plugged in, and frequently fail to switch back when unplugged. Checking Sound Settings and toggling default output back to Speakers restores sound in ten seconds.'
     }
   };
 

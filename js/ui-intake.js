@@ -67,7 +67,11 @@
       bent_socket_pins: ['visual', 'power'], blown_caps: ['visual', 'power'],
       kernel_task_panic: ['activity', 'thermal'], browser_push_spam: ['activity', 'storage_used'],
       captive_portal_loop: ['activity', 'visual'], console_full: ['storage_used', 'bench'],
-      charge_port_dead: ['power', 'visual', 'battery']
+      charge_port_dead: ['power', 'visual', 'battery'],
+      gpu_cable_wrong_port: ['visual', 'bench'],
+      keyboard_layout_swap: ['activity', 'visual'],
+      display_brightness_zero: ['visual', 'power'],
+      audio_device_swapped: ['activity', 'visual']
     };
     var need = REVEALED_BY[t.theory] || [];
     var have = need.filter(function (i) { return t.testsRun.indexOf(i) !== -1; });
