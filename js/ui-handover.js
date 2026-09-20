@@ -36,8 +36,8 @@
       if (window.sekAudio) window.sekAudio.playErrorBuzz();
       UI.modal('<div class="modal-head"><h3>“I cannot pay that.”</h3></div><div class="modal-body">'
         + '<p>' + esc(J.customer(t).name) + ' has ' + fmt(t.budgetFt) + '. You are asking ' + fmt(p) + '.</p>'
-        + '<div class="note warn">They are not haggling — they genuinely do not have it. '
-        + 'You can drop the price and take the hit, or you can learn the real lesson: the budget was on the job card before you spent anything.</div>'
+        + '<div class="note warn">' + esc(window.TechOpsScore.payRefusal(t, p, res.overall))
+        + ' You can drop the price and take the hit, or you can look again at why the job is worth less than you are asking.</div>'
         + '</div><div class="modal-foot"><button class="btn btn-primary" data-close>Re-price it</button></div>');
       return;
     }

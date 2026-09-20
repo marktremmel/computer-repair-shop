@@ -716,7 +716,10 @@
 
   /** Healthy instrument readings, so that a clean test looks like real data rather than "nothing found". */
   function baseline(machine) {
-    var hasHdd = false;
+    // You can only hear a drive that has moving parts in it. On a machine
+    // whose storage is soldered flash there is genuinely nothing to listen
+    // to, and saying "quiet, no clicking" implied there might have been.
+    var couldSpin = !machine.storageSoldered && (machine.storageBuses || []).indexOf('sata3') !== -1;
     return {
       smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4200, note: 'No reallocated or pending sectors. This drive is fine.' },
       bench: { seqMBps: 520, randIops: 74000, latencyMs: 0.1, note: 'Normal for the bus in this machine.' },
@@ -729,7 +732,9 @@
       storage_used: { usedPct: 54, freeGB: 210, biggest: 'Photos Library — 61 GB', note: 'Plenty of free space.' },
       activity: { memPressurePct: 36, swapGB: 0.3, topProc: 'Safari', topProcMemGB: 1.6, topProcCpuPct: 12, note: 'Memory pressure green, nothing running away.' },
       visual: { note: 'Clean inside. No swelling, no burn marks, no obvious damage.' },
-      listen: { note: 'Quiet. No clicking, no grinding.' }
+      listen: couldSpin
+        ? { note: 'Quiet. No clicking, no grinding — and this one has a 2.5" bay, so there could have been.' }
+        : { note: 'Nothing to hear. The storage in this machine is flash soldered to the board — no platters, no head, no bearing. A drive only makes a noise if something in it is turning.' }
     };
   }
 

@@ -62,6 +62,7 @@
       })[App.current].render();
       App.paintIcons();
       App.paintFaces();
+      if (window.TechOpsIdentity) window.TechOpsIdentity.apply();
       App.refreshPlayerChip();
       UI.refresh();
     },
@@ -110,7 +111,7 @@
         body: !t.asked.length
           ? 'You have not asked them anything. Go to <b>The sit-down</b> \u2014 a question costs 0.1 h and an instrument costs up to 1.5 h.'
           : !t.testsRun.length
-            ? 'You have their story but no measurements. Run the instruments the answers pointed at, on the bench or in the macOS lab.'
+            ? 'You have their story but no measurements. Run the instruments the answers pointed at, on the bench or in the software lab.'
             : (!t.installed.length && !t.actionsDone.length)
               ? 'You have readings. Decide what they mean, then either fit a part from the market or do the work on the bench \u2014 remember some faults need no parts at all.'
               : 'Re-run the test that found the fault to confirm the repair, then go to <b>Handover</b>.'
@@ -187,7 +188,7 @@
         + '<div class="note" style="margin:14px 0"><b>The loop</b><br>'
         + '<b>1 · Counter</b> — pick a job. The budget and the deadline are part of the puzzle.<br>'
         + '<b>2 · The sit-down</b> — ask them questions before you open anything. A question costs 0.1 h, a memory test costs 1.5 h.<br>'
-        + '<b>3 · Bench &amp; macOS lab</b> — measure only what the answers pointed at. Testing everything costs the customer a day.<br>'
+        + '<b>3 · Bench &amp; software lab</b> — measure only what the answers pointed at. Testing everything costs the customer a day.<br>'
         + '<b>4 · Market</b> — buy only what your measurements justify. Cheap, used, retail and genuine are four real answers.<br>'
         + '<b>5 · Bench</b> — right driver, battery disconnected first, part into the bay.<br>'
         + '<b>6 · Handover</b> — set your price and find out what they thought.</div>'
@@ -213,7 +214,10 @@
       var sig = p.name + '|' + p.avatar;
       if (host.dataset.sig !== sig) {
         host.dataset.sig = sig;
-        host.innerHTML = '<div class="pface" data-seed="' + esc(p.avatar) + '" data-size="22"></div>'
+        // Same fallback the dossier and the title use, so a player saved
+        // before they picked a face still draws somebody rather than the
+        // string "undefined".
+        host.innerHTML = '<div class="pface" data-seed="' + esc(p.avatar || 'ava-1') + '" data-size="22"></div>'
           + '<span>' + esc(p.name) + '</span>';
         App.paintFaces(host);
       }
@@ -229,9 +233,11 @@
      * instance — so nobody has to reload the page to see their own character.
      */
     refreshAll: function () {
+      // Mark them for repainting but leave the old portrait up. `mount()`
+      // swaps its canvas in only once the new one has finished drawing, so
+      // blanking here made every face flash empty and come back.
       document.querySelectorAll('.pface').forEach(function (n) {
         delete n.dataset.painted;
-        n.innerHTML = '';
       });
       App.refreshPlayerChip();
       App.renderCurrent();
@@ -289,8 +295,30 @@
       document.getElementById('btn-report').addEventListener('click', function () { window.TechOpsReport.show(); });
 
       Shop.on('change', App.refreshPlayerChip);
+      document.getElementById('btn-access').addEventListener('click', function () {
+        var m = UI.modal('<div class="modal-head"><h3>Making it easier to read</h3>'
+          + '<div style="font-size:12.5px;color:var(--ink-3)">Kept in this browser, so it stays set on this machine.</div></div>'
+          + '<div class="modal-body">' + window.TechOpsA11y.panel() + '</div>'
+          + '<div class="modal-foot"><button class="btn btn-primary" data-close>Done</button></div>');
+        // Re-render so the switches show their new state, then re-bind.
+        var repaint = function () {
+          m.el.querySelector('.modal-body').innerHTML = window.TechOpsA11y.panel();
+          window.TechOpsA11y.bind(m.el, repaint);
+        };
+        window.TechOpsA11y.bind(m.el, repaint);
+      });
+
       document.getElementById('btn-help').addEventListener('click', function () {
         window.TechOpsDossier.book('guide');
+      });
+      // Shift-click the help button for the walk round again. Also offered as
+      // a button inside the guide itself.
+      document.getElementById('btn-help').addEventListener('click', function (e) {
+        if (e.shiftKey && window.TechOpsTour) {
+          var veil = document.querySelector('.modal-veil');
+          if (veil) veil.remove();
+          window.TechOpsTour.start(function () {});
+        }
       });
       var br = document.getElementById('btn-breather');
       if (br) br.addEventListener('click', function () { window.TechOpsBreather.show(); });
@@ -311,7 +339,10 @@
         var b = BADGES[id];
         if (b) UI.toast(b.icon + ' ' + b.name, b.desc, 'good');
       });
-      Shop.on('change', function () { UI.refresh(); App.paintFaces(); });
+      Shop.on('change', function () {
+        UI.refresh(); App.paintFaces();
+        if (window.TechOpsIdentity) window.TechOpsIdentity.apply();
+      });
 
       App.paintIcons();
       App.paintFaces();
@@ -319,13 +350,35 @@
       UI.refresh();
       App.go(Shop.state.ticket ? (Shop.state.ticket.asked && Shop.state.ticket.asked.length ? 'bench' : 'intake') : 'counter');
 
-      if (!Shop.state.player) {
-        setTimeout(function () {
-          window.TechOpsCharacter.show(function () {
-            App.refreshAll();
+      /*
+       * The shop from the outside first, every time.
+       *
+       * Walking a class straight onto a workbench is a lot at once, and a
+       * character you built deserves somewhere to be looked at. The title
+       * screen is also where the access settings live, so somebody who needs
+       * larger text can find it before they need to read anything.
+       */
+      var start = function () {
+        var afterSetup = function () {
+          App.refreshAll();
+          // Offered once, skippable, and never in the way of somebody who
+          // already knows where everything is.
+          if (window.TechOpsTour && !window.TechOpsTour.seen()) {
+            window.TechOpsTour.offer(function () { App.briefing(); });
+          } else {
             App.briefing();
-          });
-        }, 260);
+          }
+        };
+        if (!Shop.state.player) {
+          window.TechOpsCharacter.show(afterSetup);
+        } else if (window.TechOpsTour && !window.TechOpsTour.seen()) {
+          window.TechOpsTour.offer(function () {});
+        }
+      };
+      if (window.TechOpsTitle) {
+        setTimeout(function () { window.TechOpsTitle.show(start); }, 120);
+      } else {
+        setTimeout(start, 260);
       }
     }
   };

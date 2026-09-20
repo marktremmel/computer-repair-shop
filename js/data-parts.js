@@ -173,6 +173,62 @@
     },
 
     // ───────────────────────────── BATTERY ─────────────────────────────
+    /*
+     * The middle of the battery market, which did not exist here before.
+     *
+     * With only a no-name cell and the genuine service part, every battery job
+     * had the same answer: buy genuine. A reputable third-party cell with a
+     * warranty and honest health reporting, but a little less capacity for a
+     * lot less money, turns it back into a question \u2014 and the question is
+     * the one the shop is for. For somebody whose laptop never leaves the
+     * kitchen table it is plainly the right call; for a student off the mains
+     * all day it is the same complaint again by March.
+     */
+    {
+      id: 'batt_a1322_green', cat: 'battery', vendor: 'ipon',
+      name: 'GreenCell A1322 (branded, 92%)',
+      priceFt: 13500, deliveryDays: 3, warrantyMonths: 12, risk: 0.08,
+      fits: ['mbp13_2012'],
+      spec: { model: 'A1322', reportsHealth: true, capacityPct: 92 },
+      pitch: 'Named brand, two-year cells, reports health properly, half the price of the genuine part.',
+      catch: '92% of the original capacity. On a machine that lives on a desk nobody will ever meet that number.'
+    },
+    {
+      id: 'batt_a2389_green', cat: 'battery', vendor: 'ipon',
+      name: 'GreenCell MacBook Air M1 (branded, 93%)',
+      priceFt: 19500, deliveryDays: 3, warrantyMonths: 12, risk: 0.08,
+      fits: ['mba_m1'],
+      spec: { model: 'A2389', reportsHealth: true, capacityPct: 93 },
+      pitch: 'Warranty, real health reporting, and it is in stock in Budapest.',
+      catch: 'Seven per cent down on the original \u2014 roughly forty minutes off a day away from a socket.'
+    },
+    {
+      id: 'batt_t480_green', cat: 'battery', vendor: 'ipon',
+      name: 'GreenCell ThinkPad T480 pack (94%)',
+      priceFt: 11000, deliveryDays: 2, warrantyMonths: 12, risk: 0.07,
+      fits: ['thinkpad_t480'],
+      spec: { model: '01AV489', reportsHealth: true, capacityPct: 94 },
+      pitch: 'Clips in from the outside in four seconds, warranty, honest health figures.',
+      catch: 'Slightly down on the original, and the internal cell is still whatever age it was.'
+    },
+    {
+      id: 'batt_a2471_green', cat: 'battery', vendor: 'ipon',
+      name: 'GreenCell iPhone 12 cell (branded, 94%)',
+      priceFt: 11500, deliveryDays: 3, warrantyMonths: 12, risk: 0.10,
+      fits: ['iphone12'],
+      spec: { model: 'A2471', reportsHealth: false, capacityPct: 94 },
+      pitch: 'Proper cells and a warranty for a third of what Apple charge.',
+      catch: 'Apple pair the battery to the phone, so Battery Health still reads "Unknown Part" however good the cell is. That is Apple\'s doing rather than the cell\'s \u2014 and the customer still has to look at it every day.'
+    },
+    {
+      id: 'batt_deck_green', cat: 'battery', vendor: 'ipon',
+      name: 'GreenCell Steam Deck pack (91%)',
+      priceFt: 15500, deliveryDays: 4, warrantyMonths: 12, risk: 0.09,
+      fits: ['steamdeck'],
+      spec: { model: 'deck-40', reportsHealth: true, capacityPct: 91 },
+      pitch: 'Warranty and real capacity reporting, well under the official pack.',
+      catch: 'Nine per cent down, and a handheld is the one machine that is never plugged in.'
+    },
     {
       id: 'batt_a1322_sz', cat: 'battery', vendor: 'sz_direct',
       name: 'A1322 battery (compatible, no cell data)',

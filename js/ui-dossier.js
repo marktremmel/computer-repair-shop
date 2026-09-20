@@ -61,7 +61,7 @@
     return '<div class="note" style="margin-bottom:12px"><b>The loop</b><br>'
       + '<b>1 &middot; Counter</b> — pick a job. The budget and the deadline are part of the puzzle.<br>'
       + '<b>2 &middot; The sit-down</b> — ask before you open anything. A question costs 0.1 h; a memory test costs 1.5 h.<br>'
-      + '<b>3 &middot; Bench &amp; macOS lab</b> — measure only what the answers pointed at. Testing everything costs the customer a day.<br>'
+      + '<b>3 &middot; Bench &amp; software lab</b> — measure only what the answers pointed at. Testing everything costs the customer a day.<br>'
       + '<b>4 &middot; Parts market</b> — buy what the measurements justify, and check with the customer first.<br>'
       + '<b>5 &middot; Bench</b> — right driver, battery off first, part into the board.<br>'
       + '<b>6 &middot; Handover</b> — set your price and find out what they thought.</div>'
@@ -180,6 +180,19 @@
       + '<p style="font-size:12px;color:var(--ink-3);margin-top:6px">A new shift wipes the till, the jobs and the shop fittings. '
       + 'Your face and name are kept.</p>'
 
+      + '<div class="card-head" style="margin-top:18px">Carry this shop to another computer</div>'
+      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
+      + 'The shop saves itself in this browser. To carry on at home, on another machine, or after '
+      + 'the computers get wiped, copy this code and paste it back in there. It is a <b>different</b> code '
+      + 'from the hand-in one \u2014 that one reports a finished shift and cannot restore it.</p>'
+      + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
+      + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:11px;resize:vertical"></textarea>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+      + '<button class="btn btn-primary btn-sm" id="d-savecopy">Copy my save code</button>'
+      + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
+      + '</div>'
+      + '<div id="d-savemsg" style="margin-top:8px"></div>'
+
       + '<div class="card-head" style="margin-top:18px">For the teacher</div>'
       + '<button class="btn" id="d-teacher">Decode a student\u2019s shift code</button>'
       + '</div>';
@@ -237,9 +250,10 @@
 
     function openBuilder() {
       var cur = Shop.state.player || {};
-      var existing = cur.avatar ? window.TechOpsPixel.custom(cur.avatar) : null;
+      // Your actual current face, editable — not a fresh stranger.
+      var existing = window.TechOpsPixel.editable(cur.avatar);
       m.close();
-      window.TechOpsCharBuild.open(existing || null, function (built) {
+      window.TechOpsCharBuild.open(existing, function (built) {
         var key = 'custom-' + Math.random().toString(36).slice(2, 8);
         window.TechOpsPixel.remember(key, built);
         Shop.state.customFaces = Shop.state.customFaces || {};
@@ -251,6 +265,44 @@
         UI.toast('That is you', 'Your face is updated everywhere in the shop.', 'good');
         TAB = 'you';
         openBook();
+      });
+    }
+
+    // ── carry the shop elsewhere ──
+    var codeBox = m.el.querySelector('#d-savecode');
+    if (codeBox && window.TechOpsSave) {
+      var code = window.TechOpsSave.make();
+      codeBox.value = code || 'Could not build a save code on this machine.';
+      var copy = m.el.querySelector('#d-savecopy');
+      if (copy) copy.addEventListener('click', function () {
+        codeBox.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        if (!ok && navigator.clipboard) { navigator.clipboard.writeText(codeBox.value); ok = true; }
+        UI.toast(ok ? 'Copied' : 'Select and copy it',
+          ok ? 'Paste it into TechOps on the other machine and press continue.'
+             : 'The code is selected in the box — copy it with Ctrl+C.', ok ? 'good' : '');
+      });
+      var loadBtn = m.el.querySelector('#d-saveload');
+      if (loadBtn) loadBtn.addEventListener('click', function () {
+        var msg = m.el.querySelector('#d-savemsg');
+        msg.innerHTML = '<textarea id="d-paste" rows="3" placeholder="Paste the save code here" '
+          + 'style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;'
+          + 'padding:9px 12px;color:var(--ink);font-family:var(--mono);font-size:11px"></textarea>'
+          + '<button class="btn btn-primary btn-sm" id="d-pastego" style="margin-top:7px">Continue this shop</button>';
+        m.el.querySelector('#d-pastego').addEventListener('click', function () {
+          var res = window.TechOpsSave.load(m.el.querySelector('#d-paste').value);
+          if (!res.ok) {
+            msg.innerHTML = '<div class="note danger">' + esc(res.error) + '</div>';
+            return;
+          }
+          m.close();
+          window.TechOpsApp.refreshAll();
+          window.TechOpsApp.go('counter');
+          UI.toast('Welcome back, ' + res.name,
+            'Picking up on day ' + res.day + '. Any job that was half open on the other machine is not carried over — '
+            + 'start the next one fresh.', 'good');
+        });
       });
     }
 

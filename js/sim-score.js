@@ -152,9 +152,38 @@
         }
       }
 
-      if (p.cat === 'battery' && p.spec.reportsHealth === false) {
-        fitScore -= 18;
-        findings.push({ axis: 'fit', good: false, text: 'Battery Health now reads "Unknown Part" and will for the rest of the machine\'s life. Customers read that screen.' });
+      if (p.cat === 'battery') {
+        /*
+         * A battery is judged on how much of the day it has to survive.
+         *
+         * Every cell here is rated somewhere between 88% and 100% of the
+         * original capacity. That gap is invisible to somebody whose laptop
+         * never leaves the kitchen table and costs a student an afternoon in
+         * the library, which is exactly the kind of judgement this shop is
+         * for. Before this, every battery scored the same for everybody.
+         */
+        var mob = uc.mobility === undefined ? 0.5 : uc.mobility;
+        var shortfall = Math.max(0, 100 - (p.spec.capacityPct === undefined ? 100 : p.spec.capacityPct));
+        if (shortfall > 0) {
+          fitScore -= shortfall * (0.3 + mob * 2.1);
+          findings.push({ axis: 'fit', good: false, text: 'This cell is rated '
+            + (100 - shortfall) + '% of the original capacity. '
+            + (mob >= 0.7
+                ? 'They are off the mains most of the day, so that missing ' + shortfall + '% is an hour they will notice every single day.'
+                : mob >= 0.4
+                  ? 'They are off the mains often enough that the missing ' + shortfall + '% will come up.'
+                  : 'This machine spends its life plugged in, so ' + shortfall + '% down is a number nobody will ever meet.') });
+          if (mob >= 0.7) {
+            lessons.push('Runtime is the only thing a battery is for, and a replacement rated at 88% starts where a worn-out one ends. '
+              + 'Ask how far the machine travels before you pick the cell — for somebody at a desk it is a bargain, and for somebody on a train it is the same complaint again in six months.');
+          }
+        } else if (mob >= 0.7) {
+          findings.push({ axis: 'fit', good: true, text: 'Full-capacity cell for somebody who actually lives off the battery. That is the right place to spend the money.' });
+        }
+        if (p.spec.reportsHealth === false) {
+          fitScore -= 10 + 14 * uc.durabilitySensitivity;
+          findings.push({ axis: 'fit', good: false, text: 'Battery Health now reads "Unknown Part" and will for the rest of the machine\'s life. Customers read that screen.' });
+        }
       }
 
       if (p.cat === 'thermal' && p.spec.conductive) {
@@ -165,6 +194,25 @@
     axes.fit = clamp(fitScore);
 
     // ── 3. Budget ─────────────────────────────────────────────────────
+    /*
+     * What the job was worth, as distinct from what the customer could pay.
+     *
+     * Staying inside the budget used to be the whole of this axis, which left
+     * a hole big enough to drive a shop through: bill a pensioner every forint
+     * she has for a five-minute lint clean and score full marks, or run all
+     * ten instruments on a job that needed two and charge her for the lot.
+     * Neither is over budget. Both are the thing this material exists to
+     * argue against.
+     *
+     * So the bill is also measured against the work: the parts, plus the time
+     * it takes to do the job properly \u2014 sit down with them, run the two
+     * instruments the answers point at, and carry out the repair.
+     */
+    var fairHours = 0.4 + 2.0 + (fb.kind === 'action'
+      ? ((window.TechOpsJobs.ACTIONS[fb.id] || {}).labourHours || 0.8)
+      : 1.0);
+    var fairFt = ticket.partsCostFt + Math.round(fairHours * 5000);
+
     var over = priceFt - ticket.budgetFt;
     var wasteHit = soldAirFor ? 55 : 0;
     var budgetScore;
@@ -178,20 +226,58 @@
       budgetScore = clamp(100 - wasteHit - (over / Math.max(1, ticket.budgetFt)) * 180 * uc.priceSensitivity);
       findings.push({ axis: 'budget', good: false, text: 'The bill came to ' + window.techOpsFmt(priceFt) + ' against a budget of ' + window.techOpsFmt(ticket.budgetFt) + '.' });
     }
+    // Gouging, whether by padding the diagnosis or simply by asking for what
+    // they happen to have. Kept separate from the over-budget test, because a
+    // bill can be well inside the budget and still be several times the job.
+    var ratio = priceFt / Math.max(1, fairFt);
+    if (ratio > 1.45 && resolved && !soldAirFor) {
+      var gougeHit = Math.min(46, (ratio - 1.45) * 52 * (0.5 + uc.priceSensitivity));
+      budgetScore -= gougeHit;
+      findings.push({ axis: 'budget', good: false, text: 'You charged ' + window.techOpsFmt(priceFt)
+        + ' for a job worth about ' + window.techOpsFmt(fairFt) + ' \u2014 the parts plus the time it takes to do properly. '
+        + (ticket.labourHours > fairHours + 1.5
+            ? 'Most of the difference is bench hours: you ran ' + ticket.labourHours.toFixed(1)
+              + ' hours of tests on a job that needed about ' + fairHours.toFixed(1) + ', and billed them for all of it.'
+            : 'It was inside their budget, which is not the same as it being what the work was worth.') });
+      lessons.push('A bill should describe the work, not the wallet. Staying under the budget is the floor, not the goal \u2014 '
+        + 'the customer cannot tell the difference between two hours of necessary testing and ten hours of guessing, '
+        + 'and charging them for the guessing is how a shop gets a reputation it cannot shake.');
+    }
     axes.budget = clamp(budgetScore);
 
     // ── 4. Speed ──────────────────────────────────────────────────────
     var days = window.TechOpsJobs.turnaroundDays(ticket);
     var speedScore = 100;
-    if (days > ticket.urgencyDays) {
-      var late = days - ticket.urgencyDays;
+
+    /*
+     * A deadline you renegotiated is not a deadline you missed.
+     *
+     * If the part could not arrive in time and you went back to the customer,
+     * showed them the date and got a yes, the promise is the new date. The
+     * market screen already runs that conversation; it used to have no effect
+     * on the score, so the game said "they agreed" and then marked you down as
+     * though they had not. Students read that, correctly, as unfair.
+     *
+     * It is not free: they still did not get it when they wanted it, so an
+     * agreed delay costs a fixed amount rather than the full overrun. Going
+     * past the *agreed* date is late in the ordinary way.
+     */
+    var promised = ticket.urgencyDays;
+    var renegotiated = 0;
+    if (ticket.agreedDays && ticket.agreedDays > ticket.urgencyDays) {
+      renegotiated = ticket.agreedDays - ticket.urgencyDays;
+      promised = ticket.agreedDays;
+    }
+
+    if (days > promised) {
+      var late = days - promised;
       // Lateness is judged against what was promised. A day late on a one-day
       // job is a broken promise; a day late on a ten-day job is a rounding error.
       var patience = 1 - ((window.TechOpsShop.state.perks || {}).patience || 0);
-      var overrun = (late / Math.max(1, ticket.urgencyDays)) * patience;
+      var overrun = (late / Math.max(1, promised)) * patience;
       speedScore = clamp(100 - overrun * 55 * (0.4 + uc.speedSensitivity) - late * 3);
       var benchDays = window.TechOpsJobs.benchDays(ticket);
-      findings.push({ axis: 'speed', good: false, text: 'They needed it in ' + ticket.urgencyDays + ' day' + (ticket.urgencyDays === 1 ? '' : 's') + ' and waited ' + days + '. '
+      findings.push({ axis: 'speed', good: false, text: 'They needed it in ' + promised + ' day' + (promised === 1 ? '' : 's') + ' and waited ' + days + '. '
         + (late >= 10 ? 'Three weeks on a slow boat for a part that saved ten thousand forints.'
            : benchDays >= 2
              ? ticket.labourHours.toFixed(1) + ' hours of that was your own bench time — testing everything costs the customer days.'
@@ -201,6 +287,21 @@
       if (late >= 10) lessons.push('Delivery time is part of the price. A part that saves 10.000 Ft and arrives three weeks late has cost the customer far more than it saved them.');
     } else if (days <= 1) {
       findings.push({ axis: 'speed', good: true, text: 'Same-day turnaround.' });
+    }
+
+    if (renegotiated > 0) {
+      // Told in advance and agreed to: a real cost, nowhere near missing it.
+      speedScore -= Math.min(22, 6 + renegotiated * 2.5 * (0.4 + uc.speedSensitivity));
+      findings.push({ axis: 'speed', good: days <= promised, text: days <= promised
+        ? 'Nothing that fitted could arrive in ' + ticket.urgencyDays + ' day'
+          + (ticket.urgencyDays === 1 ? '' : 's') + ', so you went back to them with the real date and got a yes. '
+          + 'They waited ' + days + ' days instead \u2014 later than they wanted, but not a surprise, and that is the difference.'
+        : 'You agreed a new date of ' + promised + ' days with them and then missed that one too.' });
+      if (days <= promised) {
+        lessons.push('A deadline you renegotiate before you order is a different thing from a deadline you miss. '
+          + 'The customer still loses the days, so it costs you \u2014 but far less than silence does. '
+          + 'Check the delivery date against what they asked for before you spend their money, not after.');
+      }
     }
     axes.speed = clamp(speedScore);
 
@@ -311,7 +412,18 @@
     }
 
     // ── Reputation and comeback ───────────────────────────────────────
-    var repDelta = Math.round((stars - 3) * 4);
+    /*
+     * A bad name travels faster than a good one.
+     *
+     * A straight line through the stars made reputation move too slowly to be
+     * felt inside a lesson: forty days of genuinely poor work barely dented
+     * it, so the consequence existed on paper and nowhere else. This curve is
+     * steeper at the bottom, and a merely adequate job holds you still rather
+     * than building anything — which is how word of mouth actually behaves.
+     * Recovery is still quick: five good jobs undo a bad week.
+     */
+    var REP_BY_STARS = { 1: -16, 2: -9, 3: -1, 4: 4, 5: 8 };
+    var repDelta = REP_BY_STARS[stars] === undefined ? 0 : REP_BY_STARS[stars];
     if (ticket.warranty) repDelta -= 3;
 
     var comeback = null;
@@ -349,11 +461,45 @@
    * Will the customer actually pay this? Budget is a wall, not a suggestion —
    * but a job done visibly well buys a little stretch.
    */
+  /**
+   * Will they actually hand the money over?
+   *
+   * A bill is a claim about the work. If the machine still limps, or it came
+   * back three weeks late with a part they did not need, the claim does not
+   * hold and people say so at the counter — they pay for the parts and argue
+   * about the rest. This used to ignore quality almost entirely, which made
+   * padding the bill on a botched job the most profitable thing in the game.
+   */
   function willPay(ticket, priceFt, quality) {
     var uc = window.TechOpsJobs.useCase(ticket);
     var stretch = 1 + (0.22 * (1 - uc.priceSensitivity)) + (quality > 80 ? 0.12 : 0);
-    return priceFt <= ticket.budgetFt * stretch;
+    var ceiling = ticket.budgetFt * stretch;
+    if (quality < 80) {
+      // Full price needs work they are happy with. Below that it slides, and
+      // a genuinely bad job commands about half of what they came in with.
+      ceiling *= quality >= 55
+        ? (0.72 + (quality - 55) / 25 * 0.28)
+        // Genuinely poor work barely commands the parts. People do not hand
+        // over their savings for a machine that still limps, and a shop that
+        // expects them to is not a business for long.
+        : (0.30 + Math.max(0, quality) / 55 * 0.42);
+    }
+    return priceFt <= ceiling;
   }
 
-  window.TechOpsScore = { grade: grade, willPay: willPay };
+  /** Why they are refusing, in their words, so the number is not a mystery. */
+  function payRefusal(ticket, priceFt, quality) {
+    if (quality < 55) {
+      return 'It is not that they have not got it — it is that they have looked at the machine. '
+        + 'Work they can see is poor does not command the full price, and saying so at the counter is what customers do.';
+    }
+    if (quality < 80) {
+      return 'They have the money, but not for this. The job is not what they were hoping for, '
+        + 'and the bill is written as though it were.';
+    }
+    return 'They are not haggling — they genuinely do not have it. '
+      + 'The budget was on the job card before you spent anything.';
+  }
+
+  window.TechOpsScore = { grade: grade, willPay: willPay, payRefusal: payRefusal };
 })(window);

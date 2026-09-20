@@ -77,6 +77,12 @@
       needsStep: 'battery_connector', labourHours: 1.1, costFt: 0,
       done: 'Worked the spudger under one corner at a time, a millimetre at a time, until the adhesive let go. Forty minutes and no bent cells \u2014 which is the only outcome that matters with a lithium pack.'
     },
+    reconnect_power: {
+      id: 'reconnect_power', label: 'Plug the PSU back in and route the loom', icon: '\ud83d\udd0c',
+      needsStep: 'psu_switch', onlyMachines: ['tower_pc', 'ps5pro'],
+      repeatable: true, labourHours: 0.4, costFt: 0,
+      done: '24-pin seated until the latch clicks, loom routed behind the tray and clear of the fan, switch back on. It powers up.'
+    },
     reconnect_battery: {
       id: 'reconnect_battery', label: 'Reconnect the battery to boot it', icon: '\u26a1', tool: 'spudger',
       repeatable: true, labourHours: 0.2, costFt: 0,
@@ -311,7 +317,9 @@
     });
     if (ticket.batteryDisconnected) f.battery_off = true;
     var machine = window.TechOpsMachines.get(ticket.machineId);
-    if (machine.kind === 'desktop' && ticket.openSteps.indexOf('psu_switch') !== -1) f.battery_off = true;
+    if ((machine.kind === 'desktop' || machine.kind === 'console')
+        && ticket.openSteps.indexOf('psu_switch') !== -1
+        && ticket.openSteps.indexOf('reconnect_power') === -1) f.battery_off = true;
     if (ticket.openSteps.indexOf('heat_edges') !== -1) f.heated = true;
     if (ticket.openSteps.indexOf('pick_seam') !== -1 || ticket.openSteps.indexOf('cut_adhesive') !== -1) f.unglued = true;
     if (!machine.battery) f.battery_off = true;          // no pack to disconnect
@@ -341,6 +349,35 @@
     newTicket: newTicket,
     flags: flags,
     canStep: canStep,
+
+    /**
+     * How much trade a shop with this name actually sees.
+     *
+     * Reputation used to change only *who* walked in, never how many, so a
+     * shop everyone warns their friends about got exactly as much work as a
+     * good one. Cutting corners then paid, straightforwardly, which is the
+     * opposite of the argument this material is making. A bad name costs you
+     * customers, and customers are the only thing the shop runs on.
+     *
+     * There is always at least one waiting, because a shop with no way back is
+     * a dead end, not a lesson.
+     */
+    footfall: function (shop) {
+      var rep = shop.state.reputation;
+      var perks = shop.state.perks || {};
+      var bonus = (perks.footfall || 0) >= 0.4 ? 2 : (perks.footfall || 0) >= 0.15 ? 1 : 0;
+      var waiting = rep >= 72 ? 3 : rep >= 50 ? 2 : 1;
+      var quietDays = rep >= 72 ? 1 : rep >= 50 ? 1 : rep >= 30 ? 2 : 3;
+      if (bonus) quietDays = Math.max(1, quietDays - 1);
+      return {
+        waiting: Math.min(4, waiting + bonus),
+        quietDays: quietDays,
+        why: rep >= 72 ? 'Word of mouth is doing the work — there is always somebody waiting.'
+           : rep >= 50 ? 'A steady trickle. Good reviews would make it a queue.'
+           : rep >= 30 ? 'Thin. People are reading the reviews before they walk in.'
+           : 'Almost nobody comes in any more. The reviews have done that, and only better work will undo it.'
+      };
+    },
 
     /**
      * The teardown step an action actually needs *on this machine*.

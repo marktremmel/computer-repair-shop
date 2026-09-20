@@ -268,12 +268,31 @@
   function bodyNetwork() {
     var t = Shop.state.ticket;
     t.net = t.net || {};
+    var mNet = J.machine(t);
+    var win = mNet.os === 'windows';
+    /*
+     * Every hop carries the command you would actually type, because the
+     * point of this screen is not that a student can click through it here
+     * — it is that they can walk the same chain on a real machine that is
+     * not loading pages. The commands follow whatever is on the bench.
+     */
     var HOPS = [
-      { id: 'self',   label: 'This Mac',        addr: '192.168.1.24', why: 'Does the machine have an address at all?' },
-      { id: 'router', label: 'Your router',     addr: '192.168.1.1',  why: 'Can it reach the box in the hallway?' },
-      { id: 'isp',    label: 'ISP gateway',     addr: '81.0.64.1',    why: 'Does anything leave the building?' },
-      { id: 'dns',    label: 'DNS',             addr: '8.8.8.8',      why: 'Can it ask what a name means?' },
-      { id: 'site',   label: 'A real website',  addr: 'nkp.hu',       why: 'And does the whole chain work end to end?' }
+      { id: 'self',   label: 'This machine',   addr: '192.168.1.24', why: 'Does it have an address at all, or did nothing hand one out?',
+        cmd: win ? 'ipconfig' : 'ifconfig | grep "inet "',
+        cmdWhy: 'An address starting 169.254 means nothing answered. That is the whole diagnosis, and you are done.' },
+      { id: 'router', label: 'Your router',    addr: '192.168.1.1',  why: 'Can it reach the box in the hallway?',
+        cmd: win ? 'ping 192.168.1.1' : 'ping -c 4 192.168.1.1',
+        cmdWhy: win ? 'Find the address first with ipconfig — it is the Default Gateway.'
+                    : 'Find the address first with netstat -nr | grep default.' },
+      { id: 'isp',    label: 'ISP gateway',    addr: '81.0.64.1',    why: 'Does anything leave the building?',
+        cmd: win ? 'tracert -h 3 1.1.1.1' : 'traceroute -m 3 1.1.1.1',
+        cmdWhy: 'The first hop past your own router is the provider. If that never answers, the fault is outside and nothing you do in here fixes it.' },
+      { id: 'dns',    label: 'DNS',            addr: '8.8.8.8',      why: 'Can it turn a name into an address?',
+        cmd: win ? 'nslookup nkp.hu' : 'dig +short nkp.hu',
+        cmdWhy: 'The one that catches people out: the connection is fine and only the name lookup is broken. Test against a name, not an address.' },
+      { id: 'site',   label: 'A real website', addr: 'nkp.hu',       why: 'And does the whole chain work end to end?',
+        cmd: 'curl -I http://nkp.hu',
+        cmdWhy: 'Plain HTTP on purpose. A hotspot login page can only intercept a request it is allowed to read, so this is also how you find one.' }
     ];
     // Where the chain is broken for this job. Wi-Fi faults break at the router.
     var breakAt = t.netBreak || 'dns';
@@ -286,6 +305,7 @@
         + '<div class="hop-dot"></div>'
         + '<div class="hop-main"><b>' + esc(h.label) + '</b> <span class="hop-addr">' + esc(h.addr) + '</span>'
         + '<div class="hop-why">' + esc(h.why) + '</div>'
+        + '<div class="hop-cmd"><code>' + esc(h.cmd) + '</code><span>' + esc(h.cmdWhy) + '</span></div>'
         + (done ? '<div class="hop-out">' + (ok
             ? 'ping ' + h.addr + ' \u2014 5 packets, 0% loss, 14 ms'
             : (h.id === 'dns'
@@ -320,7 +340,10 @@
 
     return '<div class="note teach" style="margin-bottom:11px"><b>What ping is.</b> '
       + 'It sends a few packets to one address and counts how many come back. On its own that is almost useless. '
-      + 'Sent along the chain in order, it tells you exactly where the connection stops.</div>'
+      + 'Sent along the chain in order, it tells you exactly where the connection stops.<br><br>'
+      + 'The command under each step is the one you would type on a real '
+      + (win ? 'Windows machine, in Command Prompt or PowerShell' : 'Mac, in Terminal')
+      + '. That is the part worth taking home — this panel is only a way of practising the order.</div>'
       + '<div class="hops">' + rows + '</div>' + verdict;
   }
 
@@ -477,8 +500,9 @@
         d: 'Before touching a setting, open Activity Monitor together and look. No unknown process, no installer, nothing running. That is the reassurance they actually came in for \u2014 and it is also the evidence.',
         game: 'settings', verb: 'Check what is running', path: ['Activity Monitor', 'CPU', 'All Processes'] },
       { id: 'findsite', t: 'Find who was given permission',
-        d: 'Browser settings keep a list of every site allowed to send notifications. The culprit is a name in that list, not a virus on the disk.',
-        game: 'settings', verb: 'Open the notification list', path: ['Safari', 'Settings', 'Websites', 'Notifications'] },
+        d: 'Browser settings keep a list of every site allowed to send notifications. The culprit is a name on that list, not a virus on the disk. '
+         + 'On a Mac it is Safari \u203a Settings \u203a Websites \u203a Notifications; in Chrome and Edge it is Settings \u203a Privacy \u203a Site settings \u203a Notifications.',
+        game: 'notifications', verb: 'Open the notification list' },
       { id: 'revoke', t: 'Remove it, and show them the list',
         d: 'Deny is not enough on its own \u2014 remove it so the entry is gone. Then leave the list open and show them what Allow actually grants, because the next site will ask too.',
         game: 'toggles3', verb: 'Remove the permission',
@@ -524,6 +548,74 @@
     ]
   };
 
+  /*
+   * The same jobs on Windows.
+   *
+   * A Dell and a ThinkPad were being walked through macOS Recovery and told
+   * to hold Command and R — a combination those machines do not have, on an
+   * operating system they do not run, and the one shortcut that reloads the
+   * browser the game is running in. `JOB_STEPS_BY_OS` picks the right
+   * procedure for the machine on the bench.
+   *
+   * The password job deliberately teaches the legitimate route — prove it is
+   * theirs, then reset through the account that owns it — rather than any of
+   * the bypasses that are all over the internet. A shop that uses those is a
+   * shop that unlocks stolen laptops.
+   */
+  var JOB_STEPS_WINDOWS = {
+    reset_password: [
+      { id: 'proof', t: 'Establish that it is actually theirs',
+        d: 'This is the step that separates a repair shop from a fence. Everything after it is easy; this is the part that matters.',
+        game: 'proof', verb: 'Check ownership' },
+      { id: 'which', t: 'Work out which kind of account it is',
+        d: 'A Microsoft account resets online from any other device and takes two minutes. A local account does not, and the honest answer there is different. Look at the sign-in screen before you promise anything.',
+        game: 'settings', verb: 'Read the sign-in screen',
+        path: ['Sign-in screen', 'The account name', 'Is there an email address?'] },
+      { id: 'reset', t: 'Reset it through the account that owns it',
+        d: 'For a Microsoft account: account.live.com/password/reset from your phone, with the customer doing the verification. For a local account with no reset disk there is no legitimate way in, and the honest answer is that the files can be copied off to another machine but the account cannot be opened. Say that rather than reaching for a bypass.',
+        game: 'toggles3', verb: 'Do it properly',
+        tgTitle: 'Which of these would you actually do?',
+        tgPrompt: 'Tick everything that belongs in an honest shop. Leave the rest.',
+        tgVerb: 'Those ones',
+        tgOk: 'That is the professional route: prove it, reset it through the owner, and be straight about what cannot be done.',
+        tgMiss: 'You have left out something that matters: ',
+        tgExtra: 'That is how stolen machines get unlocked. A shop that does it once is the shop that gets asked again.',
+        items: [
+          { id: 'id',    label: 'Check photo ID and proof of purchase first',            pick: true },
+          { id: 'ms',    label: 'Reset the Microsoft account with the owner present',    pick: true },
+          { id: 'say',   label: 'Say plainly when a local account cannot be opened',     pick: true },
+          { id: 'copy',  label: 'Offer to copy their files off to another machine',      pick: true },
+          { id: 'byp',   label: 'Swap a system file at the login screen to get a shell', pick: false },
+          { id: 'noask', label: 'Get on with it \u2014 they seem nice enough',              pick: false }
+        ] }
+    ],
+    reinstall_os: [
+      { id: 'check', t: 'Prove the drive is actually fine first',
+        d: 'A machine that will not boot and a machine with a dead disk look identical from the outside. SMART settles it in ten seconds, and it decides whether this is an hour of work or a new drive.',
+        game: 'settings', verb: 'Check SMART before anything',
+        path: ['Command Prompt', 'wmic diskdrive get status', 'CrystalDiskInfo', 'SMART status'] },
+      { id: 'copy', t: 'Copy their files off before you touch the system',
+        d: 'Pull the drive, or boot a live USB, and copy the Users folder to your own storage. An in-place repair install keeps everything. Should. You copy first anyway, because "should" is not a backup.',
+        game: 'backup', verb: 'Copy the Users folder' },
+      { id: 'install', t: 'Repair install over the top',
+        d: 'Media Creation Tool on a working PC, 8 GB stick, boot from it, and choose Upgrade \u2014 Keep personal files and apps. Not Custom, which is the one that wipes the partition.',
+        game: 'reinstall', verb: 'Repair install' }
+    ]
+  };
+
+  /** The right procedure for the machine on the bench. */
+  function jobStepsFor(machine, act) {
+    if (machine && machine.os === 'windows' && JOB_STEPS_WINDOWS[act]) return JOB_STEPS_WINDOWS[act];
+    return JOB_STEPS[act];
+  }
+
+  /** What to call the software bench for this machine. */
+  function labTitle(machine) {
+    return machine && machine.os === 'windows' ? 'Windows lab'
+         : machine && machine.os === 'macos'   ? 'macOS lab'
+         : 'Software lab';
+  }
+
   /** The software job this fault actually needs, shown where it can be done. */
   function bodySoftwareJob(t) {
     var f = J.fault(t);
@@ -534,7 +626,7 @@
     if (act === 'card_recovery') {
       return '<div class="card"><div class="card-head">Card &amp; photo recovery</div>' + bodyRecovery(t) + '</div>';
     }
-    var steps = JOB_STEPS[act];
+    var steps = jobStepsFor(J.machine(t), act);
     if (!steps) return '';
     t.job = t.job || {};
     var doneCount = steps.filter(function (x) { return t.job[x.id]; }).length;
@@ -560,12 +652,12 @@
     var host = document.getElementById('view-mac');
     var t = Shop.state.ticket;
     if (!t) {
-      host.innerHTML = '<div class="view-head"><h2>macOS lab</h2><p>No machine connected. Take a job at the counter.</p></div>';
+      host.innerHTML = '<div class="view-head"><h2>Software lab</h2><p>No machine connected. Take a job at the counter.</p></div>';
       return;
     }
     var power = J.canRunSoftware(t);
     if (!power.ok) {
-      host.innerHTML = '<div class="view-head"><h2>macOS lab</h2></div>'
+      host.innerHTML = '<div class="view-head"><h2>' + labTitle(J.machine(t)) + '</h2></div>'
         + '<div class="note warn" style="max-width:66ch"><b>This machine will not boot.</b><br><br>'
         + esc(power.why)
         + '<br><br>Software diagnostics run on a machine that is <i>working</i>. The order matters: '
@@ -603,7 +695,7 @@
       return;
     }
     if (false) {
-      host.innerHTML = '<div class="view-head"><h2>macOS lab</h2></div>'
+      host.innerHTML = '<div class="view-head"><h2>' + labTitle(J.machine(t)) + '</h2></div>'
         + '<div class="note">This job is a phone. Software diagnostics for it happen on the bench instruments instead — '
         + 'use the charge port and battery tests over there.</div>';
       return;
@@ -641,7 +733,7 @@
 
     var jobPanel = bodySoftwareJob(t);
 
-    host.innerHTML = '<div class="view-head"><h2>macOS lab</h2>'
+    host.innerHTML = '<div class="view-head"><h2>' + labTitle(m) + '</h2>'
       + '<p>The customer\'s machine, booted from your bench. Half the evidence lives here — and so do the repairs that cost nothing but your time.</p></div>'
       + (jobPanel ? '<div style="max-width:620px;margin-bottom:18px">' + jobPanel + '</div>' : '')
       + '<div class="mac-screen"><div class="mac-menubar"><span class="mm-apple"></span><span class="mm-b">Finder</span>'
@@ -737,7 +829,7 @@
         var t2 = Shop.state.ticket;
         var f2 = J.fault(t2);
         var act = f2.fixedBy.id;
-        var steps = JOB_STEPS[act] || [];
+        var steps = jobStepsFor(J.machine(Shop.state.ticket), act) || [];
         var stepId = b.getAttribute('data-jobgame');
         var step = steps.filter(function (x) { return x.id === stepId; })[0];
         var finish = function () {

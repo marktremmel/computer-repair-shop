@@ -46,6 +46,14 @@ Some things the game is built to make unavoidable:
 - **Sometimes the answer is no.** If the cheapest honest repair costs more than
   the machine is worth, saying so and charging for the diagnosis is a four-star
   outcome, not a failure.
+- **A bill describes the work, not the wallet.** Staying inside the budget is
+  the floor. Charging a pensioner everything she has for a five-minute fix, or
+  running all ten instruments and billing for the lot, costs you stars — and
+  people do not hand over full price for work they can see is poor.
+- **A bad name empties the shop.** Reputation decides how many people are
+  waiting at the counter and how many days pass before the next one. Over a
+  long shift the careless shop earns a burst and then sits idle; the careful
+  one is still busy.
 - **Some faults are the machine protecting itself.** A MacBook can be unusably
   slow *because* it is cold: with a thermal sensor unplugged, macOS clamps the
   processor rather than risk heat it cannot see. The fix is a ribbon cable, and
@@ -65,6 +73,14 @@ Some things the game is built to make unavoidable:
 - **Hand-in codes.** A student's whole shift compresses into one `SEK7K-…` code.
   Paste it into the teacher decoder (also under **Record**) and it decodes
   entirely in your browser. Nothing is uploaded anywhere.
+- **Save codes, so a shift survives the machine.** The shop saves itself to
+  the browser after every job, but a shared computer or a wiped profile takes
+  that with it. **Shop record → Carry this shop to another computer** gives a
+  code that restores who you are, the till, the reputation and the job history
+  somewhere else. It is a *different* code from the hand-in one, and the two
+  refuse to be confused: a hand-in code reports a finished shift and cannot
+  restore one, which is deliberate — otherwise a student could edit their own
+  marks back in.
 - **Paste the whole class at once.** The decoder takes up to fifty codes in one
   go and builds a roster: average stars, till, reputation and all five axes per
   student, sortable by any column, with a CSV export for the register. It names
@@ -95,8 +111,11 @@ so browsers pick up the change instead of serving a stale copy.
 ## Checking a change
 
 ```bash
-node tools/coverage.js   # content integrity: nothing unwinnable, nothing unreachable
-node tools/scoring.js    # 27 scoring scenarios
+node tools/coverage.js     # content integrity: nothing unwinnable, nothing unreachable
+node tools/scoring.js      # 27 scoring scenarios
+node tools/playthrough.js  # plays every job five ways and simulates 40-day
+                           # shifts — is careful work visibly and financially
+                           # better than careless work?
 ```
 
 No dependencies — plain Node. See `ROADMAP.md` for how to add machines, faults

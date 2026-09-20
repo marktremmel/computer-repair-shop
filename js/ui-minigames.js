@@ -401,6 +401,67 @@
     },
 
     /** Hold the right keys at the right moment. */
+    /**
+     * The browser's notification permissions, as a panel you can actually
+     * read rather than a menu path to guess.
+     *
+     * Hunting for the right words in an invented menu tree taught nothing
+     * except the tree. What matters is recognising which entry does not
+     * belong in the list and knowing that removing it is the whole fix.
+     */
+    notifications: function (done, step) {
+      var win = step && step.windows;
+      var SITES = [
+        { d: 'nkp.hu',                  a: 'Allow', why: 'The school portal. They asked for this one.' },
+        { d: 'mail.google.com',         a: 'Allow', why: 'Their email. Wanted.' },
+        { d: 'idokep.hu',               a: 'Allow', why: 'Weather warnings. Harmless, and they chose it.' },
+        { d: 'fast-cleaner-mac.info',   a: 'Allow', why: 'Nobody asks for this. Nobody has heard of it.', rogue: true },
+        { d: 'facebook.com',            a: 'Deny',  why: 'Already blocked.' },
+        { d: 'index.hu',                a: 'Allow', why: 'News. Their choice.' }
+      ];
+      var removed = {}, wrong = 0;
+      var m = UI.modal(frame((win ? 'Edge' : 'Safari') + ' \u203a Settings \u203a Websites \u203a Notifications',
+        '<p style="font-size:13px;color:var(--ink-2)">Every site here was allowed by somebody clicking a button once. '
+        + 'One of them is sending the fake warnings. Remove that one and nothing else \u2014 the others were asked for.</p>'
+        + '<div class="mg-perms" id="mg-perms"></div>'
+        + '<div id="mg-say" class="mg-say"></div>'));
+
+      function draw() {
+        document.getElementById('mg-perms').innerHTML = SITES.map(function (x, i) {
+          if (removed[i]) {
+            return '<div class="mg-perm gone"><span class="mg-fav">\u2013</span>'
+              + '<div><b>' + esc(x.d) + '</b><span>removed</span></div></div>';
+          }
+          return '<div class="mg-perm"><span class="mg-fav">' + esc(x.d.charAt(0).toUpperCase()) + '</span>'
+            + '<div><b>' + esc(x.d) + '</b><span>' + esc(x.why) + '</span></div>'
+            + '<span class="mg-allow ' + (x.a === 'Allow' ? 'yes' : 'no') + '">' + x.a + '</span>'
+            + '<button class="btn btn-sm" data-rm="' + i + '">Remove</button></div>';
+        }).join('');
+        document.getElementById('mg-perms').querySelectorAll('[data-rm]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var i = +b.getAttribute('data-rm');
+            var say = document.getElementById('mg-say');
+            removed[i] = true;
+            if (SITES[i].rogue) {
+              say.className = 'mg-say ok';
+              say.textContent = 'That is the one. Nothing was installed, so nothing had to be uninstalled \u2014 one permission, gone.';
+              audio('playSuccessChime');
+              draw();
+              setTimeout(function () { m.close(); done(); }, 1500);
+              return;
+            }
+            wrong++;
+            say.className = 'mg-say bad';
+            say.textContent = 'That was a site they actually wanted. ' + SITES[i].why
+              + ' Read the address, not the list \u2014 the odd one out is the one nobody would type on purpose.';
+            audio('playErrorBuzz');
+            draw();
+          });
+        });
+      }
+      draw();
+    },
+
     keycombo: function (done, step) {
       var combo = step.combo, held = {};
       var m = UI.modal(frame(step.comboTitle || 'Hold the key combination',

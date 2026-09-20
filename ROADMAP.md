@@ -45,6 +45,47 @@ add its fallback at the same time.
 possible, a label on the control before it is clicked. A silent no-op is
 indistinguishable from a broken button.
 
+**A bill describes the work, not the wallet.** Staying inside the budget is the
+floor, not the goal. `sim-score.js` also measures the bill against what the job
+was worth — the parts plus the time it takes to do properly — so billing a
+pensioner her whole budget for a five-minute lint clean, or running all ten
+instruments and charging for the lot, costs you. Before this, both scored full
+marks on budget, which is the opposite of the argument the material makes.
+
+**Reputation buys footfall, and that is where it bites.** A bad name used to
+change only *who* walked in, never how many, so cutting corners paid
+straightforwardly. `TechOpsJobs.footfall()` now sets how many people are waiting
+and how many days pass before the next one. A shop nobody trusts sits empty, and
+empty days are the only thing the economy really punishes. There is always at
+least one customer, because a shop with no way back is a dead end rather than a
+lesson.
+
+**Nobody pays full price for visibly poor work.** `willPay()` reads the grade: a
+job scoring under 55 commands about a third of what the customer came in with.
+Without that, padding the bill on a botched job was the most profitable thing in
+the game.
+
+**The machine's operating system decides the procedure.** Every machine has an
+`os`, and `jobStepsFor()` picks the procedure from it. Windows laptops were
+being walked through macOS Recovery and told to hold Command and R — a
+combination those machines do not have, on a system they do not run, and the
+one shortcut that reloads the browser the game is running in. When you add a
+software job, add the variant for every OS it can land on, or narrow its
+`appliesTo`.
+
+**Offer everything, but say what nothing calls for.** A technician can always
+do more than the job needs, so actions stay available — but `notIndicated()`
+in `ui-bench.js` dims the ones your own measurements do not support and says
+why ("nothing corroded — the inspection was clean"). An option presented with
+no comment reads as an instruction.
+
+**Access settings are part of the material, not a nicety.** `js/a11y.js` holds
+text size, higher contrast, plainer letterforms and reduced motion, applied as
+attributes on `<html>` and remembered in `localStorage`. Reduced motion follows
+the system the first time. Only locally installed typefaces are used, because
+fetching a webfont would break the promise that this runs off a USB stick with
+no network.
+
 **An accessible route is the same work, not less of it.** The keyboard path
 through a precision gesture advances one press at a time and penalises hammering
 or a held key exactly as a snatched drag is penalised — you can still tear an
@@ -76,6 +117,34 @@ Honest list, roughly by how much they matter.
 ## 3. Things worth building next
 
 Roughly in order of value per effort.
+
+**A tutorial shift.** The title screen is the way in now, but the first job is
+still learn-by-drowning. A scripted opening ticket — one obvious fault, one
+question that decides it, one part — with the rest of the shop closed off until
+it is done, would let a class start without a teacher narrating. Mark asked for
+this specifically; it is the single biggest thing left before a lesson runs
+itself.
+
+**A phone build.** Currently cumbersome: too many windows for a small screen.
+Two separable pieces of work. The honest port is making the bench, market and
+lab usable at 390px — the board already scales, the panels do not. The other,
+which Mark suggested and is probably the better lesson on a phone, is a
+**swipe mode**: one symptom a card, swipe left for hardware and right for
+software, or "would this fix it — yes/no", scored on speed and accuracy. That
+is a different game sharing the same content, and it would work on a bus.
+
+**Friends in the shift.** A local session where a class adds each other as the
+walk-in customers, built in the character builder, so the person whose iPhone
+you are fixing is sitting two desks away. Also: a preview of the next ~20
+generated customers, with the ability to rename and re-style them before they
+arrive. Both are character-builder work rather than simulation work, and both
+would make a lesson feel like it belongs to the group.
+
+**More funky procedure mini-games.** The loom routing on the PSU reconnect is
+the first of these and it works well. The pattern generalises: a short,
+physical, failable action attached to a step that used to be a click. Obvious
+candidates are cable management on a tower build, seating a CPU cooler evenly
+across four screws, and pulling a display ribbon at the right angle.
 
 **Fill out the thin machines.** The spread is mbp13_2012 23, inspiron15 20,
 thinkpad_t480 19, mba_m1 and mbp14_m3 17, imac_m1 11, tower_pc and switch2 9,
@@ -165,6 +234,48 @@ entry against that fault's actual `readings`.
 (`chipid-data.js`, `pixel-manifest.js`) were originally typed out by hand and
 had already gained a wrong sprite path. They are now **generated by
 `rebuild.sh`** from the `.json`. Do not edit them; edit the JSON and rebuild.
+
+**A sprite pack's numbered files may not be what you assume.** The portrait
+pack ships noses, ears, freckles and blush in four fixed skin tones, numbered
+1–4, with no recolourable base layer. Treated as interchangeable shapes and
+picked at random, every character got a nose unrelated to their face — pale on
+dark skin and back again. They are chosen by the skin's luminance now
+(`skinVariant()`), and the builder exposes the four as a stepper. Look at the
+actual files before deciding what a layer is for.
+
+**A relative url() in a custom property resolves against the stylesheet.**
+The title background was set as `--title-bg: url("assets/...")` from
+JavaScript and consumed inside `shop.css`, so the browser looked for it under
+`css/` and quietly 404'd. Build the absolute URL with `new URL(path,
+document.baseURI)` when a path crosses from script into a stylesheet.
+
+**A gesture needs somewhere to be staged.** Cleaning a charge port is the one
+job you do on a *closed* machine, and the gesture was anchored to the board
+stage, which only exists once it is open — so the action silently completed
+itself with no gesture at all. `gestureHost()` falls back to the chassis.
+
+**A phantom flag is a dead end.** `canRunSoftware()` checked for a
+`reconnect_power` step that nothing in the game could ever set, so a tower with
+its PSU switched off could never boot again. If a check names a state,
+something must be able to produce it — grep for the setter before you trust
+the reader.
+
+**A harness that restates a rule will disagree with the game.** The shift
+simulation reimplemented the reputation formula instead of reading `repDelta`
+off the grade, so it reported a consequence the game did not actually apply. It
+also called `willPay()` with a hard-coded quality of 80, which meant it never
+saw the quality-dependent ceiling at all and concluded that overcharging was
+profitable. Harnesses must call the sim, never paraphrase it.
+
+**Set-up that silently does something else.** A sweep passed `faultId` to
+`newTicket()`, which takes `fault`, so for weeks it seeded a *random* fault each
+iteration while reporting full machine × fault coverage. Assert that the state
+you asked for is the state you got — `if (t.faultId !== f.id) mismatched++`
+costs one line.
+
+**A note on the counter needs a card under it.** Notes elsewhere sit inside
+`.card`, so their 8% tint reads. Placed straight on a view whose background is a
+photograph of the shop, the same note is invisible.
 
 **A render sweep proves nothing about clicking.** A sweep that drove all 157
 machine × fault pairs through all eight screens reported zero errors while
@@ -266,14 +377,22 @@ node tools/coverage.js   # every machine x fault x part x action x teardown step
                          # is reachable and winnable; every fault has a decisive
                          # interview answer and a REVEALED_BY entry backed by a
                          # real reading; every screw type can be drawn
+node tools/playthrough.js  # plays every pair under five strategies and over
+                           # 40-day shifts: is careful work visibly better,
+                           # does it also earn more, does every job have at
+                           # least one good answer, and does the same part
+                           # really suit different people differently?
+                           # TECHOPS_DAYS=90 for a longer horizon.
 node tools/scoring.js    # 27 scenarios: the same part scores differently for
                          # different customers, no-part faults punish upselling,
                          # misdiagnosis fails, the worst-axis cap holds
 ```
 
-Both run on plain Node with no dependencies. `coverage.js` has now caught six
-classes of shipped bug that playtesting missed — run it after touching any
-data file.
+All three run on plain Node with no dependencies. `coverage.js` has caught six
+classes of shipped bug that playtesting missed — run it after touching any data
+file. `playthrough.js` is the one to run after touching `sim-score.js`: it is
+how the gap between careful and careless work is kept measurable, and it found
+that overcharging used to win the game outright.
 
 Then open it in a browser and click through a job. The harnesses cannot see a
 silent refusal or a control nobody can reach, which is the category most of the

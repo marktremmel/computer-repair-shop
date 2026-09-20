@@ -24,6 +24,7 @@
     if (opts.reset) {
       var cur = Shop.state.player || {};
       draft = { name: cur.name || '', avatar: cur.avatar || 'ava-1',
+                shopColour: cur.shopColour, shopMark: cur.shopMark,
                 background: cur.background || null, shop: cur.shop || '' };
       // A new set of faces every time you come back to this screen.
       P.FACE_PRESETS.forEach(function (_, i) { P.FACE_PRESETS[i] = 'ava-' + Math.random().toString(36).slice(2, 8); });
@@ -54,6 +55,10 @@
       + '<label class="field"><span>Shop name</span>'
       + '<input id="ch-shop" value="' + esc(draft.shop) + '" maxlength="28"></label>'
       + '</div>'
+      + '<div class="card-head" style="margin-top:14px">Your sign</div>'
+      + '<div style="font-size:12px;color:var(--ink-3);margin-bottom:9px">'
+      + 'The colour and mark follow you — on the door, in the top bar, and on the sign outside.</div>'
+      + (window.TechOpsIdentity ? window.TechOpsIdentity.picker(draft) : '')
       + '<div class="card-head">Pick a face <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">'
       + '&middot; portraits from <a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">Pixel Portrait Creator</a> by Lyime</span></div>'
       + '<div class="av-grid">' + avatars + '</div>'
@@ -74,8 +79,9 @@
     if (buildBtn) buildBtn.addEventListener('click', function () {
       draft.name = document.getElementById('ch-name').value;
       draft.shop = document.getElementById('ch-shop').value;
-      var existing = draft.avatar ? window.TechOpsPixel.custom(draft.avatar) : null;
-      window.TechOpsCharBuild.open(existing || null, function (built) {
+      // Your actual current face, editable — not a fresh stranger.
+      var existing = window.TechOpsPixel.editable(draft.avatar);
+      window.TechOpsCharBuild.open(existing, function (built) {
         var key = 'custom-' + Math.random().toString(36).slice(2, 8);
         window.TechOpsPixel.remember(key, built);
         Shop.state.customFaces = Shop.state.customFaces || {};
@@ -86,6 +92,11 @@
         rerender();
       });
     });
+
+    if (window.TechOpsIdentity) {
+      // Live, so the top bar changes under the modal as they choose.
+      window.TechOpsIdentity.bind(modal.el, draft, function () { rerender(); });
+    }
 
     var reroll = modal.el.querySelector('[data-reroll]');
     if (reroll) reroll.addEventListener('click', function () {
@@ -127,7 +138,9 @@
 
       var S = Shop.state;
       S.studentName = name;
-      S.player = { name: name, avatar: draft.avatar, background: draft.background, shop: shopName || 'TechOps Budapest' };
+      S.player = { name: name, avatar: draft.avatar, background: draft.background,
+                   shop: shopName || 'TechOps Budapest',
+                   shopColour: draft.shopColour, shopMark: draft.shopMark };
       var bg = P.background(draft.background);
       if (bg && !S.backgroundApplied) { bg.apply(S); S.backgroundApplied = true; }
       Shop.emit('change');

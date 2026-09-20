@@ -34,9 +34,22 @@
         Shop.state.queue.unshift(t);
       });
     }
-    while (Shop.state.queue.length < 3) {
+    while (Shop.state.queue.length < J.footfall(Shop).waiting) {
       Shop.state.queue.push(J.newTicket(Shop, {}));
     }
+  }
+
+  /** Nothing at the counter is a state you can get out of — by waiting. */
+  function waitForTrade() {
+    var f = J.footfall(Shop);
+    Shop.advanceDays(f.quietDays);
+    fillQueue();
+    UI.toast('The bell goes',
+      f.quietDays === 1 ? 'Somebody comes in the next morning.'
+        : f.quietDays + ' quiet days, and then somebody finally comes in. That is what the reviews are costing you.',
+      f.quietDays > 1 ? 'bad' : 'good');
+    Shop.emit('change');
+    render();
   }
 
   function take(idx) {
@@ -108,18 +121,32 @@
         + '</div>';
     }).join('');
 
+    var ff = J.footfall(Shop);
+    var n = Shop.state.queue.length;
     host.innerHTML = '<div class="view-head"><h2>Front counter · day ' + Shop.state.day + '</h2>'
-      + '<p>Three people waiting. Read the budget and the deadline before you read the complaint — they decide which parts are even available to you.</p></div>'
+      + '<p>' + (n === 1 ? 'One person waiting' : n + ' people waiting') + '. '
+      + 'Read the budget and the deadline before you read the complaint — they decide which parts are even available to you.</p></div>'
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:14px;max-width:1120px">' + cards + '</div>'
-      + (Shop.state.reputation < 35
-          ? '<div class="note warn" style="margin-top:16px;max-width:70ch">Your reputation is low, so the only people coming in are the ones with no other option and no money. Do a few jobs honestly and the better work comes back.</div>'
-          : Shop.state.reputation > 75
-            ? '<div class="note good" style="margin-top:16px;max-width:70ch">Word has got round. People with real work and real budgets are asking for you by name.</div>'
-            : '');
+      // Inside a card, because the view sits on a photograph and a bare note
+      // over it is unreadable.
+      + '<div class="card" style="margin-top:16px;max-width:74ch">'
+      + '<div class="card-head">How busy the counter is</div>'
+      + '<div class="note ' + (Shop.state.reputation >= 72 ? 'good' : Shop.state.reputation >= 50 ? '' : 'warn') + '">'
+      + esc(ff.why)
+      + (Shop.state.reputation < 50
+          ? ' Waiting for the next one costs you ' + ff.quietDays + ' day' + (ff.quietDays === 1 ? '' : 's')
+            + ' — empty days the rent still has to come out of.'
+          : '')
+      + '</div>'
+      + '<div style="margin-top:12px"><button class="btn" id="btn-wait">Nothing here for you · wait for the next customer ('
+      + ff.quietDays + ' day' + (ff.quietDays === 1 ? '' : 's') + ')</button></div>'
+      + '</div>';
 
     host.querySelectorAll('[data-take]').forEach(function (b) {
       b.addEventListener('click', function () { take(+b.getAttribute('data-take')); });
     });
+    var wb = document.getElementById('btn-wait');
+    if (wb) wb.addEventListener('click', waitForTrade);
   }
 
   window.TechOpsCounter = { render: render };

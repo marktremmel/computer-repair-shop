@@ -756,3 +756,54 @@
   stroke-dasharray: 4 3;
 }
 .prec-pin.done { fill: rgba(70,200,120,.16); stroke: var(--green); stroke-dasharray: none; }
+
+/* "Match my skin" — the default for parts that are part of you. */
+.cb-match {
+  display: block; margin: 0 0 7px; padding: 4px 10px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 999px;
+  color: var(--ink-2); font-size: 11.5px; font-family: var(--mono); cursor: pointer;
+}
+.cb-match:hover { border-color: var(--amber); color: var(--ink); }
+.cb-match.on { border-color: var(--green); color: var(--green); }
+
+/* Four fixed skin tones the pack draws, rather than a colour picker. */
+.cb-tone {
+  width: 26px; height: 26px; border-radius: 7px;
+  background: var(--bg); border: 1px solid var(--line);
+  color: var(--ink-2); font-family: var(--mono); font-size: 12px; cursor: pointer;
+}
+.cb-tone:hover { border-color: var(--amber); color: var(--ink); }
+.cb-tone.on { border-color: var(--amber); color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
+
+/* The command you would actually type, next to the step it belongs to. */
+.hop-cmd { margin-top: 5px; display: flex; flex-direction: column; gap: 3px; }
+.hop-cmd code {
+  align-self: flex-start; font-family: var(--mono); font-size: 11.5px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  padding: 2px 7px; color: var(--green);
+}
+.hop-cmd span { font-size: 11.5px; color: var(--ink-3); line-height: 1.5; }
+
+/* Browser notification permissions, as a panel rather than a menu hunt. */
+.mg-perms { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.mg-perm {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 9px;
+}
+.mg-perm > div { flex: 1; min-width: 0; }
+.mg-perm b { display: block; font-size: 12.5px; font-family: var(--mono); }
+.mg-perm span:not(.mg-fav):not(.mg-allow) { font-size: 11.5px; color: var(--ink-3); }
+.mg-fav {
+  width: 26px; height: 26px; flex: none; border-radius: 6px;
+  background: var(--line); color: var(--ink-2);
+  display: grid; place-items: center; font-weight: 700; font-size: 13px;
+}
+.mg-allow { font-size: 11px; font-family: var(--mono); padding: 2px 7px; border-radius: 999px; }
+.mg-allow.yes { color: var(--amber); border: 1px solid var(--amber); }
+.mg-allow.no  { color: var(--ink-3); border: 1px solid var(--line); }
+.mg-perm.gone { opacity: .45; }
+.mg-perm.gone b { text-decoration: line-through; }
+
+/* Available, but nothing you have measured calls for it. */
+.step.unindicated { opacity: .62; }
+.step.unindicated:hover { opacity: 1; }

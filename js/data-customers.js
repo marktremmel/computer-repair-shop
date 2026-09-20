@@ -14,6 +14,13 @@
    * priceSensitivity — 1.0 means every forint hurts; 0.2 means they want it right.
    * speedSensitivity — 1.0 means a three-week delivery is a disaster.
    */
+  /*
+   * `mobility` is how much of this person's life the machine spends off the
+   * mains. It is the dimension a battery is actually judged on: twelve per
+   * cent of missing capacity is invisible at a kitchen table and ruins an
+   * afternoon in a library. Without it every battery scored the same for
+   * everybody, which quietly contradicted the whole point of the shop.
+   */
   var USE_CASES = {
     email: {
       id: 'email', label: 'Email, news and video calls',
@@ -22,6 +29,7 @@
       needsSsd: true, needsFastNvme: false,
       screenTier: 'any',
       priceSensitivity: 0.9, speedSensitivity: 0.4, durabilitySensitivity: 0.9,
+      mobility: 0.15,
       blurb: 'Browser, mail, a video call with the grandchildren. Any SSD feels instant; anything beyond that is invisible to them.'
     },
     student: {
@@ -31,6 +39,7 @@
       needsSsd: true, needsFastNvme: false,
       screenTier: 'good',
       priceSensitivity: 1.0, speedSensitivity: 0.9, durabilitySensitivity: 0.7,
+      mobility: 0.95,
       blurb: 'Docs, Slides, thirty tabs, and a deadline. Money is genuinely tight and the deadline is genuinely real.'
     },
     gamer: {
@@ -40,6 +49,7 @@
       needsSsd: true, needsFastNvme: true,
       screenTier: 'good',
       priceSensitivity: 0.6, speedSensitivity: 0.8, durabilitySensitivity: 0.6,
+      mobility: 0.55,
       blurb: 'Frame rates and load times. Notices thermal throttling immediately and will tell you about it.'
     },
     video: {
@@ -49,6 +59,7 @@
       needsSsd: true, needsFastNvme: true,
       screenTier: 'exact',
       priceSensitivity: 0.3, speedSensitivity: 0.7, durabilitySensitivity: 0.4,
+      mobility: 0.25,
       blurb: 'Moves 80 GB of footage a week. This is the one person for whom the expensive Gen4 drive is genuinely the right call.'
     },
     office: {
@@ -58,6 +69,7 @@
       needsSsd: true, needsFastNvme: false,
       screenTier: 'good',
       priceSensitivity: 0.5, speedSensitivity: 1.0, durabilitySensitivity: 0.9,
+      mobility: 0.85,
       blurb: 'Cannot be without the machine. Reliability and turnaround matter far more than benchmarks.'
     },
     reseller: {
@@ -67,6 +79,7 @@
       needsSsd: true, needsFastNvme: false,
       screenTier: 'any',
       priceSensitivity: 1.0, speedSensitivity: 0.5, durabilitySensitivity: 0.3,
+      mobility: 0.1,
       blurb: 'Every forint spent comes straight off their margin. They want the cheapest repair that honestly passes as working.'
     }
   };

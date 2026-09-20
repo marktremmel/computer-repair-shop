@@ -9,9 +9,18 @@
 (function (window) {
   'use strict';
 
+  /*
+   * `os` is what the machine actually runs, and the software procedures have
+   * to read it. A Dell and a ThinkPad were being handed macOS Recovery and
+   * told to hold Command and R, which is not a thing that happens on a
+   * Windows laptop — it is also the one key combination that reloads the
+   * browser, so the instruction was wrong twice over.
+   */
+
   var MACHINES = {
     mbp13_2012: {
       id: 'mbp13_2012',
+      os: 'macos',
       name: 'MacBook Pro 13" (Mid 2012)',
       kind: 'laptop',
       icon: '💻',
@@ -37,6 +46,7 @@
 
     mba_m1: {
       id: 'mba_m1',
+      os: 'macos',
       name: 'MacBook Air (M1, 2020)',
       kind: 'laptop',
       icon: '💻',
@@ -59,6 +69,7 @@
 
     thinkpad_t480: {
       id: 'thinkpad_t480',
+      os: 'windows',
       name: 'Lenovo ThinkPad T480',
       kind: 'laptop',
       icon: '💻',
@@ -82,6 +93,7 @@
 
     tower_pc: {
       id: 'tower_pc',
+      os: 'windows',
       name: 'Custom Tower PC (B550 / Ryzen)',
       kind: 'desktop',
       icon: '🖥️',
@@ -104,6 +116,7 @@
 
     iphone12: {
       id: 'iphone12',
+      os: 'ios',
       name: 'iPhone 12',
       kind: 'phone',
       icon: '📱',
@@ -125,6 +138,7 @@
 
     imac_m1: {
       id: 'imac_m1',
+      os: 'macos',
       name: 'iMac 24" (M1, 2021)',
       kind: 'aio',
       icon: '🖥️',
@@ -148,6 +162,7 @@
 
     ipad_air: {
       id: 'ipad_air',
+      os: 'ipados',
       name: 'iPad Air (5th gen)',
       kind: 'tablet',
       icon: '📲',
@@ -171,6 +186,7 @@
 
     mbp14_m3: {
       id: 'mbp14_m3',
+      os: 'macos',
       name: 'MacBook Pro 14" (M3, 2024)',
       kind: 'laptop',
       icon: '💻',
@@ -193,6 +209,7 @@
 
     steamdeck: {
       id: 'steamdeck',
+      os: 'steamos',
       name: 'Steam Deck',
       kind: 'handheld',
       icon: '🎮',
@@ -215,6 +232,7 @@
 
     switch2: {
       id: 'switch2',
+      os: 'switchos',
       name: 'Nintendo Switch 2',
       kind: 'handheld',
       icon: '🕹️',
@@ -237,6 +255,7 @@
 
     ps5pro: {
       id: 'ps5pro',
+      os: 'ps5os',
       name: 'PlayStation 5 Pro',
       kind: 'console',
       icon: '🎛️',
@@ -259,6 +278,7 @@
 
     iphone17: {
       id: 'iphone17',
+      os: 'ios',
       name: 'iPhone 17',
       kind: 'phone',
       icon: '📱',
@@ -281,6 +301,7 @@
 
     inspiron15: {
       id: 'inspiron15',
+      os: 'windows',
       name: 'Dell Inspiron 15 3000',
       kind: 'laptop',
       icon: '💻',

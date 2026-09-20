@@ -219,6 +219,20 @@
     };
   }
 
+  /**
+   * Where a precision gesture is staged.
+   *
+   * The board stage only exists once the machine is open. Cleaning a charge
+   * port is the one job you do on a *closed* phone, so the lookup used to
+   * come back empty and the action just completed itself — which quietly
+   * removed the only interesting part of it. Fall back to the chassis.
+   */
+  function gestureHost() {
+    return document.querySelector('#view-bench .board-stage')
+        || document.querySelector('#view-bench .chassis')
+        || document.querySelector('#view-bench .mat');
+  }
+
   function chipCentre(machine, regionId) {
     var cid = chipForRegion(machine, regionId);
     if (!cid) return null;
@@ -234,6 +248,38 @@
     var a = map.to(map.L.w * (pad / 100), map.L.h * (pad / 100));
     var b = map.to(map.L.w * (1 - pad / 100), map.L.h * (1 - pad / 100));
     return { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
+  }
+
+  /**
+   * Actions whose whole purpose is to undo something you should be able to
+   * see, and the instrument that would have shown it.
+   *
+   * They stay available — a technician can always choose to do more — but
+   * an option offered with no hint that nothing calls for it reads as an
+   * instruction. Cleaning corrosion off a board with no corrosion on it, or
+   * getting an iron near a board whose capacitors are flat and clean, is
+   * time and heat spent for nothing, and saying so is the lesson.
+   */
+  var INDICATED_BY = {
+    clean_corrosion: { test: 'visual', look: /corros|liquid|residue|water/i,
+                       none: 'nothing corroded — the inspection was clean' },
+    replace_caps:    { test: 'visual', look: /dom(e|ed)|bulg|electrolyt|vent/i,
+                       none: 'no swollen capacitors were found' },
+    clean_fins:      { test: 'thermal', look: /dust|block|fin|clog/i,
+                       none: 'the fin stack looked clear' },
+    straighten_pins: { test: 'visual', look: /contact|pin|socket|crush/i,
+                       none: 'the socket looked undamaged' }
+  };
+
+  /** null when it is fine, or a short reason it is not called for. */
+  function notIndicated(ticket, machine, actionId) {
+    var rule = INDICATED_BY[actionId];
+    if (!rule) return null;
+    if (ticket.testsRun.indexOf(rule.test) === -1) {
+      return 'run the ' + (UI.INSTRUMENTS[rule.test] || {}).name.toLowerCase() + ' before you decide';
+    }
+    var r = window.TechOpsFaults.readingsFor(machine, J.fault(ticket))[rule.test] || {};
+    return rule.look.test(r.note || '') ? null : rule.none;
   }
 
   function bayList(ticket) {
@@ -537,6 +583,44 @@
       return render();
     }
 
+    if (actionId === 'reconnect_power') {
+      var stageR = gestureHost();
+      if (stageR && !t._loomDone) {
+        var psu = chipCentre(m, 'psu_switch') || { x: 80, y: 30 };
+        var hdr = chipCentre(m, 'ram_bay') || chipCentre(m, 'cpu') || { x: 40, y: 55 };
+        window.TechOpsPrecision.run({
+          type: 'trace', host: stageR, tolerance: 6,
+          // Out of the supply, along the tray, and down onto the header.
+          path: [{ x: psu.x, y: psu.y },
+                 { x: psu.x, y: Math.min(92, psu.y + 22) },
+                 { x: hdr.x, y: Math.min(92, psu.y + 22) },
+                 { x: hdr.x, y: hdr.y }],
+          start: { x: psu.x, y: psu.y },
+          title: 'Route the loom and seat the 24-pin',
+          hint: 'Follow the channel behind the tray. Cut the corner and you have left the cable sitting in the fan.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Left it unplugged.'; return render(); }
+            t._loomDone = true;
+            if (!res.ok || res.quality < 0.75) {
+              t.sloppySteps = (t.sloppySteps || 0) + 1;
+              t.labourHours += 0.4;
+              UI.toast('Cable in the fan', 'It powers up, but the loom is lying across the intake. Somebody will hear that within a week.', 'bad');
+            }
+            doAction('reconnect_power');
+          }
+        });
+        return;
+      }
+      t.openSteps.push('reconnect_power');
+      t.actionsDone = t.actionsDone.filter(function (x) { return x !== 'reconnect_power'; });
+      t.labourHours += a.labourHours;
+      audio('playCableSnap');
+      state.msg = a.done;
+      UI.toast('Power back on', a.done + ' Switch it off again before you touch the board.', 'good');
+      Shop.emit('change');
+      return render();
+    }
+
     if (actionId === 'reconnect_battery') {
       if (state.tool !== 'spudger') {
         state.msg = 'Press the connector back down with the nylon spudger.';
@@ -618,7 +702,7 @@
     // Board work that is a hand skill, not a click. Each runs its gesture once,
     // then falls back through to the normal completion path.
     if (actionId === 'straighten_pins' && !t._pinsDone) {
-      var stageP = document.querySelector('#view-bench .board-stage');
+      var stageP = gestureHost();
       if (stageP) {
         var atP = chipCentre(m, 'cpu') || { x: 50, y: 45 };
         // Five folded contacts along one edge of the socket, worked one at a
@@ -649,7 +733,7 @@
     }
 
     if (actionId === 'replace_caps' && !t._capsDone) {
-      var stageC = document.querySelector('#view-bench .board-stage');
+      var stageC = gestureHost();
       if (stageC) {
         var atC = chipCentre(m, 'psu_switch') || chipCentre(m, 'cooler') || { x: 66, y: 50 };
         window.TechOpsPrecision.run({
@@ -675,7 +759,7 @@
     }
 
     if (actionId === 'reseat_sensor' && !t._sensorDone) {
-      var stageS = document.querySelector('#view-bench .board-stage');
+      var stageS = gestureHost();
       if (stageS) {
         var atS = chipCentre(m, 'battery_connector') || { x: 50, y: 62 };
         window.TechOpsPrecision.run({
@@ -698,9 +782,12 @@
     }
 
     if (actionId === 'clean_port') {
-      var stage = document.querySelector('#view-bench .board-stage');
+      var stage = gestureHost();
       if (stage && !t._scraped) {
-        var at = chipCentre(m, 'charge_port') || { x: 50, y: 88 };
+        // On a closed machine there is no board to measure against, so aim at
+        // the bottom edge where the socket actually is.
+        var at = (stage.classList.contains('board-stage') && chipCentre(m, 'charge_port'))
+          || { x: 50, y: 86 };
         window.TechOpsPrecision.run({
           type: 'scrape', host: stage, start: at, tolerance: 5,
           title: 'Scrape the lint out',
@@ -867,11 +954,11 @@
         + 'It always works; it just costs you forty minutes.'];
     }
     if (!t.esdOn) return ['warn', 'You are working on an open board without the <b>ESD wrist strap</b>. It costs nothing and it is on the rack.'];
-    if (!t.testsRun.length) return ['', 'You have measured nothing yet. <b>Instruments</b> are at the bottom of the procedure panel, and more are in the <b>macOS lab</b> tab.'];
+    if (!t.testsRun.length) return ['', 'You have measured nothing yet. <b>Instruments</b> are at the bottom of the procedure panel, and more are in the <b>software lab</b> tab.'];
     if (t.batteryDisconnected && !J.canRunSoftware(t).ok
         && !['smart', 'bench', 'activity', 'storage_used'].some(function (i) { return t.testsRun.indexOf(i) !== -1; })) {
       return ['warn', 'The battery is off, so the machine cannot boot — and you have not run a single software test. '
-        + 'Reconnect it if you still need the <b>macOS lab</b>. Next job, read the software side before you open anything.'];
+        + 'Reconnect it if you still need the <b>software lab</b>. Next job, read the software side before you open anything.'];
     }
     if (Shop.state.onOrder.length) return ['', 'A part is in transit. Go to the <b>Parts market</b> and wait for the delivery — the customer is waiting too.'];
     if (Shop.state.shelf.length) return ['good', 'There is a part on the <b>shelf</b> (bottom right). Open the bay it belongs in, click the part, then click the bay.'];
@@ -880,7 +967,7 @@
       return ['warn', 'Four instruments run and nothing decided yet. Bench time is the customer\'s time — testing everything is not thoroughness, it is a day they did not have.'];
     }
     if (t.testsRun.length >= 2) return ['', 'You have readings. Decide what they mean — some faults need a part from the <b>Parts market</b>, and some need nothing but your time (see <b>Bench work</b>).'];
-    return ['', 'Keep measuring, or move to the <b>macOS lab</b> for the software side.'];
+    return ['', 'Keep measuring, or move to the <b>software lab</b> for the software side.'];
   }
 
   // ── render ──────────────────────────────────────────────────────────
@@ -1090,6 +1177,9 @@
       var a = J.ACTIONS[aid];
       if (a.software) return;
       if (aid === 'reconnect_battery' && !(t.batteryDisconnected && m.battery)) return;
+      if (aid === 'reconnect_power' && (m.battery
+          || t.openSteps.indexOf('psu_switch') === -1
+          || t.openSteps.indexOf('reconnect_power') !== -1)) return;
       if (aid === 'lever_battery' && !((t.snappedTabs || 0) >= 2 && t.openSteps.indexOf('battery') === -1)) return;
       if (!J.hasStepFor(a, m)) return;
       if (aid === 'clean_port' && ['port_lint'].indexOf(J.fault(t).id) === -1 && m.kind !== 'phone' && m.teardown.indexOf('charge_port') === -1) {
@@ -1104,12 +1194,17 @@
         if (a.needsAction && t.actionsDone.indexOf(a.needsAction) === -1) want.push('🔒 ' + J.ACTIONS[a.needsAction].label.toLowerCase() + ' first');
         if (a.needsPartCat && !t.installed.some(function (i) { return i.cat === a.needsPartCat; })
             && !Shop.state.shelf.some(function (e) { var p = window.TechOpsParts.get(e.partId); return p && p.cat === a.needsPartCat; })) {
-          want.push('📦 buy ' + a.needsPartCat + ' compound first');
+          want.push('📦 buy ' + (a.needsPartCat === 'thermal' ? 'thermal compound'
+                    : a.needsPartCat === 'caps' ? 'replacement capacitors'
+                    : a.needsPartCat) + ' first');
         }
       }
-      proc += '<button class="step' + (done ? ' done' : '') + '" data-action="' + aid + '"' + (done ? ' disabled' : '') + '>'
+      var idle = done ? null : notIndicated(t, m, aid);
+      proc += '<button class="step' + (done ? ' done' : '') + (idle && !want.length ? ' unindicated' : '')
+        + '" data-action="' + aid + '"' + (done ? ' disabled' : '') + '>'
         + '<span class="sn">' + (done ? '✓' : a.icon) + '</span><span>' + esc(a.label)
-        + (want.length ? '<br><span style="font-size:10.5px;color:var(--amber)">' + esc(want[0]) + '</span>' : '')
+        + (want.length ? '<br><span style="font-size:10.5px;color:var(--amber)">' + esc(want[0]) + '</span>'
+           : idle ? '<br><span style="font-size:10.5px;color:var(--ink-3)">' + esc(idle) + '</span>' : '')
         + '</span></button>';
     });
 
@@ -1118,6 +1213,9 @@
       var inst = UI.INSTRUMENTS[iid];
       if (inst.where !== 'bench') return;
       if (iid === 'battery' && !m.battery) return;
+      // Nothing turns inside soldered flash, so there is nothing to put an
+      // ear against. Offering it invited a pointless 0.2 h on every phone.
+      if (iid === 'listen' && (m.storageSoldered || (m.storageBuses || []).indexOf('sata3') === -1)) return;
       var ran = t.testsRun.indexOf(iid) !== -1 && !(t.retestNeeded && !(t.retests || {})[iid]);
       var isRetest = t.testsRun.indexOf(iid) !== -1 && t.retestNeeded && !(t.retests || {})[iid];
       var wouldTip = !ran && J.turnaroundDays({ daysWaited: t.daysWaited, labourHours: t.labourHours + inst.hours }) > J.turnaroundDays(t);

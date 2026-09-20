@@ -115,6 +115,14 @@
     var ok = document.getElementById('btn-approve');
     if (ok) ok.addEventListener('click', function () {
       document.querySelector('.modal-veil').remove();
+      // They have seen the real date and said yes, so that is the promise now.
+      // Recorded here rather than inferred at grading, because it is only true
+      // if you actually asked before spending their money.
+      if (tooSlow) {
+        t.agreedDays = Math.max(t.agreedDays || 0, totalWait);
+        UI.toast('New date agreed', esc(c.name) + ' has agreed to ' + totalWait
+          + ' days instead of ' + t.urgencyDays + '. Telling them up front costs you far less than the delay would have.', 'good');
+      }
       onAccept();
     });
   }
