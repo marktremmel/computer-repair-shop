@@ -13,7 +13,6 @@
   var J    = window.TechOpsJobs;
   var esc  = function (s) { return UI.esc(s); };
 
-<<<<<<< HEAD
   /**
    * The bench's working state. One definition, used at load and by reset():
    * there used to be two, and reset() had quietly dropped the meter and the
@@ -24,9 +23,6 @@
     return { tool: null, inHand: null, msg: '', inspect: false, meter: false, meterPoint: null };
   }
   var state = freshState();
-=======
-  var state = { tool: null, inHand: null, msg: '', inspect: false, meter: false, meterReading: '---.- Ω', meterNote: '', meterPoint: null };
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
 
   function audio(fn) { if (window.sekAudio && window.sekAudio[fn]) window.sekAudio[fn](); }
 
@@ -1121,7 +1117,6 @@
     return ['', 'Keep measuring, or move to the <b>software lab</b> for the software side.'];
   }
 
-<<<<<<< HEAD
   /**
    * The multimeter.
    *
@@ -1149,24 +1144,6 @@
           return '<button class="btn btn-xs' + (state.meterPoint === k ? ' btn-primary' : '') + '" data-probe="' + k + '">'
             + esc((pts[k] || {}).label || k) + '</button>';
         }).join('') + '</div></div>';
-=======
-  function renderMeterHud(t, m) {
-    var reading = state.meterReading || '---.- Ω';
-    var note = state.meterNote || 'Grounded to chassis. Select a test rail below to probe continuity & voltage.';
-    return '<div class="meter-hud" style="background:#14171f;border:1px solid #2d3748;border-radius:8px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">'
-      + '<div style="background:#090d0b;border:2px solid #1c2b20;border-radius:6px;padding:5px 12px;font-family:var(--mono);color:#4ade80;font-size:17px;font-weight:700;letter-spacing:1px;min-width:130px;text-align:right;box-shadow:inset 0 2px 4px rgba(0,0,0,0.6)">'
-      + esc(reading)
-      + '</div>'
-      + '<div style="font-size:12px;color:var(--ink-2);flex:1;min-width:200px">'
-      + '<b>📟 Digital Multimeter</b> &middot; <span style="color:var(--ink)">' + esc(note) + '</span>'
-      + '</div>'
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
-      + '<button class="btn btn-xs' + (state.meterPoint === 'ground' ? ' btn-primary' : '') + '" data-probe="ground">⏚ Ground (GND)</button>'
-      + '<button class="btn btn-xs' + (state.meterPoint === 'rail_12v' ? ' btn-primary' : '') + '" data-probe="rail_12v">⚡ 12V Main Rail</button>'
-      + '<button class="btn btn-xs' + (state.meterPoint === 'rail_5v' ? ' btn-primary' : '') + '" data-probe="rail_5v">⚡ 5V Standby</button>'
-      + '<button class="btn btn-xs' + (state.meterPoint === 'caps' ? ' btn-primary' : '') + '" data-probe="caps">🔋 Decoupling Caps</button>'
-      + '</div></div>';
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
   }
 
   // ── render ──────────────────────────────────────────────────────────
@@ -1537,7 +1514,6 @@
 
     host.querySelectorAll('[data-probe]').forEach(function (b) {
       b.addEventListener('click', function () {
-<<<<<<< HEAD
         var t = Shop.state.ticket;
         var m = J.machine(t);
         var pt = b.getAttribute('data-probe');
@@ -1560,45 +1536,6 @@
         }
         if (r.beep && window.sekAudio && window.sekAudio.playContinuityBeep) window.sekAudio.playContinuityBeep(0.22);
         else audio('playPing');
-=======
-        var pt = b.getAttribute('data-probe');
-        state.meterPoint = pt;
-        var t = Shop.state.ticket;
-        var f = J.fault(t);
-        if (pt === 'ground') {
-          state.meterReading = '0.00 Ω';
-          state.meterNote = 'Solid continuity to chassis ground (0.00 Ω). Reference baseline confirmed.';
-          if (window.sekAudio && window.sekAudio.playContinuityBeep) window.sekAudio.playContinuityBeep(0.2);
-        } else if (pt === 'rail_12v') {
-          if (f.id === 'blown_caps') {
-            state.meterReading = '0.03 Ω (SHORT!)';
-            state.meterNote = 'SHORT TO GROUND! 0.03 Ω impedance on 12V rail. Shorted capacitor or rail MOSFET bridging to ground.';
-            if (window.sekAudio && window.sekAudio.playContinuityBeep) window.sekAudio.playContinuityBeep(0.35);
-          } else if (f.id === 'dead_no_power') {
-            state.meterReading = '0.00 V (Open)';
-            state.meterNote = '0.00 V. Standby rail dead; power controller not negotiating voltage.';
-            audio('playPing');
-          } else {
-            state.meterReading = '12.04 V (>100kΩ)';
-            state.meterNote = 'Main 12V rail normal. High impedance to ground, no electrical short.';
-            audio('playPing');
-          }
-        } else if (pt === 'rail_5v') {
-          state.meterReading = '5.01 V (>45kΩ)';
-          state.meterNote = '5V standby rail healthy. Regulators operating within nominal tolerance.';
-          audio('playPing');
-        } else if (pt === 'caps') {
-          if (f.id === 'blown_caps') {
-            state.meterReading = '0.06 Ω (SHORT!)';
-            state.meterNote = 'Filter capacitor internal dielectric broken down! High ripple / DC bridge.';
-            if (window.sekAudio && window.sekAudio.playContinuityBeep) window.sekAudio.playContinuityBeep(0.3);
-          } else {
-            state.meterReading = 'Cap: Normal';
-            state.meterNote = 'Capacitor bank charging curve normal. No electrolyte leakage or short.';
-            audio('playPing');
-          }
-        }
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
         render();
       });
     });

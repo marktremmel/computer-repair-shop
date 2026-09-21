@@ -129,21 +129,13 @@
   function book(initialTab) {
     if (initialTab) TAB = initialTab;
     var S = Shop.state;
-<<<<<<< HEAD
     var tabs = [['you', 'You &amp; the shop'], ['save', 'Save &amp; load'], ['record', 'Goals &amp; record'], ['guide', 'How it works']];
-=======
-    var tabs = [['you', 'You &amp; the shop'], ['save', 'Save &amp; load'], ['record', 'Record &amp; badges'], ['guide', 'How it works']];
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     var body = TAB === 'guide'  ? '<div class="modal-body">' + guideBody() + '</div>'
              : TAB === 'save'   ? saveBody()
              : TAB === 'record' ? recordBody()
              : playerCard();
 
-<<<<<<< HEAD
     var title = TAB === 'record' ? 'Goals &amp; shop record'
-=======
-    var title = TAB === 'record' ? 'Shop record &amp; badges'
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
               : TAB === 'save'   ? 'Save &amp; load shift'
               : TAB === 'guide'  ? 'How the shop works'
               : 'You &amp; your shop';
@@ -163,19 +155,11 @@
       + '<div class="card-head">Carry this shift to another computer (Save Code)</div>'
       + '<div class="note good" style="margin-bottom:12px"><b>Two-way save code.</b> '
       + 'Restores who you are, your till balance, day, reputation, shop fittings, and job history on another computer or after a browser profile wipe.</div>'
-<<<<<<< HEAD
       + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
       + 'The shop automatically saves itself in this browser. To carry on at home or on another computer, '
       + 'copy this code and paste it into TechOps over there.</p>'
       + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
       + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:calc(11px * var(--a11y-scale, 1));resize:vertical"></textarea>'
-=======
-      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
-      + 'The shop automatically saves itself in this browser. To carry on at home or on another computer, '
-      + 'copy this code and paste it into TechOps over there.</p>'
-      + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
-      + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:11px;resize:vertical"></textarea>'
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
       + '<button class="btn btn-primary btn-sm" id="d-savecopy">Copy my save code</button>'
       + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
@@ -183,11 +167,7 @@
       + '<div id="d-savemsg" style="margin-top:8px"></div>'
 
       + '<div class="card-head" style="margin-top:22px">Handing in to your teacher?</div>'
-<<<<<<< HEAD
       + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.5;margin-bottom:10px">'
-=======
-      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-bottom:10px">'
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
       + 'The hand-in code is a <b>one-way grade report</b> for your teacher. It grades your whole shift '
       + 'and cannot be used to restore or edit marks. Save codes cannot be submitted as hand-in codes.</p>'
       + '<button class="btn btn-sm" id="d-goteacher">Open Teacher Report &amp; Hand-in Code</button>'
@@ -222,11 +202,7 @@
       + '<div class="card-head" style="margin-top:16px">Fitted out</div><div class="disk-rows">' + upList + '</div>'
 
       + '<div class="card-head" style="margin-top:18px">Shift seed</div>'
-<<<<<<< HEAD
       + '<p style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-2)">Any word seeds its own shop, and everyone who types the same word meets the same '
-=======
-      + '<p style="font-size:12.3px;color:var(--ink-2)">Any word seeds its own shop, and everyone who types the same word meets the same '
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
       + 'people and the same faults \u2014 so a class can compare decisions instead of luck.</p>'
       + '<div class="shift-picks">' + (window.TechOpsApp.SHIFT_CODES || []).map(function (sc) {
           return '<button class="shift-pick' + (S.shiftCode === sc.code ? ' current' : '') + '" data-shift="' + sc.code + '">'

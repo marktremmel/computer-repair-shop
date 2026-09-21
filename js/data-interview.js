@@ -321,8 +321,6 @@
     noise:   { w: 'cold', t: 'Completely quiet.' },
     drop:    { w: 'cold', t: 'No drops, no water.' }
   };
-<<<<<<< HEAD
-
   ANSWERS.ps5_liquid_metal = {
     when:    { w: 'warm', t: 'This last winter. It is four years old and it was silent until about Christmas.' },
     trigger: { w: 'hot',  t: 'Big games, after twenty minutes or so. The fan winds up and up and then the message comes and it just switches off.', s: ['thermal'] },
@@ -341,8 +339,6 @@
     heat:    { w: 'cold', t: 'It is not on long enough to get warm.' },
     history: { w: 'cold', t: 'Nobody has opened it.' }
   };
-=======
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
 
   /** When a fault says nothing about a question, the customer still answers. */
   var DEFAULTS = {

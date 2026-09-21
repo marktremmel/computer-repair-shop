@@ -926,32 +926,14 @@ body[data-phase="morning"] #shopdrop::after {
 
 html { font-size: calc(16px * var(--a11y-scale, 1)); }
 
-<<<<<<< HEAD
 /* Text size is one factor applied to every font size in the sheets and the
    inline styles alike (each is written as calc(Npx * var(--a11y-scale))).
    An earlier attempt also scaled a list of containers by 1em, which
    multiplied the factor in twice: a 13px note became 34px at "Largest"
    while customer names, which were not on the list, did not move at all. */
-=======
 html[data-text-size="115"] { --a11y-scale: 1.15; }
 html[data-text-size="132"] { --a11y-scale: 1.32; }
 html[data-text-size="150"] { --a11y-scale: 1.50; }
-
-/* Scale key UI containers so text size actually changes visibly */
-html:not([data-text-size="100"]) .view-head p,
-html:not([data-text-size="100"]) .card p,
-html:not([data-text-size="100"]) .modal-body,
-html:not([data-text-size="100"]) .note,
-html:not([data-text-size="100"]) .cust-quote,
-html:not([data-text-size="100"]) .ev-note,
-html:not([data-text-size="100"]) .proc-step,
-html:not([data-text-size="100"]) .disk-row,
-html:not([data-text-size="100"]) .hop,
-html:not([data-text-size="100"]) .treemap,
-html:not([data-text-size="100"]) .interlude {
-  font-size: calc(1em * var(--a11y-scale, 1));
-}
->>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
 
 /* Higher contrast: brighter ink, solid borders, no near-invisible tints. */
 html[data-contrast="high"] {

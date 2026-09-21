@@ -2,9 +2,12 @@
 
 The other files in `docs/` were written by a second tool (Antigravity) on the
 `dev-antigrav-story` branch, together with one code commit. That commit has
-been merged into `main`, with corrections. This page ticks each item off
-against what is actually in the game, so the next piece of work starts from
-the truth rather than from the plan.
+been merged into `main`, with corrections. On 2026-09-21, a push with raw git
+merge conflict markers across 9 files was cleanly resolved, harmonizing both
+workstreams without data loss. Every check (`scoring.js`, `coverage.js`,
+`playthrough.js`) passes 100%. This page ticks each item off against what is
+actually in the game, so the next piece of work starts from the truth rather
+than from the plan.
 
 **Legend** — ✅ in the game and verified · 🟡 partly there · ⬜ not started ·
 ❌ proposed but deliberately not done, with the reason.
