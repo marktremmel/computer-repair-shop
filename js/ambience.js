@@ -66,8 +66,8 @@
         this.current = ph.id;
         // Cross-fade: the new plate fades in over the old one, then replaces it.
         var next = document.createElement('div');
-        next.className = 'shop-plate';
-        next.style.backgroundImage = 'url("' + ph.img + '")';
+        var imgUrl = ph.img + (window.TECHOPS_BUILD ? '?v=' + window.TECHOPS_BUILD : '');
+        next.style.backgroundImage = 'url("' + imgUrl + '")';
         host.appendChild(next);
         requestAnimationFrame(function () { next.classList.add('in'); });
         setTimeout(function () {

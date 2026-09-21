@@ -15,7 +15,10 @@
   var UI   = window.TechOpsUI;
   var esc  = function (s) { return UI.esc(s); };
 
-  var BG = ['shop-morning', 'shop-noon', 'shop-afternoon', 'shop-evening', 'shop-night'];
+  var BG = [
+    'shop-morning', 'shop-noon', 'shop-afternoon', 'shop-golden-hour',
+    'shop-evening', 'shop-dusk', 'shop-night', 'shop-rain', 'shop-snow'
+  ];
 
   /** The shop is a real place with a time of day, even before you go in. */
   function backdrop() {
@@ -37,7 +40,8 @@
     // Resolved against the document, not the stylesheet. A relative url() in a
     // custom property is resolved where the property is *used*, which put this
     // under css/ and 404'd every time.
-    var bgUrl = new URL('assets/bg/' + backdrop() + '.webp', document.baseURI).href;
+    var stamp = window.TECHOPS_BUILD ? '?v=' + window.TECHOPS_BUILD : '';
+    var bgUrl = new URL('assets/bg/' + backdrop() + '.webp' + stamp, document.baseURI).href;
     host.style.setProperty('--title-bg', 'url("' + bgUrl + '")');
     host.innerHTML =
         '<div class="title-scrim"></div>'
