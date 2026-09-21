@@ -49,7 +49,7 @@
           + '</div>';
       }).join('');
       return '<div class="upg-group"><div class="card-head">' + esc(c.label) + '</div>'
-        + '<p style="font-size:12.5px;color:var(--ink-2);margin-bottom:11px">' + esc(c.note) + '</p>'
+        + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);margin-bottom:11px">' + esc(c.note) + '</p>'
         + '<div class="upg-grid">' + items + '</div></div>';
     }).join('');
 

@@ -2,7 +2,9 @@
  * TechOps Budapest — grading a finished job.
  *
  * Deliberately NOT "did you pick the expensive part". A job is graded on
- * six axes, and the cheap part wins on several of them. What loses is
+ * five judgements — fit, budget, speed, durability, safety — behind one
+ * gate, whether it was fixed at all (weighted 0 in W because it is a gate,
+ * not a score). The cheap part wins on several of them. What loses is
  * mismatch: hardware that does not fit the machine, or does not fit the
  * person, or does not arrive before their deadline.
  */
@@ -30,6 +32,7 @@
 
     var findings = [];   // { axis, good, text }
     var conductivePaste = false;
+    var lmSwappedForPaste = false, capsUnrated = false;
     var lessons  = [];   // teaching notes shown in the debrief
     var axes = {};
 
@@ -72,10 +75,15 @@
       findings.push({ axis: 'budget', good: false, text: wrongText || 'This fault needed no parts at all, and you fitted some anyway. It works — and none of it was necessary.' });
       lessons.push('The most expensive mistake in a repair shop is not a broken part — it is a part that was never needed. ' + fault.explain);
     }
+    // Reported, not recorded. `grade()` runs for every price the student tries
+    // at the handover — including the ones the customer refuses — so
+    // counting honest calls or awarding the badge in here counted one repair
+    // several times and handed out the badge for a bill nobody paid. The
+    // handover records it once the money actually changes hands.
+    var honestNoPart = false;
     if (fault.noPartNeeded && resolved && !ticket.installed.length) {
       findings.push({ axis: 'budget', good: true, text: 'You found a fault that needed no parts, said so, and charged for your time instead of inventing a sale.' });
-      shop.state.honestRefusals++;
-      shop.award('honest_tech');
+      honestNoPart = true;
     }
 
     // ── 2. Fit: does the hardware suit this person? ───────────────────
@@ -186,9 +194,24 @@
         }
       }
 
-      if (p.cat === 'thermal' && p.spec.conductive) {
+      if (p.cat === 'thermal' && fault.id === 'ps5_liquid_metal') {
+        // The one machine here designed around liquid metal: a barrier round
+        // the die and a copper plate. Paste is the compromise, not the fix.
+        if (p.spec.conductive) {
+          findings.push({ axis: 'fit', good: true, text: 'Liquid metal back on a chip whose cooler was built for it, inside the barrier Sony put there for exactly that.' });
+        } else {
+          fitScore -= 22;
+          lmSwappedForPaste = true;
+          findings.push({ axis: 'fit', good: false, text: 'Paste where the console was designed for liquid metal. It works, but a 200-watt chip runs about ten degrees hotter on it and ordinary paste pumps out under that heat.' });
+        }
+      } else if (p.cat === 'thermal' && p.spec.conductive) {
         conductivePaste = true;
         findings.push({ axis: 'safety', good: false, text: 'Liquid metal in a customer machine. It works brilliantly right up until it migrates, and then it shorts a board you do not own.' });
+      }
+      if (p.cat === 'caps' && fault.id === 'ps5_rail_short' && p.spec.volts === 'unknown') {
+        fitScore -= 18;
+        capsUnrated = true;
+        findings.push({ axis: 'fit', good: false, text: 'An unmarked capacitor on the 12 V rail. If it is rated below the rail voltage it fails short again, and nobody can tell you what that one is rated for.' });
       }
     });
     axes.fit = clamp(fitScore);
@@ -305,6 +328,19 @@
     }
     axes.speed = clamp(speedScore);
 
+    /*
+     * Repasting without clearing the fins used to fail silently: five stars at
+     * the counter, then the machine back in six days with nothing in the
+     * review to say why. It is now said at the handover and costs durability.
+     *
+     * Only when clearing the fins was possible on this machine. On a tower
+     * the step was unreachable, so a careful student was guaranteed a
+     * comeback they could do nothing about.
+     */
+    var finsReachable = window.TechOpsJobs.hasStepFor(window.TechOpsJobs.ACTIONS.clean_fins, machine);
+    var finsSkipped = fault.id === 'thermal_paste_dead' && resolved && finsReachable
+      && ticket.actionsDone.indexOf('clean_fins') === -1;
+
     // ── 5. Durability ─────────────────────────────────────────────────
     var risk = 0;
     ticket.installed.forEach(function (i) {
@@ -312,6 +348,13 @@
       if (p) risk = Math.max(risk, p.risk);
     });
     var durScore = clamp(100 - risk * 100 * (0.6 + uc.durabilitySensitivity * 0.8));
+    if (finsSkipped) {
+      durScore = clamp(durScore - 30);
+      findings.push({ axis: 'durability', good: false, text: 'Fresh paste, but the fin stack behind it is still packed with dust. '
+        + 'The heat has nowhere to go, and it will be back at the same temperature within a week.' });
+      lessons.push('Dried paste and a clogged heatsink usually arrive together, because they have the same cause: years of heat and dust. '
+        + 'Fix one and not the other and you have fixed half the problem.');
+    }
     if (risk >= 0.25) {
       findings.push({ axis: 'durability', good: false, text: 'No warranty on the parts you fitted, and this class of part has a real failure rate. If it dies in four months, that is your problem, not the seller\'s.' });
     } else if (risk <= 0.05 && ticket.installed.length) {
@@ -422,7 +465,7 @@
      * than building anything — which is how word of mouth actually behaves.
      * Recovery is still quick: five good jobs undo a bad week.
      */
-    var REP_BY_STARS = { 1: -16, 2: -9, 3: -1, 4: 4, 5: 8 };
+    var REP_BY_STARS = { 1: -18, 2: -11, 3: -3, 4: 4, 5: 8 };
     var repDelta = REP_BY_STARS[stars] === undefined ? 0 : REP_BY_STARS[stars];
     if (ticket.warranty) repDelta -= 3;
 
@@ -438,8 +481,14 @@
         comeback = { cat: cbCat, inDays: 3 + Math.floor(shop.rng() * 5) };
       }
       // Dead paste on a fault you "fixed" with a fan and nothing else, etc.
-      if (fault.id === 'thermal_paste_dead' && ticket.actionsDone.indexOf('clean_fins') === -1) {
+      if (fault.id === 'thermal_paste_dead' && finsSkipped) {
         comeback = comeback || { cat: 'thermal', inDays: 6, reason: 'You repasted but never cleared the blocked fin stack.' };
+      }
+      if (lmSwappedForPaste && shop.rng() < 0.5) {
+        comeback = comeback || { cat: 'thermal', inDays: 7, reason: 'Ordinary paste on a 200-watt chip built for liquid metal pumped out under the heat.' };
+      }
+      if (capsUnrated && shop.rng() < 0.5) {
+        comeback = comeback || { cat: 'caps', inDays: 5, reason: 'The unmarked capacitor was rated below the rail and failed short again.' };
       }
     }
 
@@ -453,6 +502,7 @@
       reviewBody: body,
       repDelta: repDelta,
       comeback: comeback,
+      honestNoPart: honestNoPart,
       riskPct: Math.round(risk * 100)
     };
   }

@@ -13,7 +13,16 @@
   var J    = window.TechOpsJobs;
   var esc  = function (s) { return UI.esc(s); };
 
-  var state = { tool: null, inHand: null, msg: '', inspect: false };
+  /**
+   * The bench's working state. One definition, used at load and by reset():
+   * there used to be two, and reset() had quietly dropped the meter and the
+   * component labels, so they vanished between jobs — and a reading from the
+   * last machine could still be sitting on the meter's display.
+   */
+  function freshState() {
+    return { tool: null, inHand: null, msg: '', inspect: false, meter: false, meterPoint: null };
+  }
+  var state = freshState();
 
   function audio(fn) { if (window.sekAudio && window.sekAudio[fn]) window.sekAudio[fn](); }
 
@@ -121,6 +130,7 @@
       ram_starved:        'not enough for the workload',
       fan_seized:         'fan will not turn — bearing seized',
       thermal_paste_dead: 'paste dried and cracked, fins blocked',
+      ps5_liquid_metal:   'liquid metal dried to one edge, die part-bare',
       battery_swollen:    'pack visibly domed — swollen',
       cracked_screen:     'glass shattered, digitiser dead',
       port_lint:          'port packed with compacted lint'
@@ -583,6 +593,28 @@
       return render();
     }
 
+    // Moving the monitor cable is a hand movement at the back of the case:
+    // out of the motherboard's video port near the top, down past the
+    // board, and into the graphics card's port on the bracket below.
+    if (actionId === 'swap_gpu_cable' && !t._cableMoved) {
+      var hostG = gestureHost();
+      if (hostG) {
+        window.TechOpsPrecision.run({
+          type: 'trace', host: hostG, tolerance: 6,
+          path: [{ x: 20, y: 16 }, { x: 20, y: 58 }, { x: 34, y: 58 }],
+          start: { x: 20, y: 16 },
+          title: 'Move the monitor cable to the graphics card',
+          hint: 'Out of the motherboard port at the top, down the back of the case, into the card\'s port on the bracket. It only goes in one way round.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Left the cable where it was.'; return render(); }
+            t._cableMoved = true;
+            doAction('swap_gpu_cable');
+          }
+        });
+        return;
+      }
+    }
+
     if (actionId === 'reconnect_power') {
       var stageR = gestureHost();
       if (stageR && !t._loomDone) {
@@ -638,7 +670,7 @@
       return render();
     }
 
-    if (a.onlyMachines && a.onlyMachines.indexOf(m.id) === -1) {
+    if ((a.onlyMachines && a.onlyMachines.indexOf(m.id) === -1) || (a.notMachines && a.notMachines.indexOf(m.id) !== -1)) {
       state.msg = 'Not on this machine — there is nothing here that this applies to.';
       audio('playErrorBuzz');
       UI.toast('Not applicable', '“' + a.label + '” is not something a ' + m.name + ' has.', 'bad');
@@ -678,7 +710,7 @@
             return p && p.cat === a.needsPartCat;
           });
           var what = a.needsPartCat === 'thermal' ? 'thermal compound'
-                   : a.needsPartCat === 'caps' ? 'replacement capacitors'
+                   : a.needsPartCat === 'caps' ? 'replacement capacitors (Parts market \u203a Board parts)'
                    : a.needsPartCat;
           state.msg = onWay
             ? 'Your ' + what + ' is still in transit. Wait for the delivery in the Parts market.'
@@ -740,6 +772,9 @@
           type: 'nudge', host: stageC, tolerance: 3.2, pushDir: 'up',
           targets: [{ x: atC.x - 5.5, y: atC.y }, { x: atC.x + 5.5, y: atC.y }],
           title: 'Lift the failed capacitors off the board',
+          overText: 'You pulled too far, too fast, and the pad came up with the leg.',
+          sideText: 'You are rocking it sideways. Straight up, both legs at once.',
+          wornText: 'All that rocking has lifted the pad. That capacitor is out, and the pad came with it.',
           hint: 'Heat both legs together and draw the can straight up. Rock it out and the pad comes with it — and a lifted pad is a much longer afternoon than a capacitor.',
           onDone: function (res) {
             if (res.aborted) { state.msg = 'Iron back in the stand. Nothing changed.'; return render(); }
@@ -752,6 +787,82 @@
             }
             t._capsDone = true;
             doAction('replace_caps');
+          }
+        });
+        return;
+      }
+    }
+
+    // Liquid metal: lifted off a bead at a time, never smeared sideways
+    // toward the barrier, then brushed back on as a thin film.
+    if (actionId === 'clean_lm' && !t._lmClean) {
+      var stL = gestureHost();
+      if (stL) {
+        var atL = chipCentre(m, 'cpu') || { x: 50, y: 48 };
+        window.TechOpsPrecision.run({
+          type: 'scrape', host: stL, start: atL, tolerance: 4, strokes: 7,
+          title: 'Swab the old liquid metal off the die',
+          hint: 'Short strokes, straight in and out, lifting each bead onto the swab. Wander sideways and you push beads over the foam barrier onto the board.',
+          offText: 'Off the die \u2014 that is toward the barrier, and past it is bare board.',
+          strokeText: 'Another bead lifted onto the swab.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Put the swab down. The die is as you found it.'; return render(); }
+            if (!res.ok || res.quality < 0.7) {
+              t.sloppySteps = (t.sloppySteps || 0) + 1;
+              t.labourHours += 0.3;
+              UI.toast('Bead on the barrier', 'One bead ended up on the foam. You chase it off with a fresh swab \u2014 slower, but it never reached the board.', 'bad');
+            }
+            t._lmClean = true;
+            doAction('clean_lm');
+          }
+        });
+        return;
+      }
+    }
+    if (actionId === 'redo_liquid_metal' && !t._lmApplied) {
+      var stA = gestureHost();
+      if (stA) {
+        var atA = chipCentre(m, 'cpu') || { x: 50, y: 48 };
+        var zz = [[-5, -3], [5, -3], [-5, 0], [5, 0], [-5, 3], [5, 3]];
+        window.TechOpsPrecision.run({
+          type: 'trace', host: stA, tolerance: 3,
+          path: zz.map(function (d) { return { x: atA.x + d[0], y: atA.y + d[1] }; }),
+          start: { x: atA.x - 5, y: atA.y - 3 },
+          title: 'Brush a thin film across the whole die',
+          hint: 'Row by row, edge to edge. You want a mirror, not a puddle \u2014 any bead left standing is one that can roll.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Brush down. Nothing applied yet.'; return render(); }
+            if (res.quality < 0.7) t.sloppySteps = (t.sloppySteps || 0) + 1;
+            t._lmApplied = true;
+            doAction('redo_liquid_metal');
+          }
+        });
+        return;
+      }
+    }
+    if (actionId === 'replace_shorted_cap' && !t._capShortDone) {
+      var stS = gestureHost();
+      if (stS) {
+        var atS2 = chipCentre(m, 'cpu') || { x: 50, y: 48 };
+        window.TechOpsPrecision.run({
+          type: 'nudge', host: stS, tolerance: 2.4, pushDir: 'up',
+          targets: [{ x: atS2.x + 9, y: atS2.y + 4 }],
+          title: 'Lift the shorted capacitor',
+          overText: 'You yanked it. The part came off and took one of its pads with it.',
+          sideText: 'Sideways drags the part across its neighbours. Straight up.',
+          wornText: 'Too much wobbling with a hot iron \u2014 the pad has lifted off the board.',
+          hint: 'The one that warmed up when you fed the rail a volt. Hot tweezers on both ends at once and lift it straight up \u2014 it is smaller than a grain of rice, and so are the pads under it.',
+          onDone: function (res) {
+            if (res.aborted) { state.msg = 'Tweezers back in the stand.'; return render(); }
+            if (!res.ok) {
+              t.boardRework = (t.boardRework || 0) + 1;
+              t.labourHours += 1.0;
+              UI.toast('Pad lifted', 'The pad came up with the part. A jumper wire brings it back, and it will always be a repair.', 'bad');
+            } else if (res.quality < 0.75) {
+              t.sloppySteps = (t.sloppySteps || 0) + 1;
+            }
+            t._capShortDone = true;
+            doAction('replace_shorted_cap');
           }
         });
         return;
@@ -806,9 +917,23 @@
     t.labourHours += a.labourHours;
     audio(actionId === 'clean_fins' ? 'playAirBlow' : 'playScrew');
     state.msg = a.done;
-    UI.toast(a.label, a.done, 'good');
+    // Anything you do to the machine can change what the instruments say, so
+    // every test you already ran becomes worth running again. Without this a
+    // repair made by hand (scraping a port, reseating a cable) left you with
+    // no way to see whether it had worked.
+    t.retestNeeded = true;
+    var again = confirmingTests(t);
+    UI.toast(a.label, a.done + (again.length
+      ? ' Re-run ' + again.join(' or ') + ' to see whether it worked.' : ''), 'good');
     Shop.emit('change');
     render();
+  }
+
+  /** The instruments already run that would show this fault going away. */
+  function confirmingTests(t) {
+    var by = (window.TechOpsIntake ? window.TechOpsIntake.revealedBy(J.fault(t).id) : []);
+    return by.filter(function (id) { return t.testsRun.indexOf(id) !== -1 && UI.INSTRUMENTS[id]; })
+      .map(function (id) { return UI.INSTRUMENTS[id].name.toLowerCase(); });
   }
 
   function runInstrument(id) {
@@ -822,10 +947,16 @@
       if (t.retests[id]) return;
       t.retests[id] = true;
       t.labourHours += inst.hours;
-      audio('playSuccessChime');
       var after = repairedReading(t, id);
-      state.msg = inst.name + ' (after the repair): ' + after;
-      UI.toast('\u2713 ' + inst.name + ' re-run', after, 'good');
+      state.msg = inst.name + ' (after the repair): ' + after.text;
+      // A re-test of the instrument that found the fault, now reading normal,
+      // is the proof. Say so plainly — that is the moment the job is done.
+      var proves = after.fixed && ((window.TechOpsIntake ? window.TechOpsIntake.revealedBy(J.fault(t).id) : [])).indexOf(id) !== -1;
+      if (proves) t.fixConfirmed = true;
+      audio(after.fixed ? 'playSuccessChime' : 'playErrorBuzz');
+      UI.toast(proves ? '\u2713 Fix confirmed' : after.fixed ? inst.name + ' re-run' : 'Still not right',
+        (proves ? 'The same test that found the fault now reads normal. ' : '') + after.text,
+        after.fixed ? 'good' : 'bad');
       Shop.emit('change');
       return render();
     }
@@ -845,18 +976,33 @@
     audio('playPing');
     var r = window.TechOpsFaults.readingsFor(J.machine(t), J.fault(t))[id] || {};
     state.msg = inst.name + ': ' + (r.note || 'nothing unusual.');
+    // A finding worth putting to the customer. Say so where it happened.
+    var opened = window.TechOpsInterview && window.TechOpsInterview.unlockedBy(t, J.machine(t), id);
+    if (opened && opened.length) {
+      UI.toast('Worth asking ' + J.customer(t).name + ' about',
+        'What you just found gives you something to put to them. It is waiting at the sit-down \u2014 and how you put it matters.', 'info');
+    }
     Shop.emit('change');
     render();
   }
 
   /** What an instrument says once the fault has actually been dealt with. */
-  function repairedReading(t, id) {
+  function isFixed(t) {
     var f = J.fault(t);
-    var fixed = (f.fixedBy.kind === 'part'
+    return (f.fixedBy.kind === 'part'
         && t.installed.some(function (i) { return i.cat === f.fixedBy.cat; }))
       || (f.fixedBy.kind === 'action' && t.actionsDone.indexOf(f.fixedBy.id) !== -1);
-    if (!fixed) return 'unchanged — whatever was wrong is still wrong.';
-    return {
+  }
+
+  function repairedReading(t, id) {
+    var f = J.fault(t);
+    var fixed = isFixed(t);
+    if (!fixed) return { fixed: false, text: 'unchanged — whatever was wrong is still wrong.' };
+    // A fault can say what its own instruments read once it is gone; the
+    // table below is only the fallback.
+    var own = f.after && f.after[id];
+    if (own) return { fixed: true, text: own };
+    return { fixed: true, text: {
       smart:        'health GOOD, 0 reallocated, 0 pending. The new drive reports clean.',
       bench:        'sequential back up to full bus speed, latency under a millisecond.',
       listen:       'silent. No clicking.',
@@ -866,8 +1012,9 @@
       power:        'plug seats flush, full wattage negotiated.',
       activity:     'memory pressure green, swap back to almost nothing.',
       storage_used: 'plenty of free space, write speed recovered.',
-      visual:       'clean inside, nothing out of place.'
-    }[id] || 'normal.';
+      visual:       'clean inside, nothing out of place.',
+      meter:        'every rail where it should be, nothing shorted to ground.'
+    }[id] || 'normal.' };
   }
 
   function install(shelfIndex, cat) {
@@ -970,6 +1117,35 @@
     return ['', 'Keep measuring, or move to the <b>software lab</b> for the software side.'];
   }
 
+  /**
+   * The multimeter.
+   *
+   * Test points come from the machine's own power design (see meterBaseline
+   * in data-faults.js), and the reading at each one comes from the fault, so
+   * a new fault only has to say what its rails look like. Getting the meter
+   * out costs bench time the first time, like any instrument, and counts as
+   * evidence for the faults a meter genuinely shows.
+   */
+  /** What the probes read now: the fault's rails, or healthy ones once it is fixed. */
+  function meterPoints(t, m) {
+    var F = window.TechOpsFaults;
+    return (isFixed(t) ? F.baseline(m) : F.readingsFor(m, J.fault(t))).meter || {};
+  }
+
+  function renderMeterHud(t, m) {
+    var pts = meterPoints(t, m);
+    var baseKeys = Object.keys(window.TechOpsFaults.baseline(m).meter || {});
+    var cur = state.meterPoint && pts[state.meterPoint];
+    return '<div class="meter-hud">'
+      + '<div class="meter-lcd' + (cur && cur.beep ? ' beep' : '') + '">' + esc(cur ? cur.v : '---') + '</div>'
+      + '<div class="meter-note"><b>Multimeter</b> · '
+      + esc(cur ? cur.note : 'Black probe on chassis ground. Pick where the red one goes.') + '</div>'
+      + '<div class="meter-pts">' + baseKeys.map(function (k) {
+          return '<button class="btn btn-xs' + (state.meterPoint === k ? ' btn-primary' : '') + '" data-probe="' + k + '">'
+            + esc((pts[k] || {}).label || k) + '</button>';
+        }).join('') + '</div></div>';
+  }
+
   // ── render ──────────────────────────────────────────────────────────
   function render() {
     var host = document.getElementById('view-bench');
@@ -1052,7 +1228,7 @@
                  + (nStripped ? ' · ' + nStripped + ' rounded' : '')
          : 'nothing holding it — lift it off');
     chassis += '<div class="chassis-label">' + m.icon + '<br>' + esc(m.name)
-      + '<br><span style="font-size:10px">' + esc(sealState) + '</span>'
+      + '<br><span style="font-size:calc(10px * var(--a11y-scale, 1))">' + esc(sealState) + '</span>'
       + (closedNext ? '<br><span class="chassis-next">click to ' + esc(J.STEPS[closedNext].label.toLowerCase()) + '</span>' : '')
       + '</div>';
     if (closedNext) chassis = chassis.replace('<div class="chassis ', '<div data-devstep="' + closedNext + '" class="chassis clickable ');
@@ -1113,8 +1289,10 @@
         + '<div class="board-tools">'
         + '<button class="btn btn-sm' + (state.inspect ? ' btn-go' : '') + '" data-inspect>'
         + (state.inspect ? '\u2713 Labels on' : 'Label the components') + '</button>'
+        + '<button class="btn btn-sm' + (state.meter ? ' btn-primary' : '') + '" data-toggle-meter>📟 Multimeter probe</button>'
         + '<span class="board-note">' + esc(L.note) + '</span>'
-        + '</div>';
+        + '</div>'
+        + (state.meter ? renderMeterHud(t, m) : '');
     }
 
     // The next step you could actually take on a closed machine — so clicking
@@ -1165,10 +1343,10 @@
       proc += '<button class="step' + (done ? ' done' : '') + (gate ? ' gate' : '') + '" data-step="' + sid + '"'
         + (done ? ' disabled' : '') + ' title="' + esc(def.why || (needsDriver ? 'Needs a screwdriver in hand.' : '')) + '">'
         + '<span class="sn">' + (done ? '✓' : i + 1) + '</span><span>' + esc(def.label)
-        + (gate && !done ? '<br><span style="font-size:10.5px;color:var(--ink-3)">safety step</span>' : '')
-        + (wrongTool ? '<br><span style="font-size:10.5px;color:var(--amber)">🪛 needs a driver in hand</span>' : '')
+        + (gate && !done ? '<br><span style="font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--ink-3)">safety step</span>' : '')
+        + (wrongTool ? '<br><span style="font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--amber)">🪛 needs a driver in hand</span>' : '')
         + (def.tool && def.tool !== 'driver' && !done && state.tool !== def.tool
-            ? '<br><span style="font-size:10.5px;color:var(--amber)">' + J.TOOLS[def.tool].icon + ' needs the ' + esc(J.TOOLS[def.tool].name) + '</span>' : '')
+            ? '<br><span style="font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--amber)">' + J.TOOLS[def.tool].icon + ' needs the ' + esc(J.TOOLS[def.tool].name) + '</span>' : '')
         + '</span></button>';
     });
 
@@ -1203,8 +1381,8 @@
       proc += '<button class="step' + (done ? ' done' : '') + (idle && !want.length ? ' unindicated' : '')
         + '" data-action="' + aid + '"' + (done ? ' disabled' : '') + '>'
         + '<span class="sn">' + (done ? '✓' : a.icon) + '</span><span>' + esc(a.label)
-        + (want.length ? '<br><span style="font-size:10.5px;color:var(--amber)">' + esc(want[0]) + '</span>'
-           : idle ? '<br><span style="font-size:10.5px;color:var(--ink-3)">' + esc(idle) + '</span>' : '')
+        + (want.length ? '<br><span style="font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--amber)">' + esc(want[0]) + '</span>'
+           : idle ? '<br><span style="font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--ink-3)">' + esc(idle) + '</span>' : '')
         + '</span></button>';
     });
 
@@ -1229,7 +1407,7 @@
     // ── shelf ──
     var shelf = '<div class="procedure shelf-col"><h4>Parts shelf</h4>';
     if (!Shop.state.shelf.length && !Shop.state.onOrder.length) {
-      shelf += '<div style="font-size:11.5px;color:var(--ink-3);line-height:1.55">Empty. Diagnose first, then buy only what the measurements justify.</div>';
+      shelf += '<div style="font-size:calc(11.5px * var(--a11y-scale, 1));color:var(--ink-3);line-height:1.55">Empty. Diagnose first, then buy only what the measurements justify.</div>';
     }
     Shop.state.shelf.forEach(function (entry, i) {
       var p = window.TechOpsParts.get(entry.partId);
@@ -1244,7 +1422,7 @@
       shelf += '<div class="shelf-item transit"><div class="si-name">' + esc(p.name) + '</div>'
         + '<div class="si-meta">in transit · ' + o.daysLeft + ' day' + (o.daysLeft === 1 ? '' : 's') + ' out</div></div>';
     });
-    shelf += '<div style="margin-top:10px;font-size:11px;color:var(--ink-3);line-height:1.5">'
+    shelf += '<div style="margin-top:10px;font-size:calc(11px * var(--a11y-scale, 1));color:var(--ink-3);line-height:1.5">'
       + (state.inHand !== null ? 'Now click the bay it goes into.' : 'Click a part to pick it up, then click its bay.') + '</div></div>';
 
     var turn = J.turnaroundDays(t);
@@ -1326,6 +1504,42 @@
     var insp = host.querySelector('[data-inspect]');
     if (insp) insp.addEventListener('click', function () { state.inspect = !state.inspect; render(); });
 
+    host.querySelectorAll('[data-toggle-meter]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        state.meter = !state.meter;
+        audio('playKeyPop');
+        render();
+      });
+    });
+
+    host.querySelectorAll('[data-probe]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket;
+        var m = J.machine(t);
+        var pt = b.getAttribute('data-probe');
+        // Getting the meter out and set up is bench time, the first time.
+        if (t.testsRun.indexOf('meter') === -1) {
+          t.testsRun.push('meter');
+          t.labourHours += 0.4;
+          Shop.emit('change');
+        }
+        state.meterPoint = pt;
+        t.meterProbed = t.meterProbed || [];
+        if (t.meterProbed.indexOf(pt) === -1) { t.meterProbed.push(pt); Shop.emit('change'); }
+        var r = meterPoints(t, m)[pt] || {};
+        // Probing the rail that was wrong, and finding it right, is proof.
+        var faultPts = (J.fault(t).readings || {}).meter || {};
+        if (isFixed(t) && faultPts[pt] && !t.fixConfirmed) {
+          t.fixConfirmed = true;
+          UI.toast('\u2713 Fix confirmed', (r.label || pt) + ' now reads ' + r.v + '. The rail that was wrong is right.', 'good');
+          Shop.emit('change');
+        }
+        if (r.beep && window.sekAudio && window.sekAudio.playContinuityBeep) window.sekAudio.playContinuityBeep(0.22);
+        else audio('playPing');
+        render();
+      });
+    });
+
     host.querySelectorAll('[data-region]').forEach(function (g) {
       var chipId = g.getAttribute('data-region');
       var mm = J.machine(Shop.state.ticket);
@@ -1380,5 +1594,5 @@
     });
   }
 
-  window.TechOpsBench = { render: render, reset: function () { state = { tool: null, inHand: null, msg: '' }; } };
+  window.TechOpsBench = { render: render, reset: function () { state = freshState(); } };
 })(window);

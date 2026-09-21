@@ -8,12 +8,60 @@
   var UI   = window.TechOpsUI;
   var esc  = function (s) { return UI.esc(s); };
 
+  /*
+   * Goals.
+   *
+   * These started as badges with the description hidden in a tooltip, so a
+   * student could not see what they were for until they had stumbled into
+   * one. They are now a visible checklist of the basic habits the shop
+   * teaches: each says what to do, why it matters, and how far along you are.
+   * Ordered roughly the way a first shift would meet them.
+   *
+   * `progress(S)` returns [have, need] for anything countable.
+   */
   var BADGES = {
-    honest_tech: { icon: '🤝', name: 'Told them the truth', desc: 'Found a fault that needed no parts and said so, instead of selling hardware.' },
-    no_upsell:   { icon: '🪙', name: 'No upsell',           desc: 'Did it twice. This is the habit the whole shop is built on.' },
-    five_star:   { icon: '⭐', name: 'Five stars',          desc: 'A job that was right on every axis at once.' },
-    five_jobs:   { icon: '🔧', name: 'Five machines in',    desc: 'Five jobs closed.' },
-    chip_reader: { icon: '🔬', name: 'Reads boards',        desc: 'Five chips identified in a row on the Chip ID bench.' }
+    first_job:   { icon: '🔧', name: 'Open for business',
+                   goal: 'Close your first job.',
+                   why:  'Everything else starts here.',
+                   progress: function (S) { return [Math.min(1, S.jobsDone || 0), 1]; } },
+    asked_first: { icon: '💬', name: 'Asked before opening',
+                   goal: 'Fix a job after asking at least three questions and running no more than two instruments.',
+                   why:  'A question costs six minutes. Running every test costs the customer a day.' },
+    honest_tech: { icon: '🤝', name: 'Told them the truth',
+                   goal: 'Fix a fault that needed no parts — and sell none.',
+                   why:  'Sometimes the right repair is free. Saying so is the job.' },
+    grounded:    { icon: '⚡', name: 'Grounded',
+                   goal: 'Finish three jobs with the ESD strap on.',
+                   why:  'Static you cannot feel kills chips weeks later, long after the customer has paid.',
+                   progress: function (S) { return [Math.min(3, (S.goalStats || {}).grounded || 0), 3]; } },
+    on_time:     { icon: '⏱️', name: 'As promised',
+                   goal: 'Hand back three jobs on or before the day you promised.',
+                   why:  'Their time is part of the price. A cheap part that arrives late cost them more.',
+                   progress: function (S) { return [Math.min(3, (S.goalStats || {}).onTime || 0), 3]; } },
+    no_upsell:   { icon: '🪙', name: 'No upsell, twice',
+                   goal: 'Be honest about needing no parts — or not being worth fixing — on two jobs.',
+                   why:  'Once is luck. Twice is the habit the whole shop is built on.',
+                   progress: function (S) { return [Math.min(2, S.honestRefusals || 0), 2]; } },
+    said_no:     { icon: '🙅', name: 'Said no',
+                   goal: 'Turn down a repair that was not worth it, and charge only for the diagnosis.',
+                   why:  'Knowing when not to repair is part of repairing.' },
+    measured:    { icon: '📟', name: 'Measured, not guessed',
+                   goal: 'Solve a job the multimeter helped you find.',
+                   why:  'A reading beats a hunch — as long as it is the right instrument for the question.' },
+    five_star:   { icon: '⭐', name: 'Five stars',
+                   goal: 'Get one job right on every judgement at once: part, price, time, durability and workmanship.',
+                   why:  'A job is only as good as its worst side.' },
+    five_jobs:   { icon: '🧰', name: 'Five machines in',
+                   goal: 'Close five jobs.',
+                   why:  'The shop gets easier to read the more of it you have seen.',
+                   progress: function (S) { return [Math.min(5, S.jobsDone || 0), 5]; } },
+    good_name:   { icon: '🏪', name: 'Word gets round',
+                   goal: 'Reach a reputation of 75.',
+                   why:  'A good name is what fills the counter tomorrow.',
+                   progress: function (S) { return [Math.min(75, Math.round(S.reputation || 0)), 75]; } },
+    chip_reader: { icon: '🔬', name: 'Reads boards',
+                   goal: 'Identify five chips in a row on the Chip ID bench.',
+                   why:  'Knowing what you are looking at is half of any repair.' }
   };
 
   var VIEWS = ['counter', 'intake', 'bench', 'mac', 'market', 'handover', 'chipid', 'shopfit'];
@@ -157,7 +205,7 @@
       }).join('');
 
       UI.modal('<div class="modal-head"><h3>Hints</h3>'
-        + '<div style="font-size:12.3px;color:var(--ink-3)">The first three are free. The last one costs bench time \u2014 the same way buying an answer works in a real shop.</div></div>'
+        + '<div style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-3)">The first three are free. The last one costs bench time \u2014 the same way buying an answer works in a real shop.</div></div>'
         + '<div class="modal-body">' + html + '</div>'
         + '<div class="modal-foot"><button class="btn" data-close>Close</button></div>');
 
@@ -182,8 +230,8 @@
 
     briefing: function () {
       UI.modal('<div class="modal-head"><h3>TechOps Budapest</h3>'
-        + '<div style="font-size:12.5px;color:var(--ink-3)">You are running the repair shop.</div></div><div class="modal-body">'
-        + '<p style="font-size:13.5px;color:var(--ink-2)">Somebody hands you a machine and tells you what they think is wrong. '
+        + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">You are running the repair shop.</div></div><div class="modal-body">'
+        + '<p style="font-size:calc(13.5px * var(--a11y-scale, 1));color:var(--ink-2)">Somebody hands you a machine and tells you what they think is wrong. '
         + 'They are often wrong — that is not a trick, it is what actually happens at a counter.</p>'
         + '<div class="note" style="margin:14px 0"><b>The loop</b><br>'
         + '<b>1 · Counter</b> — pick a job. The budget and the deadline are part of the puzzle.<br>'
@@ -194,7 +242,7 @@
         + '<b>6 · Handover</b> — set your price and find out what they thought.</div>'
         + '<div class="note teach"><b>The one thing worth knowing before you start:</b> three of the ten faults in this shop '
         + 'need no parts at all. Selling somebody a drive to fix a full Downloads folder works, and it is still the worst thing you can do to them.</div>'
-        + '<div class="note" style="margin-top:14px;font-size:12.2px"><b>Credits.</b> '
+        + '<div class="note" style="margin-top:14px;font-size:calc(12.2px * var(--a11y-scale, 1))"><b>Credits.</b> '
         + 'Character portraits are built from the <a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">'
         + 'Pixel Portrait Creator</a> by <b>Lyime</b>. The shop art, sounds and everything else are part of this material.</div>'
         + '</div><div class="modal-foot"><button class="btn btn-primary" data-close>Open the shop</button></div>');
@@ -273,6 +321,7 @@
 
     boot: function () {
       Shop.init();
+      if (window.TechOpsJobs.repairComplaints(Shop)) Shop.save();
       Shop.state.pendingComebacks = Shop.state.pendingComebacks || [];
       Shop.state.upgrades = Shop.state.upgrades || {};
       // Hand-built faces are stored whole, so they survive a reload.
@@ -289,6 +338,10 @@
       document.querySelectorAll('[data-view]').forEach(function (b) {
         b.addEventListener('click', function () { App.go(b.getAttribute('data-view')); });
       });
+      var pChip = document.getElementById('player-chip');
+      if (pChip) pChip.addEventListener('click', function () { window.TechOpsDossier.book('you'); });
+      var btnSave = document.getElementById('btn-save');
+      if (btnSave) btnSave.addEventListener('click', function () { window.TechOpsDossier.book('save'); });
       document.getElementById('btn-badges').addEventListener('click', function () {
         window.TechOpsDossier.book('record');
       });
@@ -297,7 +350,7 @@
       Shop.on('change', App.refreshPlayerChip);
       document.getElementById('btn-access').addEventListener('click', function () {
         var m = UI.modal('<div class="modal-head"><h3>Making it easier to read</h3>'
-          + '<div style="font-size:12.5px;color:var(--ink-3)">Kept in this browser, so it stays set on this machine.</div></div>'
+          + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Kept in this browser, so it stays set on this machine.</div></div>'
           + '<div class="modal-body">' + window.TechOpsA11y.panel() + '</div>'
           + '<div class="modal-foot"><button class="btn btn-primary" data-close>Done</button></div>');
         // Re-render so the switches show their new state, then re-bind.
@@ -337,7 +390,7 @@
 
       Shop.on('badge', function (id) {
         var b = BADGES[id];
-        if (b) UI.toast(b.icon + ' ' + b.name, b.desc, 'good');
+        if (b) UI.toast(b.icon + ' Goal reached — ' + b.name, b.why, 'good');
       });
       Shop.on('change', function () {
         UI.refresh(); App.paintFaces();

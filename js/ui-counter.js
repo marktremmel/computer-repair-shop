@@ -40,8 +40,18 @@
   }
 
   /** Nothing at the counter is a state you can get out of — by waiting. */
+  /**
+   * Pass on everyone waiting and see who comes in next.
+   *
+   * This used to advance the day and then refill the queue — which was
+   * already full of the same people, so nobody new ever arrived and the
+   * button looked broken. The people you passed on do not wait around for
+   * days either: they leave. Warranty comebacks stay, because those are
+   * yours whether you like it or not.
+   */
   function waitForTrade() {
     var f = J.footfall(Shop);
+    Shop.state.queue = (Shop.state.queue || []).filter(function (q) { return q.warranty; });
     Shop.advanceDays(f.quietDays);
     fillQueue();
     UI.toast('The bell goes',
@@ -78,15 +88,15 @@
         + '<div class="counter-scene"><div class="walkin">'
         + '<div class="walkin-avatar">' + UI.face(c, 78) + '</div>'
         + '<h3 class="clickable-name" data-person="' + esc(c.id || c.name) + '">' + esc(c.name) + '</h3>'
-        + '<div style="font-size:12px;color:var(--ink-3);margin-bottom:10px">' + esc(c.tag) + '</div>'
+        + '<div style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3);margin-bottom:10px">' + esc(c.tag) + '</div>'
         + '<div class="speech">“' + esc(t.complaint) + '”</div>'
         + '<div class="speech">“' + esc(c.lines.greet) + '”</div>'
         + '<div class="speech">“' + esc(c.lines.budget) + '”</div>'
         + '<div class="note teach" style="margin-top:14px"><b>What they think is wrong:</b> ' + esc(f.customerTheory)
         + '<br><br>They are describing a symptom. Go and measure the machine before you believe any of it.</div>'
         + '</div><div class="card"><div class="card-head">What they actually need it for</div>'
-        + '<div style="font-size:14px;font-weight:650;margin-bottom:6px">' + esc(J.useCase(t).label) + '</div>'
-        + '<p style="font-size:13px;color:var(--ink-2)">' + esc(J.useCase(t).blurb) + '</p>'
+        + '<div style="font-size:calc(14px * var(--a11y-scale, 1));font-weight:650;margin-bottom:6px">' + esc(J.useCase(t).label) + '</div>'
+        + '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">' + esc(J.useCase(t).blurb) + '</p>'
         + '<div class="constraint-grid">'
         + '<div class="constraint"><div class="k">Budget</div><div class="v">' + fmt(t.budgetFt) + '</div></div>'
         + '<div class="constraint"><div class="k">Deadline</div><div class="v">' + t.urgencyDays + ' days</div></div>'
@@ -116,7 +126,7 @@
         + '<div class="constraint"><div class="k">Budget</div><div class="v">' + fmt(q.budgetFt) + '</div></div>'
         + '<div class="constraint' + (tight ? ' urgent' : '') + '"><div class="k">Needs it in</div><div class="v">' + q.urgencyDays + ' d</div></div>'
         + '</div>'
-        + (tight ? '<div class="note warn" style="margin-top:10px;font-size:12px">A ' + q.urgencyDays + '-day deadline rules out anything that has to be shipped from Shenzhen.</div>' : '')
+        + (tight ? '<div class="note warn" style="margin-top:10px;font-size:calc(12px * var(--a11y-scale, 1))">A ' + q.urgencyDays + '-day deadline rules out anything that has to be shipped from Shenzhen.</div>' : '')
         + '<div style="margin-top:12px"><button class="btn btn-primary" style="width:100%" data-take="' + i + '">Take this job</button></div>'
         + '</div>';
     }).join('');
@@ -131,14 +141,14 @@
       // over it is unreadable.
       + '<div class="card" style="margin-top:16px;max-width:74ch">'
       + '<div class="card-head">How busy the counter is</div>'
-      + '<div class="note ' + (Shop.state.reputation >= 72 ? 'good' : Shop.state.reputation >= 50 ? '' : 'warn') + '">'
+      + '<div class="note ' + (Shop.state.reputation >= 72 ? 'good' : Shop.state.reputation >= 40 ? '' : 'warn') + '">'
       + esc(ff.why)
-      + (Shop.state.reputation < 50
+      + (Shop.state.reputation < 40
           ? ' Waiting for the next one costs you ' + ff.quietDays + ' day' + (ff.quietDays === 1 ? '' : 's')
             + ' — empty days the rent still has to come out of.'
           : '')
       + '</div>'
-      + '<div style="margin-top:12px"><button class="btn" id="btn-wait">Nothing here for you · wait for the next customer ('
+      + '<div style="margin-top:12px"><button class="btn" id="btn-wait">Pass on these · wait for the next customers ('
       + ff.quietDays + ' day' + (ff.quietDays === 1 ? '' : 's') + ')</button></div>'
       + '</div>';
 

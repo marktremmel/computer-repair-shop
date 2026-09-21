@@ -78,15 +78,15 @@
     if (st.faulty) {
       cBadge = '<g class="reg-badge reg-badge-faulty">'
         + '<circle cx="' + cx1 + '" cy="' + cy1 + '" r="7.5" class="reg-badge-bg"/>'
-        + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:9.5px">⚠</text></g>';
+        + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:calc(9.5px * var(--a11y-scale, 1))">⚠</text></g>';
     } else if (st.done) {
       cBadge = '<g class="reg-badge reg-badge-done">'
         + '<circle cx="' + cx1 + '" cy="' + cy1 + '" r="7.5" class="reg-badge-bg"/>'
-        + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:9.5px">✓</text></g>';
+        + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:calc(9.5px * var(--a11y-scale, 1))">✓</text></g>';
     } else if (st.target) {
       cBadge = '<g class="reg-badge reg-badge-target">'
         + '<circle cx="' + cx1 + '" cy="' + cy1 + '" r="7.5" class="reg-badge-bg"/>'
-        + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:9.5px">⦿</text></g>';
+        + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:calc(9.5px * var(--a11y-scale, 1))">⦿</text></g>';
     }
     return o + cBadge + '<title>' + (c.label || c.role) + '</title></g>';
   }

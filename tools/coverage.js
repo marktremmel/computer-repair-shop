@@ -208,6 +208,136 @@ if (!jobStepKeys) {
   });
 }
 
+// 4b'. On a phone or tablet the lab is the handset screen, not a desktop.
+// Only the bench instruments, the meter, and the handset's own Storage and
+// Battery pages can be run there. A software fault whose evidence lives only
+// in Activity Monitor can never be diagnosed on a handset, so its procedure
+// never appears; free_space shipped on the iPad with no way to do it at all.
+(() => {
+  const intakeCode = fs.readFileSync(path.join(__dirname, '..', 'js', 'ui-intake.js'), 'utf8');
+  const rb = {};
+  (intakeCode.match(/var REVEALED_BY = \{([\s\S]*?)\n  \};/) || ['', ''])[1]
+    .replace(/([a-z_]+):\s*\[([^\]]*)\]/g, (_, k, v) => { rb[k] = v.match(/[a-z_]+/g) || []; });
+  const HANDSET_RUNNABLE = ['visual', 'battery', 'power', 'thermal', 'memtest', 'meter', 'storage_used'];
+  const HANDSET_HOMES = ['free_space', 'card_recovery'];
+  Object.values(Faults.all).forEach(f => {
+    f.appliesTo.forEach(mid => {
+      const m = Machines.get(mid);
+      if (!m || (m.kind !== 'phone' && m.kind !== 'tablet')) return;
+      const ev = (rb[f.id] || []).filter(i => HANDSET_RUNNABLE.includes(i));
+      if (!ev.length) err(`UNDIAGNOSABLE ON A HANDSET: ${f.id} on [${mid}] is only revealed by `
+        + `${(rb[f.id] || []).join(', ') || 'nothing'}, none of which a phone or tablet can run.`);
+      const a = f.fixedBy.kind === 'action' && Jobs.ACTIONS[f.fixedBy.id];
+      if (a && a.software && !HANDSET_HOMES.includes(a.id) && jobStepKeys && !jobStepKeys.includes(a.id)) {
+        err(`UNREACHABLE ON A HANDSET: ${a.id} (${f.id}) on [${mid}] has no procedure the handset lab can show.`);
+      }
+      if (a && ['kill_process', 'fix_dns', 'confirm_isp'].includes(a.id)) {
+        err(`UNREACHABLE ON A HANDSET: ${a.id} lives in a desktop app, and [${mid}] has no desktop.`);
+      }
+    });
+  });
+})();
+
+// 4b''. Every part a fix needs has to be for sale.
+// Capacitors had no tab in the Parts market, so the capacitor job could only
+// ever be finished by a harness that stocked the shelf directly.
+(() => {
+  const mk = fs.readFileSync(path.join(__dirname, '..', 'js', 'ui-market.js'), 'utf8');
+  const cats = ((mk.match(/var CATS = \[([\s\S]*?)\];/) || ['', ''])[1].match(/id: '([a-z_]+)'/g) || [])
+    .map(x => x.slice(5, -1));
+  const needed = new Set();
+  Object.values(Faults.all).forEach(f => {
+    if (f.fixedBy.kind === 'part') needed.add(f.fixedBy.cat);
+    if (f.fixedBy.needsPartCat) needed.add(f.fixedBy.needsPartCat);
+  });
+  Object.values(Jobs.ACTIONS).forEach(a => { if (a.needsPartCat) needed.add(a.needsPartCat); });
+  needed.forEach(c => {
+    if (!cats.includes(c)) err(`UNBUYABLE PART: fixes need a "${c}" part but the Parts market has no "${c}" tab.`);
+  });
+  Object.values(Faults.all).forEach(f => {
+    const c = f.fixedBy.kind === 'part' ? f.fixedBy.cat : f.fixedBy.needsPartCat;
+    if (!c) return;
+    f.appliesTo.forEach(mid => {
+      const m = Machines.get(mid);
+      const ok = Parts.byCat(c).some(p => Parts.compat(p, m).ok);
+      if (!ok) err(`UNBUYABLE PART: ${f.id} on [${mid}] needs a ${c} part and nothing in the market fits it.`);
+    });
+  });
+})();
+
+// 4b'''. Follow-ups must hang off something that can actually happen.
+(() => {
+  const I = window.TechOpsInterview;
+  if (!I || !I.FOLLOWUPS) return warn('No follow-ups exported from data-interview.js.');
+  const qids = I.QUESTIONS.map(q => q.id);
+  const inst = ['visual', 'listen', 'memtest', 'thermal', 'battery', 'power', 'smart', 'bench', 'activity', 'storage_used', 'meter'];
+  Object.keys(I.FOLLOWUPS).forEach(fid => {
+    if (!Faults.get(fid)) err(`FOLLOW-UP for unknown fault "${fid}".`);
+    const list = I.FOLLOWUPS[fid], ids = list.map(x => x.id);
+    list.forEach(fu => {
+      if (fu.from && !qids.includes(fu.from) && !ids.includes(fu.from))
+        err(`FOLLOW-UP ${fid}.${fu.id} hangs off "${fu.from}", which is neither a question nor a follow-up.`);
+      if (fu.after && !inst.includes(fu.after)) err(`FOLLOW-UP ${fid}.${fu.id} waits for unknown instrument "${fu.after}".`);
+      if (!fu.from && !fu.after) err(`FOLLOW-UP ${fid}.${fu.id} can never be asked: no "from" and no "after".`);
+      (fu.choices ? fu.choices.map(c => c.a) : [fu.a]).forEach(a => {
+        if (!a || !a.t) err(`FOLLOW-UP ${fid}.${fu.id} has a choice with no answer.`);
+        (a && a.s || []).forEach(i => { if (!inst.includes(i)) err(`FOLLOW-UP ${fid}.${fu.id} points at unknown instrument "${i}".`); });
+      });
+    });
+  });
+})();
+
+// 4c. A comeback must be preventable.
+// thermal_paste_dead comes back if the fin stack is not cleared. On a machine
+// where clearing it is unreachable, a careful student is guaranteed a comeback
+// they could do nothing about — which shipped on the tower for weeks.
+(() => {
+  const f = Faults.get('thermal_paste_dead');
+  const fins = Jobs.ACTIONS.clean_fins;
+  if (!f || !fins) return;
+  f.appliesTo.forEach(mid => {
+    const m = Machines.get(mid);
+    if (m && !Jobs.hasStepFor(fins, m)) {
+      err(`UNPREVENTABLE COMEBACK: thermal_paste_dead on [${mid}] comes back unless the fins are cleaned, `
+        + `but clean_fins is unreachable on that machine.`);
+    }
+  });
+})();
+
+// 4d. What the customer says has to fit the machine on the counter.
+// A Switch arrived with a trackpad that would not click; a ThinkPad showed the
+// Mac's question-mark folder. Complaints can be tagged with `os` or `kind`,
+// and every machine a fault reaches must still have one that fits.
+(() => {
+  const SIGNS = [
+    [/trackpad|touchpad/i,             m => m.kind === 'laptop',                         'a trackpad'],
+    [/question mark|flashing folder/i, m => m.os === 'macos',                            'the Mac question-mark folder'],
+    [/startup chime/i,                 m => m.os === 'macos',                            'a startup chime'],
+    [/\blid\b/i,                       m => m.kind === 'laptop',                         'a lid'],
+    [/my mac\b/i,                      m => m.os === 'macos',                            '"my Mac"'],
+    [/keys typing/i,                   m => ['laptop', 'desktop', 'aio'].includes(m.kind), 'a keyboard'],
+    [/blue screen|windows has/i,       m => m.os === 'windows',                          'Windows']
+  ];
+  allFaults.forEach(f => f.appliesTo.forEach(mid => {
+    const m = Machines.get(mid);
+    if (!m) return;
+    const fits = f.complaints.filter(c => Jobs.complaintFits(c, m));
+    if (!fits.length) {
+      err(`Fault [${f.id}] has no complaint that fits [${mid}] \u2014 the customer would have nothing to say.`);
+      return;
+    }
+    fits.forEach(c => {
+      const t = typeof c === 'string' ? c : c.t;
+      SIGNS.forEach(([re, ok, what]) => {
+        if (re.test(t) && !ok(m)) {
+          err(`Fault [${f.id}] can tell a [${mid}] customer about ${what}: "${t.slice(0, 60)}\u2026" `
+            + `Tag the complaint with os or kind.`);
+        }
+      });
+    });
+  }));
+})();
+
 // 5. Board Layout Pedagogy Notes
 Object.keys(Boards.LAYOUTS).forEach(bId => {
   const b = Boards.LAYOUTS[bId];

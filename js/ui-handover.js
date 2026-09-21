@@ -43,6 +43,12 @@
     }
 
     Shop.earn(p, 'Job ' + t.id + ' · ' + J.customer(t).name);
+    // Counted here, once, now that they have actually paid — not inside
+    // grade(), which runs for every price tried.
+    if (res.honestNoPart) {
+      Shop.state.honestRefusals = (Shop.state.honestRefusals || 0) + 1;
+      Shop.award('honest_tech');
+    }
     Shop.recordAxes(res.axes);
     Shop.state.jobsDone++;
     Shop.state.starsTotal += res.stars;
@@ -66,12 +72,35 @@
       Shop.state.comebacks++;
     }
 
+    // ── goals ── counted here, once the money has actually changed hands.
+    var G = Shop.state.goalStats = Shop.state.goalStats || {};
+    var promised = t.agreedDays && t.agreedDays > t.urgencyDays ? t.agreedDays : t.urgencyDays;
+    if (J.turnaroundDays(t) <= promised) G.onTime = (G.onTime || 0) + 1;
+    if (t.esdOn && t.openSteps.length) G.grounded = (G.grounded || 0) + 1;
+
+    Shop.award('first_job');
+    if (res.resolved && (t.asked || []).length >= 3 && t.testsRun.length <= 2) Shop.award('asked_first');
+    if (G.grounded >= 3) Shop.award('grounded');
+    if (G.onTime >= 3) Shop.award('on_time');
+    if (res.resolved && t.testsRun.indexOf('meter') !== -1
+        && window.TechOpsIntake && window.TechOpsIntake.revealedBy(t.faultId).indexOf('meter') !== -1) {
+      Shop.award('measured');
+    }
     if (res.stars === 5) Shop.award('five_star');
     if (Shop.state.jobsDone >= 5) Shop.award('five_jobs');
     if (Shop.state.honestRefusals >= 2) Shop.award('no_upsell');
+    if (Shop.state.reputation >= 75) Shop.award('good_name');
 
     Shop.state.ticket = null;
     Shop.advanceDays(1);
+    // What a bad name actually costs: quiet days before the next group.
+    var ff = J.footfall(Shop);
+    if (ff.quietDays > 1) {
+      Shop.advanceDays(ff.quietDays - 1);
+      Shop.state.queue = (Shop.state.queue || []).filter(function (q) { return q.warranty; });
+      UI.toast('A quiet ' + (ff.quietDays - 1 === 1 ? 'day' : (ff.quietDays - 1) + ' days'),
+        'Nobody new comes in for a while. People read the reviews before they choose a shop.', 'bad');
+    }
     price = null;
     if (window.sekAudio) window.sekAudio[res.stars >= 4 ? 'playSuccessChime' : 'playErrorBuzz']();
     Shop.emit('change');
@@ -80,12 +109,15 @@
   }
 
   function comebackFault(cat, t) {
-    var map = { storage: 'dying_hdd', ram: 'bad_ram_stick', battery: 'battery_swollen',
-                screen: 'cracked_screen', fan: 'fan_seized', thermal: 'thermal_paste_dead', flex: 'port_lint' };
-    var id = map[cat];
+    var map = { storage: ['dying_hdd'], ram: ['bad_ram_stick'], battery: ['battery_swollen'],
+                screen: ['cracked_screen'], fan: ['fan_seized'], thermal: ['thermal_paste_dead', 'ps5_liquid_metal'],
+                flex: ['port_lint'], caps: ['blown_caps', 'ps5_rail_short'] };
     var m = J.machine(t);
-    var f = id ? window.TechOpsFaults.get(id) : null;
-    if (f && f.appliesTo.indexOf(m.id) !== -1) return id;
+    var hit = (map[cat] || []).filter(function (id) {
+      var f = window.TechOpsFaults.get(id);
+      return f && f.appliesTo.indexOf(m.id) !== -1;
+    })[0];
+    if (hit) return hit;
     var candidates = window.TechOpsFaults.forMachine(m);
     return (candidates && candidates.length) ? candidates[0].id : 'thermal_paste_dead';
   }
@@ -112,11 +144,11 @@
       + '<div style="display:flex;align-items:center;gap:13px">'
       + '<div class="cust-avatar" style="width:52px;height:52px">' + UI.face(c, 52) + '</div>'
       + '<div><h3>' + esc(c.name) + ' · job ' + esc(t.id) + '</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">' + esc(f.title) + ' · ' + esc(J.machine(t).name) + '</div></div>'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">' + esc(f.title) + ' · ' + esc(J.machine(t).name) + '</div></div>'
       + '<div style="margin-left:auto;text-align:right">' + UI.stars(res.stars)
-      + '<div style="font-size:12px;color:var(--ink-3)">' + fmt(p) + ' paid</div></div></div></div>'
+      + '<div style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3)">' + fmt(p) + ' paid</div></div></div></div>'
       + '<div class="modal-body">'
-      + '<div class="quote-bubble" style="font-style:normal;font-size:13.5px;margin-bottom:18px">' + esc(res.reviewBody) + '</div>'
+      + '<div class="quote-bubble" style="font-style:normal;font-size:calc(13.5px * var(--a11y-scale, 1));margin-bottom:18px">' + esc(res.reviewBody) + '</div>'
       + bars
       + (res.resolved ? '' : '<div class="note danger" style="margin-top:12px"><b>The machine is not fixed.</b> ' + esc(f.explain) + '</div>')
       + '<div class="card-head" style="margin-top:18px">Line by line</div>' + findings
@@ -153,7 +185,10 @@
     Shop.recordAxes({ fit: 100, budget: 100, speed: 100, durability: 100, safety: 100 });
     Shop.adjustRep(3);
     Shop.state.honestRefusals = (Shop.state.honestRefusals || 0) + 1;
-    Shop.award('honest_tech');
+    Shop.award('first_job');
+    Shop.award('said_no');
+    if (Shop.state.honestRefusals >= 2) Shop.award('no_upsell');
+    if (Shop.state.reputation >= 75) Shop.award('good_name');
     Shop.state.history.unshift({
       id: t.id, day: Shop.state.day, customer: c.name, machine: J.machine(t).name,
       fault: J.fault(t).title, faultId: t.faultId, stars: 4, paidFt: feeFt,
@@ -207,6 +242,13 @@
     var warnings = '';
     if (!t.testsRun.length) warnings += '<div class="note danger">You have not measured anything. You are about to hand back a machine on a guess.</div>';
     if (t.boardDamaged) warnings += '<div class="note danger"><b>The board is dead.</b> Whatever you charge, this goes badly. Charging nothing is the only defensible move.</div>';
+    // Did anyone check it worked? Saying "not re-tested" must not leak whether
+    // it would have passed — only that nobody looked.
+    if (t.fixConfirmed) {
+      warnings += '<div class="note good"><b>\u2713 Fix confirmed on the bench.</b> The same test that found the fault reads normal now. You can say so to their face.</div>';
+    } else if ((t.installed.length || t.actionsDone.length) && t.testsRun.length) {
+      warnings += '<div class="note teach"><b>Not re-tested.</b> You think it is fixed. Re-run the test that found the fault on the bench \u2014 otherwise the customer is the one who finds out.</div>';
+    }
     if (t.installed.length && !t.esdOn) warnings += '<div class="note warn">Fitted without the ESD strap. It will probably be fine. Probably.</div>';
 
     // Is this job even doable for what they have?
@@ -223,7 +265,7 @@
       + t.labourHours.toFixed(1) + ' h).</p></div>'
       + '<div style="display:grid;grid-template-columns:1fr 360px;gap:18px;max-width:1080px;align-items:start">'
       + '<div class="card"><div class="card-head">Work done</div><div class="disk-rows">' + work + '</div>'
-      + '<div style="display:flex;gap:18px;margin-top:14px;font-size:13px">'
+      + '<div style="display:flex;gap:18px;margin-top:14px;font-size:calc(13px * var(--a11y-scale, 1))">'
       + '<span>Parts <b>' + fmt(t.partsCostFt) + '</b></span>'
       + '<span>Labour <b>' + t.labourHours.toFixed(1) + ' h</b> → ' + fmt(labourFt) + '</span>'
       + '<span style="margin-left:auto">Your cost <b>' + fmt(t.partsCostFt) + '</b></span></div>'
@@ -241,13 +283,13 @@
           : '')
       + '</div>'
       + '<div class="card"><div class="card-head">The bill</div>'
-      + '<div style="font-size:30px;font-weight:750;font-variant-numeric:tabular-nums;margin-bottom:4px" id="price-out">' + fmt(price) + '</div>'
-      + '<div style="font-size:12px;color:' + (price > t.budgetFt ? 'var(--red)' : 'var(--green)') + ';margin-bottom:12px" id="price-note">'
+      + '<div style="font-size:calc(30px * var(--a11y-scale, 1));font-weight:750;font-variant-numeric:tabular-nums;margin-bottom:4px" id="price-out">' + fmt(price) + '</div>'
+      + '<div style="font-size:calc(12px * var(--a11y-scale, 1));color:' + (price > t.budgetFt ? 'var(--red)' : 'var(--green)') + ';margin-bottom:12px" id="price-note">'
       + (price > t.budgetFt ? fmt(price - t.budgetFt) + ' over their budget' : fmt(t.budgetFt - price) + ' inside their budget') + '</div>'
       + '<input type="range" id="price-slider" min="' + min + '" max="' + max + '" step="500" value="' + price + '" style="width:100%">'
-      + '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-3);font-family:var(--mono);margin-top:3px">'
+      + '<div style="display:flex;justify-content:space-between;font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--ink-3);font-family:var(--mono);margin-top:3px">'
       + '<span>' + fmt(min) + ' (break even)</span><span>' + fmt(max) + '</span></div>'
-      + '<div class="note" style="margin-top:14px;font-size:12.3px">Your margin is ' + fmt(price - t.partsCostFt)
+      + '<div class="note" style="margin-top:14px;font-size:calc(12.3px * var(--a11y-scale, 1))">Your margin is ' + fmt(price - t.partsCostFt)
       + ' for ' + t.labourHours.toFixed(1) + ' hours of bench time. Charging nothing is not generosity if you then cannot buy parts for the next job.</div>'
       + '<button class="btn btn-primary" style="width:100%;margin-top:14px;justify-content:center" id="btn-hand">Hand it back</button>'
       + '</div></div>';

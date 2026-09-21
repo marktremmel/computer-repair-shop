@@ -31,7 +31,7 @@
     return '<div class="modal-head"><div style="display:flex;align-items:center;gap:14px">'
       + '<div class="cust-avatar" style="width:72px;height:72px">' + UI.face(person, 72) + '</div>'
       + '<div><h3>' + esc(person.name) + '</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">' + esc(person.tag || '')
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">' + esc(person.tag || '')
       + (person.age ? ' · ' + person.age : '') + '</div></div></div></div>'
       + '<div class="modal-body">'
       + (uc.blurb ? '<div class="note teach" style="margin-bottom:14px">' + esc(uc.blurb) + '</div>' : '')
@@ -41,7 +41,7 @@
       + (t ? '<div class="card-head" style="margin-top:16px">What they told you</div>'
            + '<div class="quote-bubble" style="font-style:normal">' + esc(t.complaint) + '</div>'
            + (t.asked && t.asked.length
-               ? '<div style="font-size:12.3px;color:var(--ink-2);margin-top:8px">You have asked them '
+               ? '<div style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-2);margin-top:8px">You have asked them '
                  + t.asked.length + ' question' + (t.asked.length === 1 ? '' : 's') + '.</div>'
                : '<div class="note warn" style="margin-top:8px">You have not asked them anything yet.</div>')
          : '')
@@ -74,7 +74,7 @@
          ['Still working next year', 'Cheap with no warranty is a bet you are making on their behalf.'],
          ['Safe, tidy workmanship', 'Strap on, battery off, right driver, connectors lifted straight.']]
         .map(function (r) {
-          return '<div class="disk-row"><span class="k">' + r[0] + '</span><span style="font-size:12px">' + r[1] + '</span></div>';
+          return '<div class="disk-row"><span class="k">' + r[0] + '</span><span style="font-size:calc(12px * var(--a11y-scale, 1))">' + r[1] + '</span></div>';
         }).join('') + '</div>'
       + '<div class="note teach" style="margin-top:12px">A job is only as good as its <b>worst</b> axis. '
       + 'You cannot make up for the wrong part by being fast.</div>'
@@ -88,7 +88,7 @@
       + '<i>before</i> you open it, or you throw that away until you plug it back in.</div>'
 
       + '<div class="card-head" style="margin-top:16px">Credits</div>'
-      + '<p style="font-size:12.3px;color:var(--ink-2)">Character portraits are built from the '
+      + '<p style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-2)">Character portraits are built from the '
       + '<a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">Pixel Portrait Creator</a> by <b>Lyime</b>.</p>';
   }
 
@@ -102,7 +102,7 @@
       + '<div class="pface" data-noclick="1" data-seed="' + esc(p.avatar || 'ava-1') + '" data-size="72"></div>'
       + '<span class="avatar-edit-hint">edit</span></button>'
       + '<div><h3>' + esc(p.name || 'You') + '</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">' + esc(p.shop || '') + '</div></div></div></div>'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">' + esc(p.shop || '') + '</div></div></div></div>'
       + '<div class="modal-body">'
       + (bg ? '<div class="note" style="margin-bottom:14px"><b>' + esc(bg.name) + '</b><br>' + esc(bg.blurb) + '</div>' : '')
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:9px">'
@@ -120,27 +120,58 @@
       + '<button class="btn" id="d-build">Build my face, piece by piece</button>'
       + '<button class="btn" id="d-rechar">Change name, shop and background</button>'
       + '</div>'
-      + '<p style="font-size:12.2px;color:var(--ink-3);margin-top:8px">Changing your face or your name keeps everything you have earned. '
+      + '<p style="font-size:calc(12.2px * var(--a11y-scale, 1));color:var(--ink-3);margin-top:8px">Changing your face or your name keeps everything you have earned. '
       + 'Starting a whole new shift is further down, under <b>Record</b>.</p>'
       + '</div>';
   }
 
   /** Everything about you, your shop and the rules, behind one set of tabs. */
-  function book() {
+  function book(initialTab) {
+    if (initialTab) TAB = initialTab;
     var S = Shop.state;
-    var tabs = [['you', 'You &amp; the shop'], ['record', 'Record'], ['guide', 'How it works']];
-    var body = TAB === 'guide' ? '<div class="modal-body">' + guideBody() + '</div>'
+    var tabs = [['you', 'You &amp; the shop'], ['save', 'Save &amp; load'], ['record', 'Goals &amp; record'], ['guide', 'How it works']];
+    var body = TAB === 'guide'  ? '<div class="modal-body">' + guideBody() + '</div>'
+             : TAB === 'save'   ? saveBody()
              : TAB === 'record' ? recordBody()
              : playerCard();
 
-    return (TAB === 'you' ? '' : '<div class="modal-head"><h3>' + (TAB === 'record' ? 'Shop record' : 'How the shop works') + '</h3></div>')
+    var title = TAB === 'record' ? 'Goals &amp; shop record'
+              : TAB === 'save'   ? 'Save &amp; load shift'
+              : TAB === 'guide'  ? 'How the shop works'
+              : 'You &amp; your shop';
+
+    return '<div class="modal-head"><h3>' + title + '</h3></div>'
       + '<div class="book-tabs">' + tabs.map(function (t) {
           return '<button class="book-tab' + (TAB === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>';
         }).join('') + '</div>'
       + body
       + '<div class="modal-foot">'
-      + '<button class="btn" id="dossier-report">Shift report &amp; hand-in code</button>'
+      + '<button class="btn" id="dossier-report">Teacher report &amp; hand-in code</button>'
       + '<button class="btn btn-primary" data-close>Close</button></div>';
+  }
+
+  function saveBody() {
+    return '<div class="modal-body">'
+      + '<div class="card-head">Carry this shift to another computer (Save Code)</div>'
+      + '<div class="note good" style="margin-bottom:12px"><b>Two-way save code.</b> '
+      + 'Restores who you are, your till balance, day, reputation, shop fittings, and job history on another computer or after a browser profile wipe.</div>'
+      + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
+      + 'The shop automatically saves itself in this browser. To carry on at home or on another computer, '
+      + 'copy this code and paste it into TechOps over there.</p>'
+      + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
+      + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:calc(11px * var(--a11y-scale, 1));resize:vertical"></textarea>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+      + '<button class="btn btn-primary btn-sm" id="d-savecopy">Copy my save code</button>'
+      + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
+      + '</div>'
+      + '<div id="d-savemsg" style="margin-top:8px"></div>'
+
+      + '<div class="card-head" style="margin-top:22px">Handing in to your teacher?</div>'
+      + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.5;margin-bottom:10px">'
+      + 'The hand-in code is a <b>one-way grade report</b> for your teacher. It grades your whole shift '
+      + 'and cannot be used to restore or edit marks. Save codes cannot be submitted as hand-in codes.</p>'
+      + '<button class="btn btn-sm" id="d-goteacher">Open Teacher Report &amp; Hand-in Code</button>'
+      + '</div>';
   }
 
   function recordBody() {
@@ -148,9 +179,9 @@
     var hist = (S.history || []).slice(0, 10).map(function (h) {
       return '<div class="disk-row' + (h.stars >= 4 ? ' ok' : h.stars <= 2 ? ' bad' : '') + '">'
         + '<span class="k">day ' + h.day + ' &middot; ' + esc(h.customer) + '</span>'
-        + '<span style="font-size:11.5px">' + esc(h.fault) + (h.declined ? ' · declined honestly' : '') + '</span>'
+        + '<span style="font-size:calc(11.5px * var(--a11y-scale, 1))">' + esc(h.fault) + (h.declined ? ' · declined honestly' : '') + '</span>'
         + '<span class="v">' + '★'.repeat(h.stars) + '</span></div>';
-    }).join('') || '<div style="color:var(--ink-3);font-size:12.5px">No jobs closed yet.</div>';
+    }).join('') || '<div style="color:var(--ink-3);font-size:calc(12.5px * var(--a11y-scale, 1))">No jobs closed yet.</div>';
 
     var ups = Object.keys(S.upgrades || {});
     var upList = ups.length
@@ -158,16 +189,20 @@
           var u = window.TechOpsUpgrades.get(id);
           return u ? '<div class="disk-row ok"><span class="k">' + esc(u.name) + '</span><span class="v">day ' + S.upgrades[id] + '</span></div>' : '';
         }).join('')
-      : '<div style="color:var(--ink-3);font-size:12.5px">Nothing fitted yet. The till is for spending.</div>';
+      : '<div style="color:var(--ink-3);font-size:calc(12.5px * var(--a11y-scale, 1))">Nothing fitted yet. The till is for spending.</div>';
 
+    var B = window.TechOpsApp.BADGES || {};
+    var got = Shop.state.badges || {};
+    var nDone = Object.keys(B).filter(function (k) { return got[k]; }).length;
     return '<div class="modal-body">'
-      + '<div class="card-head">Jobs</div><div class="disk-rows">' + hist + '</div>'
+      + '<div class="card-head">Goals <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">\u00b7 '
+      + nDone + ' of ' + Object.keys(B).length + ' \u2014 the habits a good repair shop runs on</span></div>'
+      + '<div class="goal-list">' + badgeList() + '</div>'
+      + '<div class="card-head" style="margin-top:18px">Jobs</div><div class="disk-rows">' + hist + '</div>'
       + '<div class="card-head" style="margin-top:16px">Fitted out</div><div class="disk-rows">' + upList + '</div>'
-      + '<div class="card-head" style="margin-top:16px">Badges</div>'
-      + '<div class="badge-row">' + badgeList() + '</div>'
 
-      + '<div class="card-head" style="margin-top:18px">Shift code</div>'
-      + '<p style="font-size:12.3px;color:var(--ink-2)">Any word seeds its own shop, and everyone who types the same word meets the same '
+      + '<div class="card-head" style="margin-top:18px">Shift seed</div>'
+      + '<p style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-2)">Any word seeds its own shop, and everyone who types the same word meets the same '
       + 'people and the same faults \u2014 so a class can compare decisions instead of luck.</p>'
       + '<div class="shift-picks">' + (window.TechOpsApp.SHIFT_CODES || []).map(function (sc) {
           return '<button class="shift-pick' + (S.shiftCode === sc.code ? ' current' : '') + '" data-shift="' + sc.code + '">'
@@ -177,35 +212,27 @@
       + '<input id="shift-in" value="' + esc(S.shiftCode) + '" style="flex:1;background:var(--bg);border:1px solid var(--line);'
       + 'border-radius:9px;padding:9px 12px;color:var(--ink);font-family:var(--mono)">'
       + '<button class="btn btn-danger" id="btn-newshift">Start a new shift</button></div>'
-      + '<p style="font-size:12px;color:var(--ink-3);margin-top:6px">A new shift wipes the till, the jobs and the shop fittings. '
+      + '<p style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3);margin-top:6px">A new shift wipes the till, the jobs and the shop fittings. '
       + 'Your face and name are kept.</p>'
-
-      + '<div class="card-head" style="margin-top:18px">Carry this shop to another computer</div>'
-      + '<p style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 0 9px">'
-      + 'The shop saves itself in this browser. To carry on at home, on another machine, or after '
-      + 'the computers get wiped, copy this code and paste it back in there. It is a <b>different</b> code '
-      + 'from the hand-in one \u2014 that one reports a finished shift and cannot restore it.</p>'
-      + '<textarea id="d-savecode" readonly rows="3" style="width:100%;background:var(--bg);border:1px solid var(--line);'
-      + 'border-radius:9px;padding:9px 12px;color:var(--ink-2);font-family:var(--mono);font-size:11px;resize:vertical"></textarea>'
-      + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
-      + '<button class="btn btn-primary btn-sm" id="d-savecopy">Copy my save code</button>'
-      + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
-      + '</div>'
-      + '<div id="d-savemsg" style="margin-top:8px"></div>'
-
-      + '<div class="card-head" style="margin-top:18px">For the teacher</div>'
-      + '<button class="btn" id="d-teacher">Decode a student\u2019s shift code</button>'
       + '</div>';
   }
 
+  /** Each goal as a row: what to do, why it matters, and how far along you are. */
   function badgeList() {
     var B = window.TechOpsApp.BADGES || {};
     var got = Shop.state.badges || {};
     return Object.keys(B).map(function (k) {
       var b = B[k], has = !!got[k];
-      return '<div class="badge-chip' + (has ? ' on' : '') + '" title="' + esc(b.desc) + '">'
-        + '<span>' + b.icon + '</span><b>' + esc(b.name) + '</b>'
-        + (has ? '<i>day ' + got[k] + '</i>' : '<i>not yet</i>') + '</div>';
+      var pr = !has && b.progress ? b.progress(Shop.state) : null;
+      return '<div class="goal' + (has ? ' done' : '') + '">'
+        + '<span class="goal-ic">' + b.icon + '</span>'
+        + '<div class="goal-main"><b>' + esc(b.name) + '</b>'
+        + '<div class="goal-what">' + esc(b.goal) + '</div>'
+        + '<div class="goal-why">' + esc(b.why) + '</div>'
+        + (pr ? '<div class="goal-bar"><span style="width:' + Math.round(pr[0] / pr[1] * 100) + '%"></span></div>' : '')
+        + '</div>'
+        + '<span class="goal-state">' + (has ? '\u2713 day ' + got[k] : pr ? pr[0] + ' / ' + pr[1] : 'to do') + '</span>'
+        + '</div>';
     }).join('');
   }
 
@@ -247,6 +274,8 @@
     });
     var rep = m.el.querySelector('#dossier-report');
     if (rep) rep.addEventListener('click', function () { m.close(); window.TechOpsReport.show(); });
+    var goTeach = m.el.querySelector('#d-goteacher');
+    if (goTeach) goTeach.addEventListener('click', function () { m.close(); window.TechOpsReport.show(); });
 
     function openBuilder() {
       var cur = Shop.state.player || {};
@@ -288,7 +317,7 @@
         var msg = m.el.querySelector('#d-savemsg');
         msg.innerHTML = '<textarea id="d-paste" rows="3" placeholder="Paste the save code here" '
           + 'style="width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;'
-          + 'padding:9px 12px;color:var(--ink);font-family:var(--mono);font-size:11px"></textarea>'
+          + 'padding:9px 12px;color:var(--ink);font-family:var(--mono);font-size:calc(11px * var(--a11y-scale, 1))"></textarea>'
           + '<button class="btn btn-primary btn-sm" id="d-pastego" style="margin-top:7px">Continue this shop</button>';
         m.el.querySelector('#d-pastego').addEventListener('click', function () {
           var res = window.TechOpsSave.load(m.el.querySelector('#d-paste').value);

@@ -58,6 +58,12 @@
       body: 'Day, till, jobs, average stars and reputation. Reputation is not decoration — it decides how many '
           + 'people are waiting at the counter tomorrow. A shop nobody trusts sits empty.' },
 
+    { view: 'counter', sel: '#btn-badges',
+      title: 'Your goals',
+      body: 'Twelve habits a good repair shop runs on — ask before you open, sell nothing that is not needed, '
+          + 'wear the strap, deliver when you said. Each one says what to do and why, and shows how far along you are. '
+          + 'A good place to start if you are not sure what to aim for.' },
+
     { view: 'counter', sel: '#btn-access',
       title: 'If you need it easier to read',
       body: 'Text size, stronger contrast, plainer letters, less movement. Set once and this machine remembers. '
@@ -159,8 +165,8 @@
     /** The one-line offer shown to somebody opening the shop for the first time. */
     offer: function (after) {
       UI.modal('<div class="modal-head"><h3>First time behind the counter?</h3></div>'
-        + '<div class="modal-body"><p style="font-size:13.5px;line-height:1.65">'
-        + 'Two minutes, eight stops, and it only shows you where things are — '
+        + '<div class="modal-body"><p style="font-size:calc(13.5px * var(--a11y-scale, 1));line-height:1.65">'
+        + 'Two minutes, nine stops, and it only shows you where things are — '
         + 'what is actually wrong with each machine is yours to work out.</p></div>'
         + '<div class="modal-foot">'
         + '<button class="btn" data-close id="tour-no">I will find my way</button>'

@@ -73,6 +73,7 @@
     if (d.c) S.shiftCode = d.c;
     if (d.sd !== undefined) S.seed = d.sd;
     if (d.rc !== undefined) S.rngCalls = d.rc;
+    if (Shop.reseed && d.sd !== undefined) Shop.reseed(d.sd, d.rc);
     if (d.d) S.day = d.d;
     if (d.$ !== undefined) S.cashFt = d.$;
     if (d.r !== undefined) S.reputation = d.r;

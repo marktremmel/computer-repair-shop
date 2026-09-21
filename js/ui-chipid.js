@@ -151,14 +151,14 @@
         + '<div class="chip-head"><span class="chip-num">#' + (state.picked + 1) + '</span>'
         + '<div><b>' + esc(sel.c.v || 'unmarked') + '</b>'
         + '<div class="chip-part">' + esc(sel.c.p) + '</div></div></div>'
-        + (sel.c.q ? '<div class="note warn" style="margin:10px 0;font-size:12px">iFixit marked this one as a best guess — even the people who do this for a living are not always certain.</div>' : '')
+        + (sel.c.q ? '<div class="note warn" style="margin:10px 0;font-size:calc(12px * var(--a11y-scale, 1))">iFixit marked this one as a best guess — even the people who do this for a living are not always certain.</div>' : '')
         + (selAns
             ? '<div class="note ' + (selAns.right ? 'good' : 'danger') + '" style="margin:10px 0">'
               + (selAns.right ? '<b>Right — ' + esc(R.label(sel.c.r)) + '.</b>' : '<b>Not quite.</b> That one is <b>' + esc(R.label(sel.c.r)) + '</b>.')
               + '<br>' + esc(sel.c.d) + '</div>'
               + '<div class="note teach"><b>What that does.</b> ' + esc(R.ROLES[sel.c.r].what) + '</div>'
               + '<div class="note" style="margin-top:8px"><b>How you could have told.</b> ' + esc(R.ROLES[sel.c.r].tell) + '</div>'
-            : '<p style="font-size:13px;color:var(--ink-2);margin:10px 0">What is this chip for?</p>'
+            : '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2);margin:10px 0">What is this chip for?</p>'
               + '<div class="chip-opts">' + opts.map(function (k) {
                   return '<button class="chip-opt" data-role="' + k + '">' + esc(R.label(k)) + '</button>';
                 }).join('') + '</div>')
@@ -180,7 +180,7 @@
       + '<p>Board-level work: not swapping a part, but knowing what every part <i>is</i>. '
       + 'Nobody expects you to memorise part numbers — but you can learn to read a board, and that is what turns '
       + '"it is broken" into "the thing that makes the backlight work is broken".</p>'
-      + '<p style="font-size:12px;color:var(--ink-3)">Chip identifications from '
+      + '<p style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3)">Chip identifications from '
       + '<a href="https://www.ifixit.com" target="_blank" rel="noopener">iFixit</a>’s public chip-ID teardowns.</p></div>';
   }
 

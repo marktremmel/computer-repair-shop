@@ -52,6 +52,13 @@
         bench: { seqMBps: 120, randIops: 4200, latencyMs: 9, note: 'Slower than rated — an almost-full SSD has nowhere to write, so it slows down. This recovers when space is freed.' },
         activity: { memPressurePct: 41, swapGB: 3.8, topProc: 'kernel_task', topProcMemGB: 1.2, note: 'Swap is high only because there is no disk space left to swap into.' }
       },
+      readingsOn: {
+        tablet: {
+          storage_used: { usedPct: 99, freeGB: 0.6, biggest: 'Files \u203a Exports \u2014 video, most of it saved twice',
+            note: '63.4 of 64 GB used. The biggest thing on it is a folder of exported videos, most of them saved twice under slightly different names.' },
+          bench: { seqMBps: 310, randIops: 5100, latencyMs: 6, note: 'Writes have slowed to a crawl \u2014 flash with nowhere empty to write has to erase first.' }
+        }
+      },
       fixedBy: { kind: 'action', id: 'free_space' },
       wrongFix: {
         storage: 'You sold them a bigger drive to solve a folder of duplicate video exports. It works — and you charged forty thousand forints for something a ten-minute cleanup fixes. They will find out.'
@@ -110,7 +117,8 @@
     thermal_paste_dead: {
       id: 'thermal_paste_dead',
       title: 'Dried thermal paste and blocked fins',
-      appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'tower_pc', 'imac_m1', 'mbp14_m3', 'steamdeck', 'switch2', 'ps5pro'],
+      // Not the PS5: it has no paste on the APU. See ps5_liquid_metal.
+      appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'tower_pc', 'imac_m1', 'mbp14_m3', 'steamdeck', 'switch2'],
       severity: 'medium',
       complaints: [
         'It sounds like a hairdryer and then it just switches itself off in the middle of a match.',
@@ -160,7 +168,9 @@
       appliesTo: ['mbp13_2012', 'mba_m1', 'iphone12', 'inspiron15', 'thinkpad_t480', 'ipad_air', 'mbp14_m3', 'steamdeck', 'switch2', 'iphone17'],
       severity: 'critical',
       complaints: [
-        'The trackpad has stopped clicking properly, and it only lasts about forty minutes now.',
+        { t: 'The trackpad has stopped clicking properly, and it only lasts about forty minutes now.', kind: ['laptop'] },
+        { t: 'The screen has started lifting away from the frame on one side, and it only lasts a couple of hours now.', kind: ['phone', 'tablet'] },
+        { t: 'The back has started to bulge and the buttons on one side feel spongy. It barely lasts an hour now.', kind: ['handheld'] },
         'Also the bottom is a bit... curved? It wobbles on the table.'
       ],
       customerTheory: 'They think the trackpad broke and the battery thing is separate.',
@@ -191,7 +201,19 @@
         power: { watts: 0, negotiated: 'none', seats: false, note: 'The plug stops about 2 mm short of home. No data pins make contact, so no charging negotiation happens at all.' },
         visual: { note: 'Shine a light in: a compacted grey felt disc of pocket lint, pressed into a solid pad at the bottom of the port by three years of plugging in.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 6200, note: 'Nothing wrong with the storage.' },
-        battery: { cycles: 380, healthPct: 91, condition: 'Normal', designMah: 2815, currentMah: 2561, note: 'Battery is healthy. It just is not getting charged.' }
+        battery: { cycles: 380, healthPct: 91, condition: 'Normal', designMah: 2815, currentMah: 2561, note: 'Battery is healthy. It just is not getting charged.' },
+        meter: {
+          vbus: { label: 'USB in', v: '0.00 V',
+            note: 'Nothing at all at the port pins with the charger plugged in. The charger is live \u2014 the plug simply never reaches the contacts.' },
+          // Same fault on a laptop: the meter's point there is DC-in.
+          dcin: { label: 'DC in', v: '0.00 V',
+            note: 'No voltage reaching the board from the charger. The brick tests fine on its own \u2014 the plug is stopping short of the pins.' }
+        }
+      },
+      // What the same instruments say once the lint is out.
+      after: {
+        power: 'the plug clicks home flush. USB-PD negotiated at 9 V / 2.2 A \u2014 about 20 W, full fast charge. The charging icon comes up at once.',
+        battery: 'same healthy cell, and now climbing: charging at a normal rate.'
       },
       fixedBy: { kind: 'action', id: 'clean_port' },
       wrongFix: {
@@ -251,7 +273,8 @@
       severity: 'high',
       noPartNeeded: true,
       complaints: [
-        'It updated overnight and now it just shows a folder with a question mark on it.',
+        { t: 'It updated overnight and now it just shows a folder with a question mark on it.', os: ['macos'] },
+        { t: 'It updated overnight and now it goes straight to a blue screen that says Automatic Repair, round and round.', os: ['windows'] },
         'I have tried turning it off and on about forty times.'
       ],
       customerTheory: 'They are certain the hard drive has died and want a new one.',
@@ -320,10 +343,19 @@
       severity: 'critical',
       complaints: [
         'A glass of orange juice went over it. I dried it with a hairdryer and put it in rice and it worked for two days.',
-        'It is doing strange things now. Keys typing by themselves, and it gets warm in one corner.'
+        { t: 'It is doing strange things now. Keys typing by themselves, and it gets warm in one corner.', kind: ['laptop', 'desktop', 'aio'] },
+        { t: 'It is doing strange things now. The screen presses things on its own, and it gets warm in one corner.', kind: ['phone', 'tablet'] },
+        { t: 'It is doing strange things now. The controls press themselves in menus, and it gets warm in one corner.', kind: ['handheld', 'console'] }
       ],
       customerTheory: 'They believe the rice fixed it and the new problem is unrelated.',
       readings: {
+        meter: {
+          sysbus: { label: 'System rail', v: '38 \u03a9 to ground', beep: true,
+            note: 'Measured with the power off: 38 \u03a9 from the system rail to ground. A healthy rail reads thousands. '
+              + 'Current is leaking to ground somewhere \u2014 start at the corroded connector.' },
+          vbat: { label: 'Battery rail', v: '41 \u03a9 to ground', beep: true,
+            note: 'Power off, 41 \u03a9 from the battery rail to ground where it should be thousands. Something wet is conducting.' }
+        },
         visual: { note: 'Corrosion on the board around one corner: dull green-white crust on the pins of two connectors, and the liquid-contact indicator strip has gone bright red.' },
         power: { watts: 12, negotiated: 'USB-PD 5V/2.4A', seats: true, note: 'Charging, but drawing oddly and getting warm at the corner where the corrosion is.' },
         thermal: { idleC: 58, loadC: 86, fanRpm: 3800, note: 'One area runs hot that should not — current is going somewhere it should not go.' },
@@ -349,6 +381,15 @@
       ],
       customerTheory: 'They have decided the machine is finished and are half expecting you to confirm it.',
       readings: {
+        meter: {
+          sysbus: { label: 'System rail', v: '0.00 V',
+            note: 'Nothing on the system rail \u2014 yet DC in reads 20 V. Power is reaching the board and not being switched through. '
+              + 'The controller that decides when to turn on has latched, which is what a drain-and-reset clears.' },
+          rail12: { label: '12 V main', v: '0.00 V',
+            note: 'The main rail never came up, but 5 V standby is present. The supply is fine and waiting; the board is not asking it to turn on.' },
+          vbat: { label: 'Battery rail', v: '3.84 V',
+            note: 'The battery is charged and connected. The power is there; the board just is not starting.' }
+        },
         power: { watts: 0, negotiated: 'none', seats: true, note: 'The plug seats and the charger is fine, but the machine draws nothing at all — not even the trickle a sleeping board takes.' },
         battery: { cycles: 340, healthPct: 88, condition: 'Normal', designMah: 6700, currentMah: 5896, note: 'The pack itself holds charge perfectly well. It is simply not being asked for any.' },
         visual: { note: 'No corrosion, no burn marks, no swelling. Nothing wrong that you can see \u2014 which is itself informative.' },
@@ -418,7 +459,8 @@
       noPartNeeded: true,
       complaints: [
         'The fans run flat out from the moment it starts, even sitting on the desk doing nothing. And the keyboard backlight has stopped.',
-        'It also will not sleep when I shut the lid any more.'
+        { t: 'It also will not sleep when I shut the lid any more.', kind: ['laptop'] },
+        { t: 'It also will not go to sleep on its own any more \u2014 the screen just stays on all night.', kind: ['aio', 'desktop'] }
       ],
       customerTheory: 'They are sure the fan is broken and want a new one fitted.',
       readings: {
@@ -513,7 +555,8 @@
       severity: 'medium',
       noPartNeeded: true,
       complaints: [
-        'It got really slow last Tuesday and a window keeps popping up saying my Mac has three viruses and I have to call a number.',
+        { t: 'It got really slow last Tuesday and a window keeps popping up saying my Mac has three viruses and I have to call a number.', os: ['macos'] },
+        { t: 'It got really slow last Tuesday and a window keeps popping up saying Windows has three viruses and I have to call a number.', os: ['windows'] },
         'The fan is on all the time even when I am not doing anything.'
       ],
       customerTheory: 'They want you to wipe and reinstall everything, losing all their photos.',
@@ -544,6 +587,10 @@
       ],
       customerTheory: 'They are sure the board arrived faulty and want you to confirm it so they can send it back.',
       readings: {
+        meter: {
+          vcore: { label: 'CPU core', v: '0.4 \u03a9 to ground', beep: true,
+            note: 'A dead short on the processor supply. Lift the CPU and measure again: if it disappears, the short is in the socket \u2014 two bent contacts touching \u2014 not on the board.' }
+        },
         visual: { note: 'Lift the processor and look into the socket under a light: three of the gold contacts in one corner are folded flat and two of them are touching each other. The little triangle on the chip is not where the triangle on the socket is — it went in a quarter turn out and the clamp was forced shut on top of it.' },
         power: { watts: 14, negotiated: 'none', seats: true, note: 'The supply reaches 14 W and cuts. Short-circuit protection trips on the standby rail before anything can boot.' },
         thermal: { idleC: 23, loadC: 23, fanRpm: 0, note: 'Room temperature. It never stays on long enough to make heat.' },
@@ -569,6 +616,11 @@
       ],
       customerTheory: 'They have already replaced the power supply and are now convinced the graphics card is dying.',
       readings: {
+        meter: {
+          rail12: { label: '12 V main', v: '12.02 V',
+            note: 'Rock steady \u2014 and that is the lesson. A multimeter averages over a fraction of a second, so it cannot see the 460 mV of ripple '
+              + 'that appears under load. That takes an oscilloscope, or your eyes on the tops of the capacitors. The right instrument matters as much as the reading.' }
+        },
         visual: { note: 'Two of the small aluminium cans in the row beside the processor socket are domed on top instead of flat, and one has crusted brown residue around the vent scoring. The rest of the row is flat and clean, which is what makes these two obvious.' },
         bench: { seqMBps: 505, randIops: 71000, latencyMs: 0.1, note: 'Storage is fine — when it stays on long enough to test.' },
         power: { watts: 410, negotiated: 'ATX 12V', seats: true, ripplemV: 460, note: 'Ripple on the 12 V rail reaches 460 mV under load. The ATX specification allows 120 mV. At idle it sits at 40 mV, which is why it is fine all morning.' },
@@ -700,19 +752,225 @@
       ],
       customerTheory: 'They assume the battery has gone, because the thing they notice is that it runs out.',
       readings: {
+        meter: {
+          vbus: { label: 'USB in', v: '0 \u2013 5.0 V',
+            note: 'Jumps between nothing and five volts as you touch the cable. The charger is fine and so is the battery; the contact in the port is not.' }
+        },
         power: { watts: 3, negotiated: 'USB 5V/0.5A only', seats: false, note: 'The plug rocks in the socket instead of clicking home, and it only ever negotiates the slowest possible charge. Push it sideways and the wattage jumps, then dies.' },
         visual: { note: 'Under magnification the port shell is splayed on one side and two of the contacts inside are pushed back out of line. This is mechanical damage, not dirt — there is nothing in there to clean out.' },
         battery: { cycles: 260, healthPct: 91, condition: 'Normal', designMah: 3240, currentMah: 2948, note: 'Ninety-one percent health. The battery is in good shape — it is just rarely getting a full charge into it.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4100, note: 'Storage fine.' },
         thermal: { idleC: 33, loadC: 61, fanRpm: 0, note: 'Normal.' }
       },
+      after: {
+        power: 'the new port takes the plug with a firm click and holds 9 V / 2.2 A even when you wiggle the cable. Before, it fell back to half an amp.',
+        battery: 'the same healthy cell, charging steadily with no drop-outs.'
+      },
       fixedBy: { kind: 'part', cat: 'flex' },
       wrongFix: {
         battery: 'A new battery in a device that cannot charge it. It lasts exactly as long as the old one did, because the old one was never the problem — and they have paid for a battery and still cannot plug it in.'
       },
       explain: 'A battery that runs out and a port that will not take charge look identical from the outside, and the customer will almost always name the battery. The two readings that separate them are sitting right next to each other: battery health is fine, and the port will not negotiate more than the fallback half-amp. Pull on a plugged-in cable hard enough and you splay the port shell — after that it makes contact at an angle or not at all. On most phones and handhelds the port is on its own small flex board precisely because it is the part that wears out, so this is a replaceable component and not a new device.'
+    },
+
+    ps5_liquid_metal: {
+      id: 'ps5_liquid_metal',
+      title: 'Liquid metal dried out under the cooler',
+      appliesTo: ['ps5pro'],
+      severity: 'medium',
+      complaints: [
+        'It says "Your PS5 is too hot" and switches itself off, always halfway through a long match. It never used to.',
+        'The fan is louder than the television now. Somebody online said it is because I stand it upright.'
+      ],
+      customerTheory: 'They have read that standing it upright ruins the liquid metal, and mostly want to know whether to lay it flat.',
+      readings: {
+        thermal: { idleC: 58, loadC: 104, fanRpm: 4900, throttleMhz: 1400,
+          note: 'The chip reaches 104 \u00b0C a few minutes into a demanding game and the console shuts down to protect itself. The fan is at full speed the whole time \u2014 it is working; the heat is just not reaching the heatsink.' },
+        visual: { note: 'The fan and the dust catchers are clean, so this is not dust. With the cooler lifted: the liquid metal has gone grey and grainy along one edge of the die, and a third of the die is bare. A few silver beads have escaped onto the foam barrier round the chip \u2014 none past it.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 7300, note: 'The SSD is fine.' }
+      },
+      after: {
+        thermal: 'peaks at 81 \u00b0C in the same game and holds there. The fan settles to a hum you can talk over.',
+        visual: 'a thin mirror film across the whole die, barrier intact, cooler seated evenly.'
+      },
+      fixedBy: { kind: 'action', id: 'redo_liquid_metal', needsPartCat: 'thermal' },
+      wrongFix: {
+        fan: 'A new fan on a console whose fan was fine. It spins just as hard at a heatsink that is still not getting the heat.'
+      },
+      explain: 'The PS5 ships with liquid metal between the chip and the cooler, not paste. It moves heat several times better, and a chip drawing two hundred watts needs it. Over years of heating and cooling it can dry out and pull to one side, leaving part of the die bare. Sony put a foam barrier round the die so escaped beads cannot reach the board, which is why the repair is to swab the old metal out with isopropyl alcohol, check the barrier, and brush on a thin new film. The "never stand it upright" theory is repeated everywhere and is not well supported; age and heat cycles are the usual cause.'
+    },
+
+    ps5_rail_short: {
+      id: 'ps5_rail_short',
+      title: 'Shorted capacitor on the 12 V rail',
+      appliesTo: ['ps5pro'],
+      severity: 'high',
+      complaints: [
+        'It beeps once, the light flashes blue for a second, and then nothing. Every single time.',
+        'It went like this after the big storm. It was plugged in but switched off.'
+      ],
+      customerTheory: 'They are sure the power supply has blown and want a new one fitted.',
+      readings: {
+        meter: {
+          rail12: { label: '12 V main', v: '0.3 \u03a9 to ground', beep: true,
+            note: 'Power off, continuity mode: the 12 V rail beeps to ground at 0.3 \u03a9. A healthy rail reads thousands. Something on this rail is a dead short \u2014 the supply sees it and shuts down, which is exactly what it should do. '
+              + 'Feed a volt into the rail from the bench supply and one part warms up: a ceramic capacitor beside the chip\u2019s voltage regulator.' },
+          sb5: { label: '5 V standby', v: '5.03 V', note: 'Standby is up. The supply is alive and waiting \u2014 it is refusing to switch the main rail on into a short.' }
+        },
+        power: { watts: 0, negotiated: 'mains in, standby up', seats: true,
+          note: 'Mains arrives and standby comes up, so the supply is not dead. Press the button: a click, a single beep, and it shuts down in under a second. That is the supply protecting itself.' },
+        visual: { note: 'Nothing to see. No burn marks, no swollen parts, no smell. Ceramic capacitors fail short without a visible mark on them, which is why looking will not find this one.' },
+        thermal: { idleC: 24, loadC: 24, fanRpm: 0, note: 'It never stays on long enough to warm up. Room temperature; the fan does not even start.' }
+      },
+      after: {
+        power: 'press the button and it stays on. The 12 V rail holds at 12.05 V into a game.',
+        thermal: 'boots, runs a game, peaks at 78 \u00b0C. Normal.'
+      },
+      fixedBy: { kind: 'action', id: 'replace_shorted_cap', needsPartCat: 'caps' },
+      wrongFix: {},
+      explain: 'A decoupling capacitor is a tiny ceramic part that steadies a rail. When one fails, it usually fails short: a direct path from the rail to ground. The supply is fine and correctly refuses to power a short, so a new supply trips in exactly the same way, and a power reset changes nothing. Nothing is visible. A multimeter finds it in seconds, in continuity mode with the power off. Replace that one capacitor with a part of the same value and voltage rating, and the rail reads thousands of ohms again.'
+    },
+
+    gpu_cable_wrong_port: {
+      id: 'gpu_cable_wrong_port',
+      title: 'Monitor plugged into motherboard HDMI',
+      appliesTo: ['tower_pc'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'I cleaned behind my desk on Sunday and plugged everything back in. Now all my games run at 4 FPS like a slideshow, but YouTube and email are fine!',
+        'I think my graphics card burned out when I vacuumed.'
+      ],
+      customerTheory: 'They are convinced the dedicated graphics card is dead and are bracing to buy a new GPU.',
+      readings: {
+        visual: { note: 'Looking at the back of the case settles it immediately: the HDMI cable is plugged into the top motherboard port, while the dedicated NVIDIA RTX graphics card at the bottom sits completely empty.' },
+        thermal: { idleC: 36, loadC: 62, fanRpm: 1200, note: 'CPU runs normally; GPU fans are idling at zero RPM because it is not being asked to render anything.' },
+        power: { watts: 85, negotiated: 'ATX 12V', seats: true, note: 'Tower draws barely 85 W under 3D games — the dedicated card is never engaging.' },
+        bench: { seqMBps: 3400, randIops: 180000, latencyMs: 0.05, note: 'Storage is fast and healthy.' }
+      },
+      fixedBy: { kind: 'action', id: 'swap_gpu_cable' },
+      wrongFix: {
+        ram: 'More RAM for a machine that is running games on the CPU graphics chip.',
+        thermal: 'New paste on a graphics card that was never plugged in.'
+      },
+      explain: 'When a PC has a dedicated graphics card, the monitor cable must plug directly into the GPU ports at the bottom of the case, not the motherboard video output at the top. Plugging into the motherboard forces games to run on weak integrated graphics. Moving the cable takes ten seconds and costs zero forints.'
+    },
+
+    keyboard_layout_swap: {
+      id: 'keyboard_layout_swap',
+      title: 'Keyboard layout switched in software',
+      appliesTo: ['thinkpad_t480', 'inspiron15', 'mba_m1'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'My password fails every time, but I know it is right! I tried twenty times and it locked me out. The keyboard must be broken.',
+        'It happened right after my little brother was playing around with the buttons.'
+      ],
+      customerTheory: 'They think the keyboard controller has died or keys are sending ghost keystrokes.',
+      readings: {
+        activity: { memPressurePct: 29, swapGB: 0.1, topProc: 'Browser', topProcMemGB: 0.8, note: 'Every process is normal and the keyboard is registering every press. Whatever is wrong, the machine is not struggling \u2014 the keys are arriving, just not as the letters on them.' },
+        visual: { note: 'The physical keyboard is in perfect condition. Every keycap is clean, switches rebound crisply, zero liquid residue.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2400, note: 'Drive fine.' },
+        power: { watts: 28, negotiated: 'USB-PD 9V/3A', seats: true, note: 'Normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'set_keyboard_layout' },
+      wrongFix: {
+        flex: 'A new keyboard assembly that will type with the exact same swapped letters because the layout is in software.'
+      },
+      explain: 'The letters printed on a key are only a label. What the key types is decided by the software layout. A Hungarian keyboard has Z and Y the other way round from English, '
+        + 'and the key printed 0 sits where English puts the backtick \u2014 so under the wrong layout "Zebra0" types as "Yebra`" and the password fails every time, with nothing broken. '
+        + 'On Windows, Alt+Shift or Windows+Space switches layout; on a Mac, Control+Space. Easy to press by accident, and nothing on screen says it happened.'
+    },
+
+    display_brightness_zero: {
+      id: 'display_brightness_zero',
+      title: 'Backlight brightness dimmed to zero',
+      appliesTo: ['inspiron15', 'thinkpad_t480'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        'The screen went completely pitch black yesterday. The green power light is on and I hear the fan, but nothing appears on screen.',
+        'The shop near the station told me the LCD screen is dead and quoted 55,000 Ft.'
+      ],
+      customerTheory: 'They expect to buy an expensive replacement display panel.',
+      readings: {
+        visual: { note: 'Shining a phone flashlight at an angle against the black glass reveals desktop icons, folders and the cursor moving underneath! The LCD matrix is generating images, but the LED backlight brightness is set to 0%.' },
+        power: { watts: 22, negotiated: 'USB-PD 20V/1.1A', seats: true, note: 'Machine is awake, booted and drawing power normally.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3100, note: 'Drive healthy.' },
+        thermal: { idleC: 38, loadC: 65, fanRpm: 1800, note: 'Temperatures normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'restore_brightness' },
+      wrongFix: {
+        screen: 'Replacing a perfectly working display panel because the brightness shortcut key was pressed.'
+      },
+      explain: 'A torch held against the glass is the standard test, and it tells you one precise thing: the panel is drawing a picture, and the light behind it is off. '
+        + 'That is very often a real hardware fault \u2014 a failed backlight driver, a blown fuse on the board, a damaged cable \u2014 and none of those is fixed by a new screen either. '
+        + 'But some laptops let the brightness go all the way to off, and one keypress in the dark can do it. So the order matters: '
+        + 'rule out the free explanation before you open the machine, and never quote for a panel when the panel just proved it works.'
+    },
+
+    audio_device_swapped: {
+      id: 'audio_device_swapped',
+      title: 'Sound muted or routed to phantom device',
+      appliesTo: ['tower_pc', 'mbp13_2012', 'inspiron15'],
+      severity: 'low',
+      noPartNeeded: true,
+      complaints: [
+        { t: 'No sound at all. Games, YouTube and Discord are totally silent. Even the startup chime stopped.', os: ['macos'] },
+        { t: 'No sound at all. Games, YouTube and Discord are totally silent. Even the little sound when I plug a USB stick in has gone.', os: ['windows'] },
+        'I unplugged my gaming headset on Sunday and since then the speakers have never worked.'
+      ],
+      customerTheory: 'They think the audio DAC or amplifier chip on the motherboard is fried.',
+      readings: {
+        activity: { memPressurePct: 32, swapGB: 0.2, topProc: 'Browser', topProcMemGB: 0.9, topProcCpuPct: 4, note: 'The audio service is running normally and is sending sound out \u2014 to wherever the output is set to go. Nothing here is broken.' },
+        visual: { note: 'Speaker cones are intact, audio jack has zero debris or bent contacts.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4400, note: 'Storage fine.' },
+        power: { watts: 45, negotiated: 'ATX/DC', seats: true, note: 'Power delivery normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'set_audio_device' },
+      wrongFix: {
+        caps: 'Soldering new audio capacitors on a motherboard whose audio was simply muted in software.'
+      },
+      explain: 'Operating systems switch default audio output when HDMI monitors or headsets are plugged in, and frequently fail to switch back when unplugged. Checking Sound Settings and toggling default output back to Speakers restores sound in ten seconds.'
     }
   };
+
+  /**
+   * Where a multimeter can go on this machine, and what a healthy one reads.
+   *
+   * The test points follow how the machine is actually powered: an ATX supply
+   * has a 12 V main rail and a 5 V standby rail; a laptop has 20 V arriving
+   * from the charger and a system rail around 12.6 V behind it; a phone or a
+   * handheld runs from a single battery rail near 3.8 V. Offering "12 V main
+   * rail" on an iPhone would teach something that is not true.
+   *
+   * `beep` marks a reading taken in continuity mode that would sound.
+   */
+  function meterBaseline(machine) {
+    var gnd = { label: 'Chassis ground', v: '0.1 \u03a9', beep: true,
+                note: 'Continuity to the chassis. This is your reference \u2014 every other reading is taken against it.' };
+    if (machine.kind === 'desktop' || machine.kind === 'console') {
+      return {
+        gnd: gnd,
+        rail12: { label: '12 V main', v: '12.04 V', note: 'Main rail at 12.04 V. The ATX tolerance is \u00b15 %, so anywhere from 11.4 to 12.6 V is healthy.' },
+        sb5:    { label: '5 V standby', v: '5.02 V', note: 'Standby is up. This rail is live whenever the supply is plugged in, even with the machine off.' },
+        vcore:  { label: 'CPU core', v: '1.21 V', note: 'Processor core voltage, normal at idle. It moves constantly under load; that is not a fault.' }
+      };
+    }
+    if (machine.kind === 'laptop' || machine.kind === 'aio') {
+      return {
+        gnd: gnd,
+        dcin:   { label: 'DC in', v: '20.1 V', note: 'The charger has negotiated 20 V and is delivering it to the board.' },
+        sysbus: { label: 'System rail', v: '12.6 V', note: 'The main system rail, fed from the charger or the battery. On a Mac this is PPBUS_G3H. Healthy.' },
+        vcore:  { label: 'CPU core', v: '0.92 V', note: 'Processor core voltage, normal at idle.' }
+      };
+    }
+    return {
+      gnd: gnd,
+      vbus: { label: 'USB in', v: '5.05 V', note: 'Five volts arriving from the cable, steady.' },
+      vbat: { label: 'Battery rail', v: '3.86 V', note: 'The battery rail, where almost everything on the board draws from. 3.86 V is a charged cell.' }
+    };
+  }
 
   /** Healthy instrument readings, so that a clean test looks like real data rather than "nothing found". */
   function baseline(machine) {
@@ -721,6 +979,7 @@
     // to, and saying "quiet, no clicking" implied there might have been.
     var couldSpin = !machine.storageSoldered && (machine.storageBuses || []).indexOf('sata3') !== -1;
     return {
+      meter: meterBaseline(machine),
       smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4200, note: 'No reallocated or pending sectors. This drive is fine.' },
       bench: { seqMBps: 520, randIops: 74000, latencyMs: 0.1, note: 'Normal for the bus in this machine.' },
       memtest: { passes: 4, errors: 0, note: 'Four full passes, zero errors.' },
@@ -756,6 +1015,14 @@
       if (fault && fault.readings) {
         Object.keys(fault.readings).forEach(function (k) {
           base[k] = Object.assign({}, base[k] || {}, fault.readings[k]);
+        });
+      }
+      // Some readings only make sense on one kind of machine: 214 GB of
+      // exports cannot be sitting on a 64 GB iPad.
+      var on = fault && fault.readingsOn && fault.readingsOn[machine.kind];
+      if (on) {
+        Object.keys(on).forEach(function (k) {
+          base[k] = Object.assign({}, base[k] || {}, on[k]);
         });
       }
       return base;

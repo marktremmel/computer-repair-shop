@@ -55,10 +55,14 @@ marks on budget, which is the opposite of the argument the material makes.
 **Reputation buys footfall, and that is where it bites.** A bad name used to
 change only *who* walked in, never how many, so cutting corners paid
 straightforwardly. `TechOpsJobs.footfall()` now sets how many people are waiting
-and how many days pass before the next one. A shop nobody trusts sits empty, and
-empty days are the only thing the economy really punishes. There is always at
-least one customer, because a shop with no way back is a dead end rather than a
-lesson.
+and how many quiet days follow each job. Those are two different things and must
+stay separate: **how many are waiting is a choice** (three below reputation 25
+is still two), and choosing between them is part of the game; **the quiet days
+after every handover are the cost of a bad name** (1 at 55+, up to 4 below 25).
+Tying both to reputation left a decent shop with one customer and no choice;
+loosening both let cutting corners win the 40-day playthrough again. The
+handover and `tools/playthrough.js` call the same `footfall()`, so the eval
+cannot drift from the game.
 
 **Nobody pays full price for visibly poor work.** `willPay()` reads the grade: a
 job scoring under 55 commands about a third of what the customer came in with.
@@ -148,8 +152,9 @@ across four screws, and pulling a display ribbon at the right angle.
 
 **Fill out the thin machines.** The spread is mbp13_2012 23, inspiron15 20,
 thinkpad_t480 19, mba_m1 and mbp14_m3 17, imac_m1 11, tower_pc and switch2 9,
-ipad_air 9, steamdeck 8, iphone12 6, iphone17 5, **ps5pro 4**. A student who
-draws the PS5 twice sees the same job. The tempting fix — padding `appliesTo`
+ipad_air 9, steamdeck 8, iphone12 6, iphone17 5, ps5pro 5 (it gained
+`ps5_liquid_metal` and `ps5_rail_short`, and lost the laptop-written
+`thermal_paste_dead`: a PS5 has no paste on its chip). The tempting fix — padding `appliesTo`
 — is the wrong one: a fault whose readings and interview answers were written
 for a laptop reads as nonsense on a console. Write it for the machine.
 
@@ -158,12 +163,10 @@ sticky-key variants, the Pixel 10a guides, MacBook Neo keyboard / trackpad /
 USB-port replacements. Adding a fault means touching five files — see §5 —
 then running the coverage check.
 
-**A multimeter and rail prober.** Two probes, black on chassis ground, red on
-board test pads (`PPBUS_G3H`, `3V3_S5`, `1V8_CORE`), with DC volts, resistance
-and a continuity beep. It teaches how 20 V at the inlet becomes 0.9 V at the
-core, and a shorted decoupling cap beeps straight to ground. The strongest
-candidate for the next real instrument, and `blown_caps` already established
-that ripple and rail voltage are things this shop measures.
+**More from the multimeter.** It exists (DC volts and continuity, test points per
+machine family) and `ps5_rail_short` is the first fault only it can find. Next:
+a shorted rail on a laptop (`PPBUS_G3H` to ground), and resistance mode as its
+own switch rather than implied by the reading.
 
 **Multi-job juggling.** Two or three machines on the go, each with its own clock.
 The biggest change to how the game feels, and the biggest risk to its clarity.
@@ -176,9 +179,12 @@ wrong, or reward being right early. There is a real mechanic in there.
 by name, a customer who tells their friends, a bad review that sits on the shop
 for a week — reputation is currently a single number doing a lot of work.
 
-**Multi-turn interviews.** Questions are single-shot. There is a good mechanic
-in "the liquid indicator is pink — are you sure nothing was spilled?" that does
-not exist yet.
+**More follow-ups.** Multi-turn interviews exist (`FOLLOWUPS` in
+`data-interview.js`): answers open follow-ups, bench findings open things to put
+to the customer, and some offer a choice of tone. Eight faults have them. The
+blunt/curious choice sets `t.tension` but nothing reads it yet beyond losing
+the lead; a customer who was accused could reasonably pay less, or not come
+back.
 
 **More boards.** Two are specified ready-to-build in the v2 guide: `pcie_gpu`
 (a graphics card is a whole computer on a card — its own processor, a GDDR6
@@ -194,6 +200,24 @@ labels. Half a day, and "Label the components" gets much richer.
 this usable with groups who find English an extra barrier on top of the content.
 
 ## 4. Traps that have already bitten
+
+**A harness that stocks the shelf cannot see a part nobody can buy.** Capacitors
+had no tab in the Parts market, so the tower's capacitor job was unwinnable in
+the real game while every scripted check passed: the scripts put parts on the
+shelf directly. Coverage now fails if any fix needs a part category the market
+does not sell, or if nothing for sale fits the machine.
+
+**A handset has no desktop, so desktop-only evidence and apps do not exist on
+it.** The iPad could get a full disk (whose fix lived in the Mac's storage app)
+and notification spam (found only in Activity Monitor). Both were unwinnable on
+the iPad. Coverage now checks that every handset fault can be diagnosed with
+something a handset can run, and fixed somewhere the handset lab shows.
+
+**A repair you cannot re-test is a repair you take on trust.** Actions such as
+scraping a port never set `retestNeeded`, so there was no way to see the fix
+land. Every action now re-arms the instruments; a re-test of the instrument that
+found the fault, reading normal, sets `t.fixConfirmed`, and the handover says
+whether anyone checked.
 
 Every one of these shipped at least once.
 
@@ -348,8 +372,9 @@ machine uses a screw type the renderer does not know.
 Then run the coverage check.
 
 **A new machine** needs an entry in `data-machines.js`, a board layout in
-`data-boards.js` (or an honest reuse of an existing one), a chassis kind mapped
-in `board.js` `KIND_FOR`, its ids added to the `appliesTo` of every fault it can
+`data-boards.js` (or an honest reuse of an existing one) mapped in its
+`FOR_MACHINE` table, an `os` so the software procedures pick the right variant,
+its ids added to the `appliesTo` of every fault it can
 have, and parts in `data-parts.js` that fit it.
 
 **A new board layout** needs a `note` explaining *why* that machine is laid out
@@ -383,7 +408,7 @@ node tools/playthrough.js  # plays every pair under five strategies and over
                            # least one good answer, and does the same part
                            # really suit different people differently?
                            # TECHOPS_DAYS=90 for a longer horizon.
-node tools/scoring.js    # 27 scenarios: the same part scores differently for
+node tools/scoring.js    # 31 scenarios: the same part scores differently for
                          # different customers, no-part faults punish upselling,
                          # misdiagnosis fails, the worst-axis cap holds
 ```

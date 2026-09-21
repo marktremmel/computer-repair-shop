@@ -42,10 +42,15 @@
 
   function apply() {
     var r = document.documentElement;
-    r.style.setProperty('--a11y-scale', (state.text / 100).toFixed(3));
+    var scale = (state.text / 100).toFixed(3);
+    r.style.setProperty('--a11y-scale', scale);
+    r.setAttribute('data-text-size', state.text);
     r.setAttribute('data-contrast', state.contrast ? 'high' : 'normal');
     r.setAttribute('data-motion', state.motion ? 'reduced' : 'normal');
     r.setAttribute('data-typeface', state.dyslexic ? 'readable' : 'normal');
+    if (document.body) {
+      document.body.style.setProperty('--a11y-scale', scale);
+    }
   }
 
   /** The system setting wins the first time; after that the player's choice does. */

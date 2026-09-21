@@ -57,7 +57,7 @@ function assert(condition, scenarioName, details) {
   }
 }
 
-console.log('\n--- TechOps Budapest: Running 27 Scoring Scenarios ---\n');
+console.log('\n--- TechOps Budapest: Running 31 Scoring Scenarios ---\n');
 
 // Helper to create a base mock ticket with explicit deterministic customer
 function mockTicket(faultId, machineId, customerId) {
@@ -365,6 +365,52 @@ function mockTicket(faultId, machineId, customerId) {
     `Expected riskPct > 15, got ${res.riskPct}%`);
 }
 
+// 28. PS5 liquid metal: liquid metal is the right answer here, not a safety fault
+{
+  const t = mockTicket('ps5_liquid_metal', 'ps5pro');
+  t.actionsDone.push('clean_lm', 'redo_liquid_metal');
+  t.installed.push({ partId: 'paste_liquid_metal', cat: 'thermal' });
+  t.partsCostFt = 6500;
+  const res = Score.grade(window.TechOpsShop, t, 20000);
+  assert(res.resolved && res.axes.safety >= 90, 'Scenario 28: Liquid metal back on a PS5 is not penalised as unsafe',
+    `Expected resolved with safety >= 90, got resolved=${res.resolved} safety=${Math.round(res.axes.safety)}`);
+}
+
+// 29. PS5 liquid metal swapped for paste: fixed, but it costs fit
+{
+  const withLm = mockTicket('ps5_liquid_metal', 'ps5pro');
+  withLm.actionsDone.push('clean_lm', 'redo_liquid_metal');
+  withLm.installed.push({ partId: 'paste_liquid_metal', cat: 'thermal' });
+  const withPaste = mockTicket('ps5_liquid_metal', 'ps5pro');
+  withPaste.actionsDone.push('clean_lm', 'redo_liquid_metal');
+  withPaste.installed.push({ partId: 'paste_mx4', cat: 'thermal' });
+  const a = Score.grade(window.TechOpsShop, withLm, 20000), b = Score.grade(window.TechOpsShop, withPaste, 20000);
+  assert(b.resolved && b.axes.fit < a.axes.fit, 'Scenario 29: Paste instead of liquid metal on a PS5 resolves but scores lower on fit',
+    `Expected resolved and fit ${Math.round(b.axes.fit)} < ${Math.round(a.axes.fit)}`);
+}
+
+// 30. PS5 rail short: a power reset is not the fix
+{
+  const t = mockTicket('ps5_rail_short', 'ps5pro');
+  t.actionsDone.push('power_reset');
+  const res = Score.grade(window.TechOpsShop, t, 5000);
+  assert(!res.resolved, 'Scenario 30: A power reset does not clear a shorted capacitor',
+    `Expected unresolved, got resolved=${res.resolved}`);
+}
+
+// 31. PS5 rail short: a rated capacitor fixes it, an unmarked one costs fit
+{
+  const good = mockTicket('ps5_rail_short', 'ps5pro');
+  good.actionsDone.push('replace_shorted_cap');
+  good.installed.push({ partId: 'mlcc_murata', cat: 'caps' });
+  const cheap = mockTicket('ps5_rail_short', 'ps5pro');
+  cheap.actionsDone.push('replace_shorted_cap');
+  cheap.installed.push({ partId: 'mlcc_unmarked', cat: 'caps' });
+  const a = Score.grade(window.TechOpsShop, good, 25000), b = Score.grade(window.TechOpsShop, cheap, 25000);
+  assert(a.resolved && b.resolved && b.axes.fit < a.axes.fit, 'Scenario 31: Unmarked capacitor on the 12 V rail scores lower on fit',
+    `Expected both resolved and fit ${Math.round(b.axes.fit)} < ${Math.round(a.axes.fit)}`);
+}
+
 // ── SUMMARY REPORT ──
 console.log('========================================');
 console.log(`Scoring Scenarios Complete: ${passedTests}/${totalTests} Passed.`);
@@ -378,6 +424,6 @@ if (failures.length) {
   console.log('');
   process.exit(1);
 } else {
-  console.log('✅ ALL 27 SCENARIOS PASSED! SCORING INVARIANTS RIGOROUSLY PRESERVED.\n');
+  console.log('✅ ALL 31 SCENARIOS PASSED! SCORING INVARIANTS RIGOROUSLY PRESERVED.\n');
   process.exit(0);
 }

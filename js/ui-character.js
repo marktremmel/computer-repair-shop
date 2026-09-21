@@ -47,7 +47,7 @@
     }).join('');
 
     var modal = UI.modal('<div class="modal-head"><h3>Before you open up</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">Who is behind the counter? The people who walk in are built from the same pieces.</div></div>'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Who is behind the counter? The people who walk in are built from the same pieces.</div></div>'
       + '<div class="modal-body">'
       + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">'
       + '<label class="field"><span>Your name</span>'
@@ -56,7 +56,7 @@
       + '<input id="ch-shop" value="' + esc(draft.shop) + '" maxlength="28"></label>'
       + '</div>'
       + '<div class="card-head" style="margin-top:14px">Your sign</div>'
-      + '<div style="font-size:12px;color:var(--ink-3);margin-bottom:9px">'
+      + '<div style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3);margin-bottom:9px">'
       + 'The colour and mark follow you — on the door, in the top bar, and on the sign outside.</div>'
       + (window.TechOpsIdentity ? window.TechOpsIdentity.picker(draft) : '')
       + '<div class="card-head">Pick a face <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">'
@@ -65,7 +65,7 @@
       + '<div class="card-head" style="margin-top:18px">Where you learned</div>'
       + '<div class="bg-grid">' + bgs + '</div>'
       + '</div><div class="modal-foot">'
-      + '<span id="ch-warn" style="font-size:12.5px;color:var(--amber);margin-right:auto;align-self:center"></span>'
+      + '<span id="ch-warn" style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--amber);margin-right:auto;align-self:center"></span>'
       + '<button class="btn btn-primary" id="ch-start">Open the shop →</button></div>',
       { sticky: true });
 

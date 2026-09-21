@@ -96,17 +96,17 @@
     var jobs = (S.history || []).slice(0, 12).map(function (h) {
       return '<div class="disk-row' + (h.stars >= 4 ? ' ok' : h.stars <= 2 ? ' bad' : '') + '">'
         + '<span class="k">day ' + h.day + ' · ' + esc(h.customer) + '</span>'
-        + '<span style="font-size:11px">' + esc(h.fault) + (h.soldUnneeded ? ' · sold parts it did not need' : '') + '</span>'
+        + '<span style="font-size:calc(11px * var(--a11y-scale, 1))">' + esc(h.fault) + (h.soldUnneeded ? ' · sold parts it did not need' : '') + '</span>'
         + '<span class="v">' + '★'.repeat(h.stars) + '</span></div>';
-    }).join('') || '<div style="color:var(--ink-3);font-size:12.5px">No jobs closed.</div>';
+    }).join('') || '<div style="color:var(--ink-3);font-size:calc(12.5px * var(--a11y-scale, 1))">No jobs closed.</div>';
 
     UI.modal('<div class="modal-head"><h3>Shift report</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">Shift code <b>' + esc(S.shiftCode) + '</b> · ' + S.jobsDone + ' job'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Shift code <b>' + esc(S.shiftCode) + '</b> · ' + S.jobsDone + ' job'
       + (S.jobsDone === 1 ? '' : 's') + ' over ' + S.day + ' days</div></div>'
       + '<div class="modal-body" id="report-print">'
       + '<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">'
       + '<input id="student-name" placeholder="Your name and class" value="' + esc(S.studentName || '') + '" '
-      + 'style="flex:1;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 13px;color:var(--ink);font-size:14px">'
+      + 'style="flex:1;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 13px;color:var(--ink);font-size:calc(14px * var(--a11y-scale, 1))">'
       + '</div>'
 
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:9px;margin-bottom:18px">'
@@ -126,10 +126,10 @@
 
       + (code
           ? '<div class="card-head" style="margin-top:18px">Hand-in code</div>'
-            + '<p style="font-size:12.5px;color:var(--ink-2)">Paste this into Google Classroom. It carries your whole shift — '
+            + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2)">Paste this into Google Classroom. It carries your whole shift — '
             + 'your teacher decodes it in their own browser, offline. Nothing is uploaded anywhere.</p>'
             + '<textarea id="hand-in-code" readonly style="width:100%;height:78px;background:var(--bg);border:1px solid var(--line);'
-            + 'border-radius:9px;padding:10px;color:var(--green);font-family:var(--mono);font-size:11px;resize:vertical">' + esc(code) + '</textarea>'
+            + 'border-radius:9px;padding:10px;color:var(--green);font-family:var(--mono);font-size:calc(11px * var(--a11y-scale, 1));resize:vertical">' + esc(code) + '</textarea>'
           : '')
       + '</div>'
       + '<div class="modal-foot">'
@@ -223,7 +223,7 @@
       var avgCol = avg >= 4 ? 'var(--green)' : avg >= 3 ? 'var(--amber)' : 'var(--red)';
       var wKey = getWeakestAxis(d.a);
       var wLabel = wKey ? AXIS[wKey].label : '—';
-      return '<tr style="border-bottom:1px solid var(--line);font-size:12px">'
+      return '<tr style="border-bottom:1px solid var(--line);font-size:calc(12px * var(--a11y-scale, 1))">'
         + '<td style="padding:7px 9px;font-weight:600;white-space:nowrap">' + esc(d.n || '(unnamed)') + '</td>'
         + '<td style="padding:7px 9px;font-family:var(--mono);color:var(--ink-2)">' + esc(d.c || '—') + '</td>'
         + '<td style="padding:7px 9px;text-align:center">' + d.j + '</td>'
@@ -236,7 +236,7 @@
         + '<td style="padding:7px 9px;text-align:center">' + badge(d.a && d.a[3]) + '</td>'
         + '<td style="padding:7px 9px;text-align:center">' + badge(d.a && d.a[4]) + '</td>'
         + '<td style="padding:7px 9px;text-align:center">'
-        + '<button class="btn btn-sm btn-inspect" data-code="' + esc(rec.code) + '" style="font-size:11px;padding:3px 7px">Inspect</button>'
+        + '<button class="btn btn-sm btn-inspect" data-code="' + esc(rec.code) + '" style="font-size:calc(11px * var(--a11y-scale, 1));padding:3px 7px">Inspect</button>'
         + '</td>'
         + '</tr>';
     }).join('');
@@ -299,8 +299,8 @@
       + '<div class="note good" style="margin-bottom:16px">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
       + '<div><b>Class Summary · ' + n + ' Student Submissions Decoded</b><br>'
-      + '<span style="font-size:12px">Aggregated across all submitted shift codes.</span></div>'
-      + '<button class="btn btn-sm btn-primary" id="btn-export-csv" style="font-size:12px;padding:6px 12px">📥 Export CSV</button>'
+      + '<span style="font-size:calc(12px * var(--a11y-scale, 1))">Aggregated across all submitted shift codes.</span></div>'
+      + '<button class="btn btn-sm btn-primary" id="btn-export-csv" style="font-size:calc(12px * var(--a11y-scale, 1));padding:6px 12px">📥 Export CSV</button>'
       + '</div>'
       + '</div>'
 
@@ -323,12 +323,12 @@
 
       + '<div class="card-head" style="margin-top:22px;display:flex;justify-content:space-between;align-items:center">'
       + '<span>Student Roster</span>'
-      + '<span style="font-size:11.5px;color:var(--ink-3);font-weight:normal">Click any column header to sort</span>'
+      + '<span style="font-size:calc(11.5px * var(--a11y-scale, 1));color:var(--ink-3);font-weight:normal">Click any column header to sort</span>'
       + '</div>'
 
       + '<div style="overflow-x:auto;margin-top:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)">'
       + '<table style="width:100%;border-collapse:collapse;text-align:left">'
-      + '<thead><tr style="border-bottom:1px solid var(--line);font-size:11.5px;background:rgba(255,255,255,0.03)">'
+      + '<thead><tr style="border-bottom:1px solid var(--line);font-size:calc(11.5px * var(--a11y-scale, 1));background:rgba(255,255,255,0.03)">'
       + th('name', 'Student')
       + th('code', 'Shift')
       + th('jobs', 'Jobs')
@@ -448,15 +448,15 @@
 
   function showTeacherDecoder() {
     UI.modal('<div class="modal-head"><h3>Teacher · Class Shift Decoder &amp; Roster</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">Paste one or multiple student SEK7K- codes (up to 50). Everything decodes 100% offline in this browser.</div></div>'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Paste one or multiple student SEK7K- codes (up to 50). Everything decodes 100% offline in this browser.</div></div>'
       + '<div class="modal-body">'
       + '<textarea id="decode-in" placeholder="Paste SEK7K- codes here (one or multiple lines)..." '
       + 'style="width:100%;height:96px;background:var(--bg);border:1px solid var(--line);border-radius:9px;'
-      + 'padding:10px;color:var(--ink);font-family:var(--mono);font-size:11.5px;resize:vertical"></textarea>'
+      + 'padding:10px;color:var(--ink);font-family:var(--mono);font-size:calc(11.5px * var(--a11y-scale, 1));resize:vertical"></textarea>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px">'
       + '<button class="btn btn-primary" id="btn-decode">Decode Codes</button>'
-      + '<button class="btn" id="btn-sample-class" style="font-size:12px">Load Sample Class (3 students)</button>'
-      + '<button class="btn" id="btn-clear" style="font-size:12px">Clear</button>'
+      + '<button class="btn" id="btn-sample-class" style="font-size:calc(12px * var(--a11y-scale, 1))">Load Sample Class (3 students)</button>'
+      + '<button class="btn" id="btn-clear" style="font-size:calc(12px * var(--a11y-scale, 1))">Clear</button>'
       + '</div>'
       + '<div id="decode-out" style="margin-top:16px"></div>'
       + '</div><div class="modal-foot"><button class="btn" data-close>Close</button></div>');
@@ -551,15 +551,15 @@
       var f = window.TechOpsFaults.get(x[2]);
       return '<div class="disk-row' + (x[3] >= 4 ? ' ok' : x[3] <= 2 ? ' bad' : '') + '">'
         + '<span class="k">day ' + x[0] + ' · ' + esc(x[1]) + '</span>'
-        + '<span style="font-size:11px">' + esc(f ? f.title : x[2])
+        + '<span style="font-size:calc(11px * var(--a11y-scale, 1))">' + esc(f ? f.title : x[2])
         + (x[4] ? '' : ' · <b>not actually fixed</b>')
         + (x[5] ? ' · <b>sold unnecessary parts</b>' : '') + '</span>'
         + '<span class="v">' + '★'.repeat(x[3]) + '</span></div>';
-    }).join('') || '<div style="color:var(--ink-3);font-size:12.5px">No jobs in this code.</div>';
+    }).join('') || '<div style="color:var(--ink-3);font-size:calc(12.5px * var(--a11y-scale, 1))">No jobs in this code.</div>';
 
     return '<div class="note good" style="margin-bottom:14px"><b>' + esc(d.n || '(no name given)') + '</b><br>'
       + 'Shift code <b>' + esc(d.c) + '</b> · ' + d.j + ' job' + (d.j === 1 ? '' : 's') + ' over ' + d.d + ' days'
-      + '<br><span style="font-size:12px">Two students with the same shift code got the same customers, faults and prices — '
+      + '<br><span style="font-size:calc(12px * var(--a11y-scale, 1))">Two students with the same shift code got the same customers, faults and prices — '
       + 'so their results are directly comparable.</span></div>'
 
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:9px;margin-bottom:18px">'

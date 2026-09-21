@@ -67,6 +67,27 @@
       osc.stop(t + 0.04);
     }
 
+    // Multimeter continuity beep
+    playContinuityBeep(duration = 0.18) {
+      if (!this._canPlay()) return;
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(2400, t);
+
+      gain.gain.setValueAtTime(0.2, t);
+      gain.gain.setValueAtTime(0.2, t + duration - 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + duration);
+    }
+
     // Cable snap into port
     playCableSnap() {
       if (!this._canPlay()) return;

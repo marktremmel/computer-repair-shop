@@ -250,13 +250,13 @@
           var dy = p.y - st.lastPt.y;
           if (Math.abs(p.x - start.x) > tolPx) {
             st.quality -= 0.03;
-            say('Stay inside the port — you are scraping the housing.', 'bad');
+            say(o.offText || 'Stay inside the port — you are scraping the housing.', 'bad');
           } else if (Math.abs(dy) > 3 && Math.sign(dy) !== st.dir) {
             st.dir = Math.sign(dy); st.strokes++;
             if (window.sekAudio) window.sekAudio.playScrew();
-            say('Another pass. It is coming loose.', 'ok');
+            say(o.strokeText || 'Another pass. It is coming loose.', 'ok');
           }
-          st.progress = Math.min(1, st.strokes / 6);
+          st.progress = Math.min(1, st.strokes / (o.strokes || 6));
           setMeter(st.progress);
           if (st.progress >= 1) return finish(true);
 
@@ -265,11 +265,11 @@
           st.pushed = fwd;
           if (side > tolPx) {
             st.quality -= 0.05;
-            say('You are dragging it sideways. It wants lifting, not bending further.', 'bad');
+            say(o.sideText || 'You are dragging it sideways. It wants lifting, not bending further.', 'bad');
             wrap.classList.add('off');
           } else if (fwd > nudgeMax) {
-            return finish(false, 'You pushed straight through it. That contact is now lying on the one next to it, '
-              + 'and this is where a straightenable board becomes a scrap one.');
+            return finish(false, o.overText || ('You pushed straight through it. That contact is now lying on the one next to it, '
+              + 'and this is where a straightenable board becomes a scrap one.'));
           } else if (speed > 0.42) {
             st.quality -= 0.07;
             say('Slower. These move about the width of a hair.', 'bad');
@@ -281,7 +281,7 @@
               : 'That is it. Let go there.', 'ok');
           }
           if (st.quality <= 0.32) {
-            return finish(false, 'Between the slips and the over-bending there is not enough of that corner left to seat a processor on.');
+            return finish(false, o.wornText || 'Between the slips and the over-bending there is not enough of that corner left to seat a processor on.');
           }
           var shown = Math.min(1, Math.max(0, fwd / nudgeMin));
           setMeter((st.pin + shown * 0.9) / targets.length, st.quality < 0.6 ? 'bad' : '');

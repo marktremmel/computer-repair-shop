@@ -228,9 +228,6 @@ function runShift(strategy, seed, days) {
   let done = 0, starSum = 0, comebacks = 0, idle = 0;
 
   while (S.state.day <= days) {
-    const ff = Jobs.footfall(S);
-    // A shop nobody trusts sits waiting. Those are days off the shift.
-    if (ff.waiting < 2 && S.rng() < 0.5) { S.state.day += ff.quietDays; idle += ff.quietDays; continue; }
 
     const m = S.pick(machines);
     const fs = Faults.forMachine(m);
@@ -247,6 +244,10 @@ function runShift(strategy, seed, days) {
     S.adjustRep(r.declined ? 3 : r.repDelta);
     // A job occupies the bench: its own hours, plus any wait for a part.
     S.state.day += Math.max(1, Math.ceil((r.benchHours || 2) / 6)) + (r.waitedDays || 0);
+    // Then the shop sits quiet for as long as its name says — the same
+    // footfall() the handover uses, so the eval cannot drift from the game.
+    const quiet = Math.max(0, Jobs.footfall(S).quietDays - 1);
+    S.state.day += quiet; idle += quiet;
     if (r.comeback) {
       // It comes back under warranty: bench days spent, nothing earned, and
       // the customer tells people. That is what a cheap part really costs.

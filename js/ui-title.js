@@ -126,7 +126,7 @@
 
     document.getElementById('t-access').addEventListener('click', function () {
       var m = UI.modal('<div class="modal-head"><h3>Making it easier to read</h3>'
-        + '<div style="font-size:12.5px;color:var(--ink-3)">Kept in this browser, so it stays set on this machine.</div></div>'
+        + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Kept in this browser, so it stays set on this machine.</div></div>'
         + '<div class="modal-body">' + window.TechOpsA11y.panel() + '</div>'
         + '<div class="modal-foot"><button class="btn btn-primary" data-close>Done</button></div>');
       var repaint = function () {

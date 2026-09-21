@@ -27,6 +27,8 @@
                + 'M8 8.6h.01M12 7.1h.01M15.8 9.1h.01M7.4 12.6h.01',
     laptop:    'M5 6h14v9H5z M3 18h18l-1.5-3H4.5z',
     parts:     'M4 8l8-4 8 4v9l-8 4-8-4z M4 8l8 4 8-4M12 12v9',
+    // A capacitor as drawn on a schematic: two plates and their leads.
+    caps:      'M12 3v6.5M12 14.5V21M6 9.5h12M6 14.5h12',
     handover:  'M6 3h9l4 4v14H6z M15 3v4h4M9 12h7M9 16h5',
 
     // ── hud ──
@@ -38,6 +40,7 @@
     speaker:   'M4 9.5h3.5L12 6v12l-4.5-3.5H4z M15.5 9.5a4 4 0 010 5M18 7.5a7 7 0 010 9',
     speakerOff:'M4 9.5h3.5L12 6v12l-4.5-3.5H4z M16 10l4 4M20 10l-4 4',
     report:    'M6 3h12v18H6z M9 8h6M9 12h6M9 16h3',
+    save:      'M4 4h12l4 4v12H4z M7 4v5h8V4 M7 15h10v5H7z',
     star:      'M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z',
     gauge:     'M4 18a8 8 0 1116 0 M12 18l4-5',
 
@@ -101,7 +104,7 @@
 
   var CAT_ICON = {
     storage: 'storage', ram: 'memory', battery: 'battery', screen: 'display',
-    thermal: 'thermal', fan: 'fan', flex: 'flex'
+    thermal: 'thermal', fan: 'fan', flex: 'flex', caps: 'caps'
   };
 
   window.TechOpsIcons = { icon: icon, paths: P, TOOL_ICON: TOOL_ICON, CAT_ICON: CAT_ICON };

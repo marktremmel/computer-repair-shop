@@ -28,7 +28,12 @@
     activity:     { id: 'activity',     name: 'Activity Monitor',    icon: '📈', where: 'mac',   hours: 0.2,
                     blurb: 'Memory pressure, swap in use, and which process is eating the machine.' },
     storage_used: { id: 'storage_used', name: 'Storage usage',       icon: '🗂️', where: 'mac',   hours: 0.2,
-                    blurb: 'How full the disk is, and what is taking the room.' }
+                    blurb: 'How full the disk is, and what is taking the room.' },
+    // Has its own panel on the board, so it is not listed with the bench
+    // instruments — but it is still an instrument, and the evidence rail
+    // has to know what to call it.
+    meter:        { id: 'meter',        name: 'Multimeter',          icon: '📟', where: 'board', hours: 0.4,
+                    blurb: 'Rail voltages and continuity to ground, one test point at a time.' }
   };
 
   function esc(s) {
@@ -38,6 +43,21 @@
   }
 
   /** Turn a raw instrument reading into a monospace readout + verdict. */
+  /** The points you have actually probed, in the order you probed them. */
+  function formatMeter(t, pts) {
+    var probed = t.meterProbed || [];
+    if (!probed.length) return { hit: false, data: '', note: 'Out and zeroed. Nothing probed yet.' };
+    var hit = false;
+    var data = probed.map(function (k) {
+      var r = pts[k] || {};
+      var bad = !!r.beep && k !== 'gnd' || /^0\.00 V/.test(r.v || '') || /–/.test(r.v || '');
+      if (bad) hit = true;
+      return esc(r.label || k) + ' <span class="' + (bad ? 'bad' : 'ok') + '">' + esc(r.v || '?') + '</span>';
+    }).join(' \u00b7 ');
+    var last = pts[probed[probed.length - 1]] || {};
+    return { hit: hit, data: data, note: last.note || '' };
+  }
+
   function formatReading(toolId, r) {
     function n(v, bad, unit) { return '<span class="' + (bad ? 'bad' : 'ok') + '">' + v + (unit || '') + '</span>'; }
     var d = '', hit = false;
@@ -188,18 +208,22 @@
         + '<div class="constraint-grid">'
         + '<div class="constraint"><div class="k">Their budget</div><div class="v">' + fmt(t.budgetFt) + '</div></div>'
         + '<div class="constraint' + (window.TechOpsJobs.turnaroundDays(t) >= t.urgencyDays ? ' urgent' : '') + '"><div class="k">Needs it in</div><div class="v">'
-        + t.urgencyDays + 'd <span style="font-size:11px;color:var(--ink-3)">· at ' + window.TechOpsJobs.turnaroundDays(t) + 'd</span></div></div>'
+        + t.urgencyDays + 'd <span style="font-size:calc(11px * var(--a11y-scale, 1));color:var(--ink-3)">· at ' + window.TechOpsJobs.turnaroundDays(t) + 'd</span></div></div>'
         + '</div></div>';
 
       html += '<div class="card"><div class="card-head">Evidence notebook</div>';
       if (!t.testsRun.length) {
-        html += '<div style="font-size:12.5px;color:var(--ink-3);line-height:1.6">Nothing measured yet. '
+        html += '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3);line-height:1.6">Nothing measured yet. '
           + 'The complaint is a symptom, not a diagnosis — and customers are wrong about the cause more often than they are right.</div>';
       } else {
         html += '<div class="evidence-list">';
         t.testsRun.forEach(function (id) {
           var inst = INSTRUMENTS[id];
-          var f = formatReading(id, readings[id] || {});
+          // An instrument the rail does not know about must never take the
+          // whole screen down. The multimeter did exactly that the first time
+          // it recorded itself here.
+          if (!inst) return;
+          var f = id === 'meter' ? formatMeter(t, readings.meter || {}) : formatReading(id, readings[id] || {});
           html += '<div class="ev ' + (f.hit ? 'hit' : 'clear') + '">'
             + '<div class="ev-tool">' + inst.icon + ' ' + esc(inst.name) + '</div>'
             + (f.data ? '<div class="ev-data">' + f.data + '</div>' : '')

@@ -19,12 +19,30 @@
       + '<div class="modal-foot">' + (footNote || '') + '<button class="btn" data-close>Cancel</button></div>';
   }
 
+  /**
+   * The customer's browser notification permissions. One list, shared with
+   * the Browser app in the software lab, so the procedure and the app can
+   * never disagree about which site is the rogue one.
+   *
+   * `why` is what the customer would say about each entry. None of them is
+   * labelled as the culprit: recognising the one nobody would type on purpose
+   * is the whole exercise.
+   */
+  var NOTIFICATION_SITES = [
+    { d: 'nkp.hu',                  a: 'Allow', why: 'The school portal. They asked for this one.' },
+    { d: 'mail.google.com',         a: 'Allow', why: 'Their email. Wanted.' },
+    { d: 'idokep.hu',               a: 'Allow', why: 'Weather warnings. Harmless, and they chose it.' },
+    { d: 'fast-cleaner-mac.info',   a: 'Allow', why: 'Nobody asks for this. Nobody has heard of it.', rogue: true },
+    { d: 'facebook.com',            a: 'Deny',  why: 'Already blocked.' },
+    { d: 'index.hu',                a: 'Allow', why: 'News. Their choice.' }
+  ];
+
   var GAMES = {
 
     /** Eject before pulling the card: the menu path, with a decoy. */
     eject: function (done) {
       var m = UI.modal(frame('The card is still mounted',
-        '<p style="font-size:13px;color:var(--ink-2)">Pulling it out while the system still has it open is how you turn a recoverable card into a broken one. Get it off cleanly.</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Pulling it out while the system still has it open is how you turn a recoverable card into a broken one. Get it off cleanly.</p>'
         + '<div class="mg-choices">'
         + '<button class="mg-choice" data-pick="yank">Just pull the card out</button>'
         + '<button class="mg-choice" data-pick="trash">Drag the card icon to the Trash</button>'
@@ -59,7 +77,7 @@
     type: function (done, step) {
       var target = step.cmd;
       var m = UI.modal(frame('Type it out',
-        '<p style="font-size:13px;color:var(--ink-2)">Copy this exactly. <b>if</b> is the input file, <b>of</b> is the output file — swap them and you write the empty image back over the card.</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Copy this exactly. <b>if</b> is the input file, <b>of</b> is the output file — swap them and you write the empty image back over the card.</p>'
         + '<div class="mg-target">' + esc(target) + '</div>'
         + '<input class="mg-input" id="mg-typed" spellcheck="false" autocomplete="off" placeholder="type here">'
         + '<div id="mg-say" class="mg-say"></div>'));
@@ -208,7 +226,7 @@
       ];
       var state = {};
       var m = UI.modal(frame('Clear what should not follow the phone',
-        '<p style="font-size:13px;color:var(--ink-2)">Some of this has to go before the phone changes hands. Some of it is none of your business.</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Some of this has to go before the phone changes hands. Some of it is none of your business.</p>'
         + '<div class="mg-toggles">' + items.map(function (it) {
             return '<button class="mg-toggle" data-tg="' + it.id + '"><span class="tg-box"></span>' + esc(it.label) + '</button>';
           }).join('') + '</div>'
@@ -244,7 +262,7 @@
     /** Reinstall: the one choice that decides whether they keep their files. */
     reinstall: function (done) {
       var m = UI.modal(frame('Reinstall — which one?',
-        '<p style="font-size:13px;color:var(--ink-2)">Two options that sound the same and are not.</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Two options that sound the same and are not.</p>'
         + '<div class="mg-choices">'
         + '<button class="mg-choice" data-pick="over">Reinstall macOS <span style="opacity:.6">(keeps the Users folder)</span></button>'
         + '<button class="mg-choice" data-pick="erase">Erase disk, then install <span style="opacity:.6">(clean install)</span></button>'
@@ -293,7 +311,7 @@
 
       var state = {};
       var m = UI.modal(frame(title,
-        '<p style="font-size:13px;color:var(--ink-2)">' + esc(prompt) + '</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">' + esc(prompt) + '</p>'
         + '<div class="mg-toggles">' + items.map(function (it) {
             return '<button class="mg-toggle" data-tg="' + it.id + '"><span class="tg-box"></span>' + esc(it.label) + '</button>';
           }).join('') + '</div>'
@@ -337,7 +355,7 @@
       ];
       var state = {};
       var m = UI.modal(frame('What comes across?',
-        '<p style="font-size:13px;color:var(--ink-2)">A new machine is a chance to leave the reason the old one was slow behind. Tick what moves.</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">A new machine is a chance to leave the reason the old one was slow behind. Tick what moves.</p>'
         + '<div class="mg-toggles">' + items.map(function (it) {
             return '<button class="mg-toggle" data-tg="' + it.id + '"><span class="tg-box"></span>' + esc(it.label) + '</button>';
           }).join('') + '</div>'
@@ -373,7 +391,7 @@
     /** Verify: open something from the copy, not from the original. */
     verify: function (done) {
       var m = UI.modal(frame('Check the copy actually works',
-        '<p style="font-size:13px;color:var(--ink-2)">Open a file — but from where?</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Open a file — but from where?</p>'
         + '<div class="mg-choices">'
         + '<button class="mg-choice" data-pick="orig">Open an invoice from the customer\u2019s drive</button>'
         + '<button class="mg-choice" data-pick="copy">Open an invoice from the external copy</button>'
@@ -411,17 +429,10 @@
      */
     notifications: function (done, step) {
       var win = step && step.windows;
-      var SITES = [
-        { d: 'nkp.hu',                  a: 'Allow', why: 'The school portal. They asked for this one.' },
-        { d: 'mail.google.com',         a: 'Allow', why: 'Their email. Wanted.' },
-        { d: 'idokep.hu',               a: 'Allow', why: 'Weather warnings. Harmless, and they chose it.' },
-        { d: 'fast-cleaner-mac.info',   a: 'Allow', why: 'Nobody asks for this. Nobody has heard of it.', rogue: true },
-        { d: 'facebook.com',            a: 'Deny',  why: 'Already blocked.' },
-        { d: 'index.hu',                a: 'Allow', why: 'News. Their choice.' }
-      ];
+      var SITES = NOTIFICATION_SITES;
       var removed = {}, wrong = 0;
       var m = UI.modal(frame((win ? 'Edge' : 'Safari') + ' \u203a Settings \u203a Websites \u203a Notifications',
-        '<p style="font-size:13px;color:var(--ink-2)">Every site here was allowed by somebody clicking a button once. '
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Every site here was allowed by somebody clicking a button once. '
         + 'One of them is sending the fake warnings. Remove that one and nothing else \u2014 the others were asked for.</p>'
         + '<div class="mg-perms" id="mg-perms"></div>'
         + '<div id="mg-say" class="mg-say"></div>'));
@@ -465,7 +476,7 @@
     keycombo: function (done, step) {
       var combo = step.combo, held = {};
       var m = UI.modal(frame(step.comboTitle || 'Hold the key combination',
-        '<p style="font-size:13px;color:var(--ink-2)">' + esc(step.comboWhy || '') + '</p>'
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">' + esc(step.comboWhy || '') + '</p>'
         + '<div class="mg-keys">' + combo.map(function (k) {
             return '<button class="mg-key" data-key="' + esc(k) + '">' + esc(k) + '</button>';
           }).join('<span class="mg-plus">+</span>') + '</div>'
@@ -502,7 +513,7 @@
      */
     proof: function (done) {
       var m = UI.modal(frame('Before you reset anybody\u2019s password',
-        '<p style="font-size:13px;color:var(--ink-2)">They say it is theirs. Almost always it is. '
+        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">They say it is theirs. Almost always it is. '
         + 'What would you accept as proof?</p>'
         + '<div class="mg-choices">'
         + '<button class="mg-choice" data-pick="receipt">Receipt or invoice with the serial on it</button>'
@@ -540,7 +551,7 @@
     backup: function (done) {
       var m = UI.modal(frame('Back it up',
         '<div class="mg-scan"><div class="mg-scan-bar"><div id="mg-scan-fill"></div></div>'
-        + '<div id="mg-status" style="font-size:12.5px;color:var(--ink-2);margin-top:9px">Copying 41.2 GB…</div></div>'
+        + '<div id="mg-status" style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);margin-top:9px">Copying 41.2 GB…</div></div>'
         + '<div id="mg-say" class="mg-say"></div>'));
       var fill = document.getElementById('mg-scan-fill'), pct = 0;
       var iv = setInterval(function () {
@@ -560,6 +571,7 @@
   };
 
   window.TechOpsMiniGames = {
+    NOTIFICATION_SITES: NOTIFICATION_SITES,
     run: function (step, onDone) {
       var g = GAMES[step.game];
       if (!g) { onDone(); return; }

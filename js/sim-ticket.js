@@ -36,7 +36,9 @@
     micro_tweezers:{ id: 'micro_tweezers', name: '0.2 mm tweezers', icon: '🧿', kind: 'hand',
                      hint: 'Finer than the ESD pair and non-magnetic, for work you can only really see through the loupe. Socket contacts are about the thickness of a hair.' },
     solder_iron:   { id: 'solder_iron',  name: 'Soldering station', icon: '🔥', kind: 'hand',
-                     hint: 'Temperature controlled. Board work means getting heat in and out fast enough to free a joint without lifting the pad underneath it.' }
+                     hint: 'Temperature controlled. Board work means getting heat in and out fast enough to free a joint without lifting the pad underneath it.' },
+    multimeter:    { id: 'multimeter',   name: 'Digital multimeter', icon: '📟', kind: 'hand',
+                     hint: 'Tests continuity and rail voltages. A continuity beep to ground tells you a rail is shorted before you even power it on.' }
   };
 
   /**
@@ -101,12 +103,13 @@
     },
     scrape_paste: {
       id: 'scrape_paste', label: 'Clean off the old paste', icon: '🧻', tool: 'alcohol_wipe',
-      needsStep: 'heatsink', labourHours: 0.3, costFt: 0,
+      // The PS5 has liquid metal on the die, not paste: see clean_lm.
+      needsStep: 'heatsink', notMachines: ['ps5pro'], labourHours: 0.3, costFt: 0,
       done: 'The cracked grey crust wipes off the die and the copper cold plate. Both surfaces are mirror-clean.'
     },
     repaste: {
       id: 'repaste', label: 'Apply fresh paste and refit', icon: '💉', tool: 'paste_syringe',
-      needsStep: 'heatsink', needsAction: 'scrape_paste', needsPartCat: 'thermal',
+      needsStep: 'heatsink', notMachines: ['ps5pro'], needsAction: 'scrape_paste', needsPartCat: 'thermal',
       labourHours: 0.5, costFt: 0,
       done: 'A pea-sized dot in the centre, heatsink lowered flat and torqued in a cross pattern so the pressure is even.'
     },
@@ -210,6 +213,22 @@
       needsStep: 'side_panel', onlyMachines: ['tower_pc'], needsPartCat: 'caps', labourHours: 2.2, costFt: 0,
       done: 'Both domed capacitors out, pads cleaned, new low-ESR parts in with the polarity stripe the right way round. Ripple on the 12 V rail is back under 60 mV and it holds through an hour of load.'
     },
+    clean_lm: {
+      id: 'clean_lm', label: 'Swab out the old liquid metal', icon: '🧻', tool: 'alcohol_wipe',
+      needsStep: 'cooler', onlyMachines: ['ps5pro'], labourHours: 0.5, costFt: 0,
+      done: 'The grey crust and the loose beads come up on isopropyl swabs, a bead at a time. The foam barrier round the die is whole \u2014 nothing got past it onto the board.'
+    },
+    redo_liquid_metal: {
+      id: 'redo_liquid_metal', label: 'Brush on a new film and refit the cooler', icon: '💉', tool: 'paste_syringe',
+      needsStep: 'cooler', needsAction: 'clean_lm', needsPartCat: 'thermal', onlyMachines: ['ps5pro'],
+      labourHours: 0.6, costFt: 0,
+      done: 'A thin mirror film worked across the whole die and a touch on the cooler plate, barrier checked, cooler lowered flat and tightened evenly.'
+    },
+    replace_shorted_cap: {
+      id: 'replace_shorted_cap', label: 'Lift the shorted capacitor and fit a new one', icon: '🔥', tool: 'solder_iron',
+      needsStep: 'cooler', onlyMachines: ['ps5pro'], needsPartCat: 'caps', labourHours: 1.4, costFt: 0,
+      done: 'The shorted part is off with hot tweezers, and the rail reads 2.1 k\u03a9 to ground again. A new capacitor of the same value and voltage rating sits in its place.'
+    },
     reseat_sensor: {
       id: 'reseat_sensor', label: 'Reseat the battery sensor flex', icon: '🌡️', tool: 'spudger',
       // The sensor is on the battery flex, so this needs a machine with a pack.
@@ -229,8 +248,54 @@
       software: true, labourHours: 0.3, costFt: 0,
       done: 'One deliberate unencrypted request, the login page appeared, terms accepted. Every site loads normally and the certificate warnings are gone — and they now know what the warning was actually telling them.',
       isFreeFix: true
+    },
+    swap_gpu_cable: {
+      id: 'swap_gpu_cable', label: 'Move HDMI cable to dedicated graphics card port', icon: '🔌',
+      onlyMachines: ['tower_pc'], labourHours: 0.2, costFt: 0,
+      done: 'Cable moved down 15 cm from the motherboard iGPU port to the dedicated graphics card port. Dedicated GPU renders display output at full frame rates.',
+      isFreeFix: true
+    },
+    set_keyboard_layout: {
+      id: 'set_keyboard_layout', label: 'Switch keyboard layout back to Hungarian QWERTZ', icon: '⌨️',
+      software: true, labourHours: 0.2, costFt: 0,
+      done: 'Input source switched from English US (QWERTY) back to Hungarian (QWERTZ). Z and Y return to their labeled places, accents and numbers match keycaps, login succeeds.',
+      isFreeFix: true
+    },
+    restore_brightness: {
+      id: 'restore_brightness', label: 'Restore display brightness slider / FN backlight', icon: '☀️',
+      software: true, labourHours: 0.1, costFt: 0,
+      done: 'Brightness level restored from 0% back to 80%. Backlight LED illuminates the panel brightly, full picture visible.',
+      isFreeFix: true
+    },
+    set_audio_device: {
+      id: 'set_audio_device', label: 'Switch audio output device to internal speakers', icon: '🔊',
+      software: true, labourHours: 0.2, costFt: 0,
+      done: 'Default sound output switched from disconnected HDMI audio back to internal stereo speakers, unmuted. Audio playback restored clearly.',
+      isFreeFix: true
     }
   };
+
+  /**
+   * What the customer says, for this machine.
+   *
+   * A complaint is a plain string when it fits anything, or
+   * `{ t, os: [...] }` / `{ t, kind: [...] }` when it only makes sense on some
+   * machines. Complaints used to be picked from the fault alone, so a Switch
+   * came in with a trackpad that would not click and a ThinkPad showed the
+   * Mac's flashing question-mark folder — exactly the kind of detail a
+   * student who owns one of these notices, and stops trusting the rest.
+   */
+  function complaintFits(c, machine) {
+    if (typeof c === 'string') return true;
+    if (c.os && c.os.indexOf(machine.os) === -1) return false;
+    if (c.kind && c.kind.indexOf(machine.kind) === -1) return false;
+    return true;
+  }
+  function complaintFor(shop, fault, machine) {
+    var fits = fault.complaints.filter(function (c) { return complaintFits(c, machine); });
+    var c = shop.pick(fits.length ? fits : fault.complaints);
+    return typeof c === 'string' ? c : c.t;
+  }
 
   function newTicket(shop, opts) {
     opts = opts || {};
@@ -278,7 +343,7 @@
       faultId: fault.id,
       budgetFt: budget,
       urgencyDays: urgency,
-      complaint: shop.pick(fault.complaints),
+      complaint: complaintFor(shop, fault, machine),
       // Roughly a third of machines have been opened before, badly.
       priorRepair: (function () {
         var r = shop.rng();
@@ -349,6 +414,34 @@
     newTicket: newTicket,
     flags: flags,
     canStep: canStep,
+    complaintFits: complaintFits,
+
+    /**
+     * Put right any saved ticket whose complaint no longer fits its machine.
+     *
+     * A complaint is written into the ticket when the customer walks in, so a
+     * save from before a complaint was corrected keeps the old wording — a
+     * Switch still describing its trackpad — until that customer is served.
+     * Run on load: anything that does not fit is re-picked from the ones
+     * that do. Only the words change; the fault is the same fault.
+     */
+    repairComplaints: function (shop) {
+      var S = shop.state, fixed = 0;
+      var tickets = (S.queue || []).slice();
+      if (S.ticket) tickets.push(S.ticket);
+      tickets.forEach(function (t) {
+        var f = window.TechOpsFaults.get(t.faultId);
+        var m = window.TechOpsMachines.get(t.machineId);
+        if (!f || !m || t.warranty) return;
+        var fitting = f.complaints.filter(function (c) { return complaintFits(c, m); })
+          .map(function (c) { return typeof c === 'string' ? c : c.t; });
+        if (fitting.length && fitting.indexOf(t.complaint) === -1) {
+          t.complaint = fitting[Math.floor(Math.random() * fitting.length)];
+          fixed++;
+        }
+      });
+      return fixed;
+    },
 
     /**
      * How much trade a shop with this name actually sees.
@@ -366,15 +459,23 @@
       var rep = shop.state.reputation;
       var perks = shop.state.perks || {};
       var bonus = (perks.footfall || 0) >= 0.4 ? 2 : (perks.footfall || 0) >= 0.15 ? 1 : 0;
-      var waiting = rep >= 72 ? 3 : rep >= 50 ? 2 : 1;
-      var quietDays = rep >= 72 ? 1 : rep >= 50 ? 1 : rep >= 30 ? 2 : 3;
+      // Two separate things. How many people are waiting is a *choice* —
+      // which budget, which deadline, which machine you know — and choosing
+      // between three is part of the game, so an ordinary shop keeps it.
+      // How long until the next group walks in is what a bad name costs:
+      // `quietDays` is spent after every job, not only when you press wait.
+      // Tying the two together left good players with one customer and no
+      // choice, and letting both go made cutting corners pay again.
+      var waiting = rep >= 25 ? 3 : 2;
+      var quietDays = rep >= 55 ? 1 : rep >= 40 ? 2 : rep >= 25 ? 3 : 4;
       if (bonus) quietDays = Math.max(1, quietDays - 1);
       return {
         waiting: Math.min(4, waiting + bonus),
         quietDays: quietDays,
-        why: rep >= 72 ? 'Word of mouth is doing the work — there is always somebody waiting.'
-           : rep >= 50 ? 'A steady trickle. Good reviews would make it a queue.'
-           : rep >= 30 ? 'Thin. People are reading the reviews before they walk in.'
+        why: rep >= 72 ? 'Word of mouth is doing the work — people are asking for you by name.'
+           : rep >= 55 ? 'A normal day. Pick the job that suits you — or pass on all of them and wait for the next lot.'
+           : rep >= 40 ? 'Slower than it should be. After each job the shop sits quiet for a day before anyone new comes in.'
+           : rep >= 25 ? 'Thin. People are reading the reviews first, and the quiet days between customers add up.'
            : 'Almost nobody comes in any more. The reviews have done that, and only better work will undo it.'
       };
     },
@@ -396,6 +497,10 @@
       if (!want || !machine || !machine.teardown) return want || null;
       if (machine.teardown.indexOf(want) !== -1) return want;
       if (want === 'heatsink' && machine.teardown.indexOf('cooler') !== -1) return 'cooler';
+      // A tower's fan is on the cooler, so it is reached the same way. Without
+      // this the fin stack was unreachable and every tower repaste came back.
+      if (want === 'fan' && machine.teardown.indexOf('fan') === -1
+          && machine.teardown.indexOf('cooler') !== -1) return 'cooler';
       if (want === 'battery_connector' && !machine.battery
           && machine.teardown.indexOf('psu_switch') !== -1) return 'psu_switch';
       return want;
@@ -410,6 +515,7 @@
     hasStepFor: function (action, machine) {
       if (!action) return true;
       if (action.onlyMachines && action.onlyMachines.indexOf(machine.id) === -1) return false;
+      if (action.notMachines && action.notMachines.indexOf(machine.id) !== -1) return false;
       var want = action.needsStep;
       if (!want) return true;
       return machine.teardown.indexOf(this.resolveStep(action, machine)) !== -1;

@@ -9,6 +9,23 @@
 
   var SAVE_KEY = 'techops-budapest-save-v1';
 
+  /**
+   * A shift code nobody typed.
+   *
+   * With no code, every new shop used to seed from "BUDAPEST", so every
+   * student who pressed Open saw the same opening customers in the same
+   * order — fine for a class comparing notes, dull for anyone playing twice.
+   * A code is still what makes a shift reproducible, so this one is shown in
+   * the shop record like any other: a student can hand it to a friend, and a
+   * teacher who wants the whole room on the same shift types their own.
+   */
+  var PLACES = ['LANCHID', 'DUNA', 'MARGIT', 'OKTOGON', 'DEAK', 'GELLERT', 'KELETI', 'NYUGATI',
+                'ASTORIA', 'BUDA', 'PEST', 'CSEPEL', 'OBUDA', 'VAR', 'ANDRASSY', 'SZIGET'];
+  function randomShiftCode() {
+    var w = PLACES[Math.floor(Math.random() * PLACES.length)];
+    return w + '-' + (1000 + Math.floor(Math.random() * 9000));
+  }
+
   /** Small seeded RNG so a teacher can hand a whole class the same shift. */
   function makeRng(seed) {
     var s = seed >>> 0 || 1;
@@ -34,7 +51,7 @@
     _handlers: {},
 
     fresh: function (shiftCode) {
-      var code = shiftCode || 'BUDAPEST';
+      var code = shiftCode || randomShiftCode();
       return {
         shiftCode: code,
         seed: seedFromString(code),
@@ -111,6 +128,13 @@
       this._rng = makeRng(this.state.seed);
       this.emit('reset');
       this.emit('change');
+    },
+
+    reseed: function (seed, calls) {
+      if (seed !== undefined) this.state.seed = seed;
+      if (calls !== undefined) this.state.rngCalls = calls;
+      this._rng = makeRng(this.state.seed);
+      for (var i = 0; i < (this.state.rngCalls || 0); i++) this._rng();
     },
 
     // ── money ──────────────────────────────────────────────────────────

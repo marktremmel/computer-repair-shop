@@ -269,7 +269,7 @@
     ch = start || null; ensure();
     tab = 'face';
     modal = UI.modal('<div class="modal-head"><h3>Build your character</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">Every piece is yours to pick. '
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Every piece is yours to pick. '
       + 'Portraits from <a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">Pixel Portrait Creator</a> by Lyime.</div></div>'
       + '<div class="modal-body"></div>'
       + '<div class="modal-foot"><button class="btn" data-close>Cancel</button>'

@@ -20,7 +20,10 @@
     { id: 'storage', label: 'Storage' }, { id: 'ram', label: 'Memory' },
     { id: 'battery', label: 'Battery' }, { id: 'screen', label: 'Display' },
     { id: 'thermal', label: 'Thermal' }, { id: 'fan', label: 'Fan' },
-    { id: 'flex',    label: 'Flex' }
+    { id: 'flex',    label: 'Flex' },
+    // Board-level parts. Missing from the market for a while, which left the
+    // capacitor jobs impossible to finish without a harness stocking the shelf.
+    { id: 'caps',    label: 'Board parts' }
   ];
 
   function chips(p, machine) {
@@ -48,6 +51,14 @@
       out.push(['', '−' + s.tempDropC + ' °C']);
     } else if (p.cat === 'fan') {
       out.push([s.noiseDb > 34 ? 'warn' : 'hi', s.noiseDb + ' dB']);
+    } else if (p.cat === 'caps' && s.volts) {
+      out.push([s.value === 'unmarked' ? 'bad' : 'hi', s.value]);
+      out.push([s.volts === 'unknown' ? 'bad' : '', s.volts === 'unknown' ? 'voltage rating unknown' : s.volts + ' rated']);
+      if (s.dielectric !== 'unknown') out.push(['', s.dielectric]);
+    } else if (p.cat === 'caps') {
+      out.push([s.esr === 'low' ? 'hi' : 'bad', s.esr === 'low' ? 'low ESR' : 'ESR not stated']);
+      out.push([s.tempC >= 105 ? 'hi' : 'warn', s.tempC + ' \u00b0C']);
+      out.push(['', s.hours + ' h']);
     }
     out.push([p.warrantyMonths === 0 ? 'bad' : p.warrantyMonths >= 24 ? 'hi' : '',
               p.warrantyMonths === 0 ? 'no warranty' : p.warrantyMonths >= 999 ? 'lifetime warranty' : p.warrantyMonths + ' mo warranty']);
@@ -90,7 +101,7 @@
       + '<div style="display:flex;align-items:center;gap:12px">'
       + '<div class="cust-avatar" style="width:48px;height:48px">' + UI.face(c, 48) + '</div>'
       + '<div><h3>Checking with ' + esc(c.name) + '</h3>'
-      + '<div style="font-size:12.3px;color:var(--ink-3)">Budget ' + fmt(t.budgetFt) + ' \u00b7 wanted it in ' + t.urgencyDays + ' days</div></div></div></div>'
+      + '<div style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-3)">Budget ' + fmt(t.budgetFt) + ' \u00b7 wanted it in ' + t.urgencyDays + ' days</div></div></div></div>'
       + '<div class="modal-body">'
       + '<div class="note" style="margin-bottom:14px"><b>' + esc(p.name) + '</b><br>'
       + esc(P.vendors[p.vendor].name) + ' \u00b7 ' + fmt(p.priceFt) + '</div>'
@@ -179,7 +190,7 @@
 
     var arrived = Shop.state.shelf.slice(-1)[0];
     UI.modal('<div class="modal-head"><h3>' + soonest + ' day' + (soonest === 1 ? '' : 's') + ' later</h3>'
-      + '<div style="font-size:12.5px;color:var(--ink-3)">Day ' + Shop.state.day + ' at the counter'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Day ' + Shop.state.day + ' at the counter'
       + (t ? ' \u00b7 ' + J.customer(t).name + ' has now waited ' + J.turnaroundDays(t) + ' days' : '') + '</div></div>'
       + '<div class="modal-body">'
       + (log.length
@@ -213,10 +224,10 @@
     var vend = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:9px;margin-bottom:18px">';
     Object.keys(P.vendors).forEach(function (vid) {
       var v = P.vendors[vid];
-      vend += '<div class="card" style="padding:11px"><div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:650">'
+      vend += '<div class="card" style="padding:11px"><div style="display:flex;align-items:center;gap:7px;font-size:calc(12.5px * var(--a11y-scale, 1));font-weight:650">'
         + v.icon + ' <span style="color:' + v.colour + '">' + esc(v.name) + '</span></div>'
-        + '<div style="font-size:10.5px;color:var(--ink-3);font-family:var(--mono);margin:3px 0 6px">' + esc(v.origin) + '</div>'
-        + '<div style="font-size:11.8px;color:var(--ink-2);line-height:1.5">' + esc(v.note) + '</div></div>';
+        + '<div style="font-size:calc(10.5px * var(--a11y-scale, 1));color:var(--ink-3);font-family:var(--mono);margin:3px 0 6px">' + esc(v.origin) + '</div>'
+        + '<div style="font-size:calc(11.8px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.5">' + esc(v.note) + '</div></div>';
     });
     vend += '</div>';
 

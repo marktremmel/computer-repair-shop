@@ -231,8 +231,12 @@
   };
 
   ANSWERS.water_damage = {
-    drop:    { w: 'hot',  t: 'Orange juice, about three weeks ago. I dried it with a hairdryer and left it in rice overnight.', s: ['visual'] },
-    when:    { w: 'warm', t: 'It was completely fine for two days afterwards. That is why I did not think it mattered.' },
+    // Unless they already confessed at the counter, they deny it. People do:
+    // not always to deceive, often because it happened when they were not there.
+    drop:    { w: 'red',  t: 'Never! I treat it like a baby. It never leaves my desk.',
+               ifComplaint: { has: 'juice', a: { w: 'hot', t: 'Orange juice, about three weeks ago. I dried it with a hairdryer and left it in rice overnight.', s: ['visual'] } } },
+    when:    { w: 'warm', t: 'A few weeks now. It was fine, and then it started doing this out of nowhere.',
+               ifComplaint: { has: 'juice', a: { w: 'warm', t: 'It was completely fine for two days afterwards. That is why I did not think it mattered.' } } },
     heat:    { w: 'hot',  t: 'It gets warm in one particular corner now. Only that corner.', s: ['visual', 'thermal'] },
     trigger: { w: 'warm', t: 'Keys type by themselves sometimes. Just a letter or two, at random.' },
     noise:   { w: 'cold', t: 'No noises.' },
@@ -293,6 +297,49 @@
     heat:    { w: 'cold', t: 'Normal temperature.' },
     power:   { w: 'cold', t: 'Charges fine.' }
   };
+  ANSWERS.gpu_cable_wrong_port = {
+    trigger: { w: 'hot',  t: 'I dusted behind the desk on Sunday and plugged the monitor back in. Web browsing is fine, but as soon as I start a 3D game it drops to 3 frames per second and stutters like a slideshow.', s: ['visual', 'bench'] },
+    history: { w: 'warm', t: 'I unplugged and moved the PC to clean behind the desk last weekend.' },
+    noise:   { w: 'cold', t: 'Fans spin quietly, no clicking or grinding.' },
+    heat:    { w: 'cold', t: 'Stays cool, the graphics card fans do not even turn on.' }
+  };
+  ANSWERS.keyboard_layout_swap = {
+    trigger: { w: 'hot',  t: 'My password fails every time at the login screen, even though I know it by heart! It starts with "Zebra" and ends with "0".', s: ['visual', 'activity'] },
+    when:    { w: 'warm', t: 'Started yesterday afternoon right after my classmate borrowed it to write an English essay.' },
+    drop:    { w: 'cold', t: 'Never dropped or spilled on. Keys physically press down smoothly.' },
+    noise:   { w: 'cold', t: 'Silent and smooth.' }
+  };
+  ANSWERS.display_brightness_zero = {
+    trigger: { w: 'hot',  t: 'The screen looks completely dead and pitch black, but when I shine my phone flashlight right up against the glass, I can faintly see my desktop wallpaper and cursor moving!', s: ['visual', 'power'] },
+    when:    { w: 'warm', t: 'Happened while I was adjusting volume and screen settings in the dark during a lecture.' },
+    power:   { w: 'warm', t: 'Power LED is solid on and the fans are running normally.' },
+    drop:    { w: 'cold', t: 'Never dropped, glass is completely uncracked.' }
+  };
+  ANSWERS.audio_device_swapped = {
+    trigger: { w: 'hot',  t: 'All sound vanished completely. YouTube videos play, games run, but the built-in speakers produce zero sound, not even a click.', s: ['activity', 'visual'] },
+    when:    { w: 'warm', t: 'Right after I unplugged my USB headset and external gaming monitor on Sunday.' },
+    noise:   { w: 'cold', t: 'Completely quiet.' },
+    drop:    { w: 'cold', t: 'No drops, no water.' }
+  };
+
+  ANSWERS.ps5_liquid_metal = {
+    when:    { w: 'warm', t: 'This last winter. It is four years old and it was silent until about Christmas.' },
+    trigger: { w: 'hot',  t: 'Big games, after twenty minutes or so. The fan winds up and up and then the message comes and it just switches off.', s: ['thermal'] },
+    heat:    { w: 'hot',  t: 'The air out of the back is scorching. Much hotter than it used to be.', s: ['thermal', 'visual'] },
+    noise:   { w: 'warm', t: 'The fan, loud, the whole time. No grinding or rattling \u2014 just loud.' },
+    history: { w: 'warm', t: 'I hoovered the dust holes out myself, like the video said. It made no difference.' },
+    drop:    { w: 'cold', t: 'Never dropped. It has sat on the same shelf since the day I bought it.' },
+    storage: { w: 'cold', t: 'There is room on it.' }
+  };
+  ANSWERS.ps5_rail_short = {
+    when:    { w: 'hot',  t: 'The morning after the big storm. It was fine the night before.', s: ['meter'] },
+    power:   { w: 'hot',  t: 'The light comes on, it beeps once, and it goes off again. The plug and the socket are fine \u2014 the lamp works in the same socket.', s: ['meter', 'power'] },
+    trigger: { w: 'warm', t: 'Just pressing the button. It does not even get as far as the logo.' },
+    noise:   { w: 'warm', t: 'A little click inside when it tries. Then nothing.' },
+    drop:    { w: 'cold', t: 'Never dropped, never wet.' },
+    heat:    { w: 'cold', t: 'It is not on long enough to get warm.' },
+    history: { w: 'cold', t: 'Nobody has opened it.' }
+  };
 
   /** When a fault says nothing about a question, the customer still answers. */
   var DEFAULTS = {
@@ -308,8 +355,84 @@
     usage:     null   // filled from the customer's use case
   };
 
-  function answerFor(faultId, questionId, useCase) {
+  /*
+   * Follow-ups. An interview is not ten independent buttons: an answer opens
+   * a question you could not have asked before it, and a finding on the bench
+   * gives you something to put to them. Each follow-up hangs off either an
+   * answer (`from`: a question id, or another follow-up's id) or a finding
+   * (`after`: an instrument id). Some offer a choice of how to say it, and
+   * how you say it decides what you hear back.
+   *
+   * `kind` limits one to machines where the story makes sense; `unless`
+   * drops it when the counter complaint already said the thing.
+   */
+  var FOLLOWUPS = {
+    water_damage: [
+      { id: 'lci', after: 'visual', unless: 'juice', icon: '\ud83d\udca7',
+        q: 'Raise the red liquid indicator with them',
+        choices: [
+          { id: 'blunt', label: '\u201cThe moisture sensor inside has gone red. That only happens with liquid.\u201d',
+            tension: 1,
+            a: { w: 'red', t: 'Are you calling me a liar? My flat is damp. Everybody says so. It will be the humidity.' },
+            why: 'Put like an accusation, the conversation becomes about whether they lied, not about what happened to the machine. You learn nothing, and the humidity story is a dead end.' },
+          { id: 'curious', label: '\u201cThe indicator inside shows liquid got in near that corner. Could anyone else have used it, or cleaned near it?\u201d',
+            a: { w: 'hot', t: '\u2026Oh. My son had it on the sofa last month with a glass of cola. He swore nothing happened. It was sticky under the corner, now I think of it.', s: ['meter', 'visual'] },
+            why: 'Nobody was accused, so they could remember. And "cola" matters: sugar leaves a residue that keeps conducting and keeps corroding, which is why this cannot wait.' }
+        ] }
+    ],
+    dead_no_power: [
+      { id: 'charger', from: 'power', kind: ['laptop', 'handheld'], q: 'Which charger was it on, exactly?',
+        a: { w: 'warm', t: 'A new one. Fifteen hundred forints at the night market by Keleti \u2014 it said "100 W fast charge" on the wrapper. The original is in a drawer.', s: ['meter', 'power'] } },
+      { id: 'spark', from: 'charger', q: 'When you plugged it in \u2014 a spark, a click, a smell?',
+        a: { w: 'warm', t: 'A little click, and a smell like a hot hairdryer for a second. Then nothing, ever since.', s: ['meter'] } }
+    ],
+    charge_port_dead: [
+      { id: 'pulled', from: 'drop', q: 'Which way did it get pulled \u2014 straight out, or sideways?',
+        a: { w: 'hot', t: 'Sideways, off the edge of the table. The plug stayed in and bent right over before it came out.', s: ['visual'] } }
+    ],
+    port_lint: [
+      { id: 'pocket', from: 'drop', q: 'Which pocket \u2014 and what else lives in it?',
+        a: { w: 'hot', t: 'Front jeans pocket, every day for three years. Keys, tissues, the usual fluff.', s: ['visual', 'power'] } }
+    ],
+    sd_formatted: [
+      { id: 'testshot', from: 'when', q: 'Not even one test photo, to see if it still worked?',
+        a: { w: 'warm', t: '\u2026Well. Two. Straight afterwards, to check it still worked. Is that bad?', s: ['storage_used'] } }
+    ],
+    bad_ram_stick: [
+      { id: 'cousin', from: 'history', q: 'Do you know what he actually bought?',
+        a: { w: 'hot', t: 'The cheapest one on the site. A different make to the one already in there. He said memory is memory.', s: ['memtest'] } }
+    ],
+    ps5_liquid_metal: [
+      { id: 'upright', from: 'history', q: 'Did you ever change where it stands, or how?',
+        a: { w: 'warm', t: 'I laid it flat for a month because of that video, then stood it back up. It made no difference either way.', s: ['thermal'] } }
+    ],
+    ps5_rail_short: [
+      { id: 'surge', from: 'when', q: 'Was it on a surge-protected strip, or straight into the wall?',
+        a: { w: 'hot', t: 'Straight into the wall. The television was on a strip, and the television is fine.', s: ['meter'] } }
+    ]
+  };
+
+  function followupsFor(ticket, machine) {
+    var c = (ticket && ticket.complaint || '').toLowerCase();
+    return (FOLLOWUPS[ticket.faultId] || []).filter(function (fu) {
+      if (fu.kind && machine && fu.kind.indexOf(machine.kind) === -1) return false;
+      if (fu.unless && c.indexOf(fu.unless) !== -1) return false;
+      return true;
+    });
+  }
+
+  /** The follow-up's reply, resolving the tone the student chose. */
+  function followupAnswer(fu, choiceId) {
+    if (!fu.choices) return fu.a;
+    var ch = fu.choices.filter(function (x) { return x.id === choiceId; })[0];
+    return ch ? ch.a : null;
+  }
+
+  function answerFor(faultId, questionId, useCase, ticket) {
     var a = (ANSWERS[faultId] || {})[questionId];
+    if (a && a.ifComplaint && ticket && String(ticket.complaint || '').toLowerCase().indexOf(a.ifComplaint.has) !== -1) {
+      return a.ifComplaint.a;
+    }
     if (a) return a;
     if (questionId === 'usage') {
       return { w: 'warm', t: 'Mostly ' + useCase.label.toLowerCase() + '. ' + useCase.blurb.split('.')[0] + '.' };
@@ -319,13 +442,35 @@
 
   window.TechOpsInterview = {
     QUESTIONS: QUESTIONS,
+    FOLLOWUPS: FOLLOWUPS,
     answerFor: answerFor,
+    followupsFor: followupsFor,
+    followupAnswer: followupAnswer,
+    /** Is this follow-up something you could ask right now? */
+    canAsk: function (ticket, fu) {
+      var done = ticket.followed || {};
+      if (done[fu.id]) return false;
+      if (fu.after) return (ticket.testsRun || []).indexOf(fu.after) !== -1;
+      return (ticket.asked || []).indexOf(fu.from) !== -1 || !!done[fu.from];
+    },
+    /** Follow-ups that this instrument has just made askable. */
+    unlockedBy: function (ticket, machine, instrumentId) {
+      return followupsFor(ticket, machine).filter(function (fu) {
+        return fu.after === instrumentId && !(ticket.followed || {})[fu.id];
+      });
+    },
     /** Instruments the answers heard so far are pointing at. */
     leads: function (ticket, faultId, useCase) {
       var out = {};
       (ticket.asked || []).forEach(function (qid) {
-        var a = answerFor(faultId, qid, useCase);
+        var a = answerFor(faultId, qid, useCase, ticket);
         (a.s || []).forEach(function (i) { out[i] = true; });
+      });
+      var done = ticket.followed || {};
+      Object.keys(done).forEach(function (id) {
+        var fu = (FOLLOWUPS[faultId] || []).filter(function (x) { return x.id === id; })[0];
+        var a = fu && followupAnswer(fu, done[id]);
+        ((a && a.s) || []).forEach(function (i) { out[i] = true; });
       });
       return Object.keys(out);
     }
