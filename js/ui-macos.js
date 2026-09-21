@@ -509,6 +509,7 @@
           { id: 'card',    label: 'The wireless card needs replacing',                                pick: false }
         ] }
     ],
+<<<<<<< HEAD
     // Settings faults are fixed where they live. One step each: it opens the
     // Settings app on the right section, and the job completes when the
     // machine actually works again — the test tone plays, the screen lights,
@@ -527,6 +528,31 @@
       { id: 'fix', t: 'Send the sound back to the speakers, and test it',
         d: 'Settings › Sound. Unplugging a monitor or a headset often leaves the output pointed at it. Pick the right device, check it is not muted, and play the test sound.',
         verb: 'Open Sound settings' }
+=======
+    set_keyboard_layout: [
+      { id: 'check', t: 'Check active input source in Settings',
+        d: 'Open Settings \u2192 Keyboard. Notice the layout is set to US English, which inverts Z and Y and misaligns punctuation.',
+        game: 'settings', verb: 'Open Keyboard Settings', path: ['Settings', 'Keyboard', 'Input Sources'] },
+      { id: 'switch', t: 'Switch layout back to Hungarian QWERTZ',
+        d: 'Select Hungarian (QWERTZ) as default input source. Test keystrokes in the password verification box.',
+        game: 'settings', verb: 'Apply Hungarian QWERTZ', path: ['Settings', 'Keyboard', 'Hungarian (QWERTZ)'] }
+    ],
+    restore_brightness: [
+      { id: 'inspect', t: 'Check panel with flashlight for faint display',
+        d: 'Shining a light reveals the LCD matrix is drawing pixels, but the LED backlight intensity is at 0%.',
+        game: 'settings', verb: 'Inspect Displays', path: ['Settings', 'Displays', 'Brightness'] },
+      { id: 'slider', t: 'Restore brightness level',
+        d: 'Slide brightness up to 80%. Backlight instantly illuminates screen.',
+        game: 'settings', verb: 'Set Brightness to 80%', path: ['Settings', 'Displays', 'Brightness Slider'] }
+    ],
+    set_audio_device: [
+      { id: 'route', t: 'Inspect default sound output in Settings',
+        d: 'Open Settings \u2192 Sound. Default playback is pointed at a disconnected HDMI/USB audio device and muted.',
+        game: 'settings', verb: 'Open Sound Settings', path: ['Settings', 'Sound', 'Output'] },
+      { id: 'speaker', t: 'Switch default output to Internal Speakers',
+        d: 'Select Internal Speakers and unmute volume. Sound output returns immediately.',
+        game: 'settings', verb: 'Select Internal Speakers', path: ['Settings', 'Sound', 'Internal Speakers'] }
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     ]
   };
 
@@ -604,6 +630,7 @@
          : 'Software lab';
   }
 
+<<<<<<< HEAD
   /*
    * The Browser and System Settings apps.
    *
@@ -1066,6 +1093,142 @@
         Shop.emit('change'); UI.refresh(); render();
       });
     });
+=======
+  // ── Browser App ──────────────────────────────────────────────────────
+  function bodyBrowser() {
+    var t = Shop.state.ticket;
+    var f = J.fault(t);
+    var tab = t._browserTab || (f.id === 'captive_portal_loop' ? 'portal' : 'notifications');
+    var isPush = f.id === 'browser_push_spam';
+    var isPortal = f.id === 'captive_portal_loop';
+    var pushDone = t.actionsDone.indexOf('revoke_notifications') !== -1;
+    var portalDone = t.actionsDone.indexOf('clear_portal') !== -1;
+
+    var navTabs = '<div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:8px">'
+      + '<button class="btn btn-sm' + (tab === 'notifications' ? ' btn-primary' : '') + '" data-btab="notifications">🔔 Site Permissions</button>'
+      + '<button class="btn btn-sm' + (tab === 'portal' ? ' btn-primary' : '') + '" data-btab="portal">🚪 Captive Portal Probe</button>'
+      + '</div>';
+
+    if (tab === 'notifications') {
+      var sites = [
+        { origin: 'https://mail.google.com', perm: 'Allowed', safe: true },
+        { origin: 'https://naptar.budapest.hu', perm: 'Allowed', safe: true }
+      ];
+      if (isPush && !pushDone) {
+        sites.unshift({ origin: 'https://system-security-alert-update.xyz', perm: 'Allowed (Spamming popups)', bad: true });
+      }
+
+      var rows = sites.map(function (s) {
+        return '<div class="hop" style="align-items:center;justify-content:space-between">'
+          + '<div class="hop-main"><b>' + esc(s.origin) + '</b>'
+          + '<div class="hop-why" style="color:' + (s.bad ? 'var(--red)' : 'var(--ink-2)') + '">' + esc(s.perm) + '</div></div>'
+          + (s.bad ? '<button class="btn btn-sm btn-danger" data-browser-act="revoke_notifications">🔕 Revoke Permission</button>'
+             : '<span class="chip mono" style="color:var(--green)">Clean</span>')
+          + '</div>';
+      }).join('');
+
+      return navTabs
+        + '<div style="font-size:12px;color:var(--ink-2);margin-bottom:10px">'
+        + 'Browser Settings &rsaquo; Websites &rsaquo; Notifications. Rogue websites trick users into clicking "Allow", then send fake system alert popups.'
+        + '</div>'
+        + '<div class="hops">' + rows + '</div>'
+        + (pushDone
+            ? '<div class="note good" style="margin-top:12px"><b>Permission revoked.</b> ' + esc(J.ACTIONS.revoke_notifications.done) + '</div>'
+            : isPush
+              ? '<div class="note warn" style="margin-top:12px">The rogue site is flooding notifications because permission was granted. Revoke it above — no hardware or reinstallation needed.</div>'
+              : '<div class="note good" style="margin-top:12px">All notification permissions are healthy.</div>');
+    }
+
+    // Portal probe tab
+    var probeUrl = 'http://captive.apple.com';
+    return navTabs
+      + '<div style="display:flex;gap:6px;margin-bottom:12px">'
+      + '<input class="form-input mono" style="flex:1" value="' + probeUrl + '" readonly>'
+      + '<button class="btn btn-sm btn-primary" data-bprobe="1">Send HTTP Probe</button>'
+      + '</div>'
+      + '<div class="card" style="background:var(--bg-1);border:1px solid var(--line);padding:14px;border-radius:6px">'
+      + '<div style="font-size:15px;font-weight:600;margin-bottom:6px">🌐 Budapest Free Wi-Fi Gateway</div>'
+      + '<p style="font-size:12.5px;color:var(--ink-2);margin-bottom:12px">This public network requires captive portal authentication before internet routing is granted. Plain HTTP requests trigger the splash page redirection.</p>'
+      + (!portalDone
+          ? '<button class="btn btn-primary btn-sm" data-browser-act="clear_portal">Accept Terms &amp; Connect to Internet</button>'
+          : '<div class="note good"><b>✓ Gateway Authenticated.</b> ' + esc(J.ACTIONS.clear_portal.done) + '</div>')
+      + '</div>';
+  }
+
+  // ── System Settings App ──────────────────────────────────────────────
+  function bodySettings() {
+    var t = Shop.state.ticket;
+    var f = J.fault(t);
+    var tab = t._settingsTab || (f.id === 'display_brightness_zero' ? 'displays'
+                              : f.id === 'keyboard_layout_swap' ? 'keyboard'
+                              : f.id === 'audio_device_swapped' ? 'sound' : 'displays');
+
+    var isBrightness = f.id === 'display_brightness_zero';
+    var isKeyboard = f.id === 'keyboard_layout_swap';
+    var isAudio = f.id === 'audio_device_swapped';
+
+    var brightDone = t.actionsDone.indexOf('restore_brightness') !== -1;
+    var kbDone = t.actionsDone.indexOf('set_keyboard_layout') !== -1;
+    var audioDone = t.actionsDone.indexOf('set_audio_device') !== -1;
+
+    var nav = '<div style="display:flex;gap:6px;margin-bottom:12px;border-bottom:1px solid var(--line);padding-bottom:8px">'
+      + '<button class="btn btn-sm' + (tab === 'displays' ? ' btn-primary' : '') + '" data-stab="displays">☀️ Displays</button>'
+      + '<button class="btn btn-sm' + (tab === 'sound' ? ' btn-primary' : '') + '" data-stab="sound">🔊 Sound</button>'
+      + '<button class="btn btn-sm' + (tab === 'keyboard' ? ' btn-primary' : '') + '" data-stab="keyboard">⌨️ Keyboard</button>'
+      + '</div>';
+
+    if (tab === 'displays') {
+      var pct = isBrightness && !brightDone ? 0 : 80;
+      return nav
+        + '<div style="margin-bottom:14px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Screen Brightness: <b>' + pct + '%</b></label>'
+        + '<div style="background:var(--bg-1);height:18px;border-radius:9px;border:1px solid var(--line);overflow:hidden;position:relative">'
+        + '<div style="width:' + pct + '%;height:100%;background:' + (pct === 0 ? 'var(--red)' : 'var(--accent)') + '"></div></div></div>'
+        + (isBrightness && !brightDone
+            ? '<div class="note warn" style="margin-bottom:12px">Brightness slider is set to 0%. The display panel is on, but the backlight LED is completely dark.</div>'
+              + '<button class="btn btn-primary btn-sm" data-settings-act="restore_brightness">☀️ Set Brightness to 80% (or press FN+F12)</button>'
+            : '<div class="note good">Brightness level is normal (80%). ' + (brightDone ? esc(J.ACTIONS.restore_brightness.done) : '') + '</div>');
+    }
+
+    if (tab === 'sound') {
+      return nav
+        + '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Sound Output Device</div>'
+        + '<div class="hops">'
+        + '<div class="hop" style="align-items:center;justify-content:space-between">'
+        + '<div class="hop-main"><b>Internal Stereo Speakers</b><div class="hop-why">Built-in speakers</div></div>'
+        + (audioDone || !isAudio ? '<span class="chip mono" style="color:var(--green)">Active (Unmuted) ✓</span>'
+           : '<button class="btn btn-sm btn-primary" data-settings-act="set_audio_device">Set as Default Output</button>')
+        + '</div>'
+        + '<div class="hop" style="align-items:center;justify-content:space-between">'
+        + '<div class="hop-main"><b>HDMI Digital Audio (Phantom / Disconnected)</b><div class="hop-why">No physical audio monitor attached</div></div>'
+        + (isAudio && !audioDone ? '<span class="chip mono" style="color:var(--red)">Active (Muted 🔇)</span>' : '<span class="chip mono">Disconnected</span>')
+        + '</div></div>'
+        + (isAudio && !audioDone
+            ? '<div class="note warn" style="margin-top:12px">The audio subsystem is currently pointed at a disconnected HDMI device and muted. Switch default output to Internal Speakers.</div>'
+            : '<div class="note good" style="margin-top:12px">Sound output configured properly. ' + (audioDone ? esc(J.ACTIONS.set_audio_device.done) : '') + '</div>');
+    }
+
+    // Keyboard tab
+    return nav
+      + '<div style="font-size:13px;font-weight:600;margin-bottom:8px">Input Sources</div>'
+      + '<div class="hops">'
+      + '<div class="hop" style="align-items:center;justify-content:space-between">'
+      + '<div class="hop-main"><b>Hungarian (QWERTZ)</b><div class="hop-why">Matches physical keyboard keycaps (ö, ü, ó, ő, ú, é, á, ű, í)</div></div>'
+      + (kbDone || !isKeyboard ? '<span class="chip mono" style="color:var(--green)">Active ✓</span>'
+         : '<button class="btn btn-sm btn-primary" data-settings-act="set_keyboard_layout">Select Hungarian</button>')
+      + '</div>'
+      + '<div class="hop" style="align-items:center;justify-content:space-between">'
+      + '<div class="hop-main"><b>English (US) - QWERTY</b><div class="hop-why">Z and Y inverted; numbers shifted</div></div>'
+      + (isKeyboard && !kbDone ? '<span class="chip mono" style="color:var(--amber)">Active (Swapped) ⚠️</span>' : '<span class="chip mono">Inactive</span>')
+      + '</div></div>'
+      + '<div style="margin-top:12px">'
+      + '<label style="font-size:12px;color:var(--ink-2);display:block;margin-bottom:4px">Test Typing Area:</label>'
+      + '<input class="form-input mono" style="width:100%" readonly value="'
+      + (isKeyboard && !kbDone ? 'Zebra0 \u2192 Types as: Yebra\u00f6 (Password fails!)' : 'Zebra0 \u2192 Types as: Zebra0 (Password accepted!)') + '">'
+      + '</div>'
+      + (isKeyboard && !kbDone
+          ? '<div class="note warn" style="margin-top:12px">Software layout was switched to English. Switch it back to Hungarian above so customer password works.</div>'
+          : '<div class="note good" style="margin-top:12px">Keyboard layout matches physical hardware. ' + (kbDone ? esc(J.ACTIONS.set_keyboard_layout.done) : '') + '</div>');
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
   }
 
   /** The software job this fault actually needs, shown where it can be done. */
@@ -1073,12 +1236,15 @@
     var f = J.fault(t);
     var act = f.fixedBy.kind === 'action' ? f.fixedBy.id : null;
     if (!act || !J.ACTIONS[act] || !J.ACTIONS[act].software) return '';
+<<<<<<< HEAD
     // Nothing here until the student has measured something that points at
     // the real fault. The panel names the fix and explains the fault, so
     // showing it on arrival handed every software job over for free.
     if (!diagnosedYet(t, act)) return '';
     if (act === 'free_space' || act === 'kill_process') return '';   // those live in their own apps
 
+=======
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     if (act === 'card_recovery') {
       return '<div class="card"><div class="card-head">Card &amp; photo recovery</div>' + bodyRecovery(t) + '</div>';
     }
@@ -1093,14 +1259,20 @@
       var deskRows = steps.map(function (st, i) {
         var done = t.job[st.id] || t.actionsDone.indexOf(act) !== -1;
         var next = !done && doneCount === i;
+<<<<<<< HEAD
         return '<div class="proc-step' + (done ? ' done' : next ? ' next' : ' later') + '" style="margin-bottom:6px;font-size:calc(11.5px * var(--a11y-scale, 1))">'
           + '<span class="ps-n" style="width:18px;height:18px;line-height:18px;font-size:calc(10px * var(--a11y-scale, 1))">' + (done ? '\u2713' : i + 1) + '</span>'
+=======
+        return '<div class="proc-step' + (done ? ' done' : next ? ' next' : ' later') + '" style="margin-bottom:6px;font-size:11.5px">'
+          + '<span class="ps-n" style="width:18px;height:18px;line-height:18px;font-size:10px">' + (done ? '\u2713' : i + 1) + '</span>'
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
           + '<div style="flex:1"><b>' + esc(st.t) + '</b>'
           + (next ? '<button class="btn btn-xs btn-primary" style="margin-top:4px;display:block" data-jobgame="' + st.id + '">\ud83d\udc49 ' + esc(st.verb) + '</button>' : '')
           + '</div></div>';
       }).join('');
 
       return '<div class="mac-notes" style="position:absolute;top:12px;right:14px;width:290px;max-height:calc(100% - 90px);background:rgba(26,30,40,0.92);backdrop-filter:blur(18px);border:1px solid rgba(212,163,75,0.45);border-radius:10px;box-shadow:0 12px 35px rgba(0,0,0,0.6);z-index:9;display:flex;flex-direction:column;overflow:hidden">'
+<<<<<<< HEAD
         + '<div style="padding:8px 12px;background:rgba(212,163,75,0.15);border-bottom:1px solid rgba(212,163,75,0.25);font-size:calc(12px * var(--a11y-scale, 1));font-weight:600;display:flex;justify-content:space-between;align-items:center">'
         + '<span>\ud83d\udccb Service Notes</span>'
         + '<button class="btn btn-xs btn-ghost" data-hide-notes style="padding:0 5px;line-height:1">\u2715</button>'
@@ -1110,6 +1282,17 @@
         + '<p style="font-size:calc(11px * var(--a11y-scale, 1));color:var(--ink-2);margin-bottom:10px;line-height:1.35">' + esc(f.explain.slice(0, 160)) + '...</p>'
         + '<div class="proc-list">' + deskRows + '</div>'
         + (allDone ? '<div class="note good" style="margin-top:8px;font-size:calc(11px * var(--a11y-scale, 1));padding:6px 8px"><b>\u2713 Job complete!</b> Handover ready.</div>' : '')
+=======
+        + '<div style="padding:8px 12px;background:rgba(212,163,75,0.15);border-bottom:1px solid rgba(212,163,75,0.25);font-size:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center">'
+        + '<span>\ud83d\udccb Service Notes</span>'
+        + '<button class="btn btn-xs btn-ghost" data-hide-notes style="padding:0 5px;line-height:1">\u2715</button>'
+        + '</div>'
+        + '<div style="padding:10px 12px;overflow-y:auto;font-size:12px;flex:1">'
+        + '<div style="font-weight:600;color:var(--accent);margin-bottom:4px">' + esc(J.ACTIONS[act].label) + '</div>'
+        + '<p style="font-size:11px;color:var(--ink-2);margin-bottom:10px;line-height:1.35">' + esc(f.explain.slice(0, 160)) + '...</p>'
+        + '<div class="proc-list">' + deskRows + '</div>'
+        + (allDone ? '<div class="note good" style="margin-top:8px;font-size:11px;padding:6px 8px"><b>\u2713 Job complete!</b> Handover ready.</div>' : '')
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
         + '</div></div>';
     }
 
@@ -1164,6 +1347,7 @@
       return;
     }
     if (m.kind === 'phone' || m.kind === 'tablet') {
+<<<<<<< HEAD
       host.innerHTML = '<div class="view-head"><h2>' + (m.kind === 'tablet' ? 'The iPad' : 'The iPhone') + ', switched on</h2>'
         + '<p>Plug it in, touch every part of the glass, see what is filling it. The same checks tell you what is wrong and, after the repair, whether you fixed it.</p></div>'
         + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;max-width:1080px;align-items:start">'
@@ -1172,6 +1356,16 @@
         + '</div>';
       bind(host);
       bindHandset(host);
+=======
+      host.innerHTML = '<div class="view-head"><h2>' + (m.kind === 'tablet' ? 'Tablet' : 'Phone') + ' procedures</h2>'
+        + '<p>No Mac to log into here \u2014 but the software side of a handset is still a job, and the order you do it in is the whole skill.</p></div>'
+        + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;max-width:1080px">'
+        + '<div class="card"><div class="card-head">Card &amp; photo recovery</div>' + bodyRecovery(t) + '</div>'
+        + '<div class="card"><div class="card-head">Wipe it safely for the next owner</div>' + bodyPhoneReset(t) + '</div>'
+        + bodySoftwareJob(t, false)
+        + '</div>';
+      bind(host);
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
       return;
     }
 
@@ -1204,6 +1398,7 @@
 
     var f2 = J.fault(t);
     var act2 = f2.fixedBy.kind === 'action' ? f2.fixedBy.id : null;
+<<<<<<< HEAD
 
     // Every app looks the same in the dock. An earlier version lit up the one
     // that fixes the current fault, which told the student both that it was a
@@ -1211,6 +1406,21 @@
     var dock = Object.keys(APPS).map(function (id) {
       return '<button class="dock-app' + (open[id] ? ' open' : '') + '" data-app="' + id + '" title="' + esc(APPS[id].name) + '">'
         + APPS[id].icon
+=======
+    var recApp = (act2 === 'revoke_notifications' || act2 === 'clear_portal') ? 'browser'
+               : (act2 === 'set_keyboard_layout' || act2 === 'restore_brightness' || act2 === 'set_audio_device') ? 'settings'
+               : (act2 === 'kill_process') ? 'activity'
+               : (act2 === 'free_space') ? 'storage'
+               : (act2 === 'reinstall_os' || act2 === 'backup_first') ? 'disk'
+               : (act2 === 'fix_dns' || act2 === 'confirm_isp') ? 'network'
+               : null;
+
+    var dock = Object.keys(APPS).map(function (id) {
+      var isRec = id === recApp;
+      return '<button class="dock-app' + (open[id] ? ' open' : '') + (isRec ? ' recommended' : '') + '" data-app="' + id + '" title="' + esc(APPS[id].name) + (isRec ? ' (Recommended for this job)' : '') + '">'
+        + APPS[id].icon
+        + (isRec ? '<span style="position:absolute;top:-3px;right:-3px;width:9px;height:9px;background:var(--amber);border-radius:50%;box-shadow:0 0 6px var(--amber)"></span>' : '')
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
         + '<span class="dock-name">' + esc(APPS[id].name) + '</span></button>';
     }).join('');
 
@@ -1220,8 +1430,13 @@
       + '<p>The customer\'s machine, booted from your bench. Half the evidence lives here — and so do the repairs that cost nothing but your time.</p></div>'
       + '<div class="mac-screen"><div class="mac-menubar"><span class="mm-apple"></span><span class="mm-b">Finder</span>'
       + '<span>File</span><span>Edit</span><span>View</span><span>Go</span>'
+<<<<<<< HEAD
       + (jobDesk || (t._notesHidden && diagnosedYet(t, act2))
           ? '<span class="mm-notes" data-toggle-notes>\ud83d\udccb Service notes</span>' : '')
+=======
+      + (act2 && J.ACTIONS[act2] && J.ACTIONS[act2].software
+          ? '<span class="mm-notes" style="cursor:pointer;background:rgba(212,163,75,0.22);color:var(--amber);padding:1px 8px;border-radius:4px;font-weight:600" data-toggle-notes>\ud83d\udccb Service Notes</span>' : '')
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
       + '<span class="mm-right"><span>' + esc(m.name.split('(')[0].trim()) + '</span><span>🔋</span><span>Day ' + Shop.state.day + '</span></span></div>'
       + '<div class="mac-desktop">' + wins + jobDesk + '<div class="mac-dock">' + dock + '</div></div></div>';
 
@@ -1326,6 +1541,7 @@
       else { audio('playKeyPop'); finish(); }
     }
 
+<<<<<<< HEAD
     // ── Browser ──
     function completeAct(act) {
       var t = Shop.state.ticket;
@@ -1478,6 +1694,61 @@
         say.textContent = 'Incorrect password. What came out was “' + (t._kbTyped || '') + '”.';
       }
     });
+=======
+    host.querySelectorAll('[data-btab]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket;
+        t._browserTab = b.getAttribute('data-btab');
+        audio('playKeyPop');
+        render();
+      });
+    });
+    host.querySelectorAll('[data-bprobe]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        audio('playPing');
+        UI.toast('HTTP Probe Sent', 'Received HTTP 302 Redirect to captive portal login gateway.', 'good');
+      });
+    });
+    host.querySelectorAll('[data-browser-act]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket;
+        var act = b.getAttribute('data-browser-act');
+        if (t.actionsDone.indexOf(act) === -1) {
+          t.actionsDone.push(act);
+          t.labourHours += J.ACTIONS[act].labourHours;
+          audio('playSuccessChime');
+          UI.toast('\u2713 ' + J.ACTIONS[act].label, J.ACTIONS[act].done, 'good');
+          Shop.emit('change');
+          UI.refresh();
+          render();
+        }
+      });
+    });
+
+    host.querySelectorAll('[data-stab]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket;
+        t._settingsTab = b.getAttribute('data-stab');
+        audio('playKeyPop');
+        render();
+      });
+    });
+    host.querySelectorAll('[data-settings-act]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket;
+        var act = b.getAttribute('data-settings-act');
+        if (t.actionsDone.indexOf(act) === -1) {
+          t.actionsDone.push(act);
+          t.labourHours += J.ACTIONS[act].labourHours;
+          audio('playSuccessChime');
+          UI.toast('\u2713 ' + J.ACTIONS[act].label, J.ACTIONS[act].done, 'good');
+          Shop.emit('change');
+          UI.refresh();
+          render();
+        }
+      });
+    });
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
 
     host.querySelectorAll('[data-hide-notes]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -1505,6 +1776,7 @@
         var stepId = b.getAttribute('data-jobgame');
         var step = steps.filter(function (x) { return x.id === stepId; })[0];
 
+<<<<<<< HEAD
         // The three settings jobs are done in the Settings app itself; the
         // step just takes you there. The browser jobs keep their procedures,
         // because each step of those teaches something the app does not.
@@ -1513,6 +1785,20 @@
           open.settings = { x: APPS.settings.x, y: APPS.settings.y, z: ++z };
           t2._settingsTab = SETTINGS_TAB[act];
           audio('playKeyPop');
+=======
+        // If step points to an app in the dock, open that app directly!
+        if (act === 'set_keyboard_layout' || act === 'restore_brightness' || act === 'set_audio_device') {
+          open['settings'] = { x: APPS['settings'].x, y: APPS['settings'].y, z: ++z };
+          audio('playKeyPop');
+          Shop.emit('change');
+          render();
+          return;
+        }
+        if (act === 'revoke_notifications' || act === 'clear_portal') {
+          open['browser'] = { x: APPS['browser'].x, y: APPS['browser'].y, z: ++z };
+          audio('playKeyPop');
+          Shop.emit('change');
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
           render();
           return;
         }
@@ -1562,6 +1848,7 @@
       });
     });
 
+<<<<<<< HEAD
     // Clicking anywhere in a window brings it to the front, as on a real
     // desktop. Only the title bar used to, so a window hidden behind another
     // stayed hidden until you found its title bar or went back to the dock.
@@ -1572,6 +1859,8 @@
       });
     });
 
+=======
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     // window dragging
     host.querySelectorAll('[data-drag]').forEach(function (bar) {
       bar.addEventListener('mousedown', function (e) {

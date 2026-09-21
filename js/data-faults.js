@@ -773,6 +773,7 @@
       explain: 'A battery that runs out and a port that will not take charge look identical from the outside, and the customer will almost always name the battery. The two readings that separate them are sitting right next to each other: battery health is fine, and the port will not negotiate more than the fallback half-amp. Pull on a plugged-in cable hard enough and you splay the port shell — after that it makes contact at an angle or not at all. On most phones and handhelds the port is on its own small flex board precisely because it is the part that wears out, so this is a replaceable component and not a new device.'
     },
 
+<<<<<<< HEAD
     ps5_liquid_metal: {
       id: 'ps5_liquid_metal',
       title: 'Liquid metal dried out under the cooler',
@@ -831,6 +832,8 @@
       explain: 'A decoupling capacitor is a tiny ceramic part that steadies a rail. When one fails, it usually fails short: a direct path from the rail to ground. The supply is fine and correctly refuses to power a short, so a new supply trips in exactly the same way, and a power reset changes nothing. Nothing is visible. A multimeter finds it in seconds, in continuity mode with the power off. Replace that one capacitor with a part of the same value and voltage rating, and the rail reads thousands of ohms again.'
     },
 
+=======
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     gpu_cable_wrong_port: {
       id: 'gpu_cable_wrong_port',
       title: 'Monitor plugged into motherboard HDMI',
@@ -868,7 +871,11 @@
       ],
       customerTheory: 'They think the keyboard controller has died or keys are sending ghost keystrokes.',
       readings: {
+<<<<<<< HEAD
         activity: { memPressurePct: 29, swapGB: 0.1, topProc: 'Browser', topProcMemGB: 0.8, note: 'Every process is normal and the keyboard is registering every press. Whatever is wrong, the machine is not struggling \u2014 the keys are arriving, just not as the letters on them.' },
+=======
+        activity: { memPressurePct: 29, swapGB: 0.1, topProc: 'SystemSettings', topProcMemGB: 0.8, note: 'Settings shows current active input source is US English (QWERTY), while the physical keyboard is Hungarian (QWERTZ).' },
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
         visual: { note: 'The physical keyboard is in perfect condition. Every keycap is clean, switches rebound crisply, zero liquid residue.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2400, note: 'Drive fine.' },
         power: { watts: 28, negotiated: 'USB-PD 9V/3A', seats: true, note: 'Normal.' }
@@ -877,9 +884,13 @@
       wrongFix: {
         flex: 'A new keyboard assembly that will type with the exact same swapped letters because the layout is in software.'
       },
+<<<<<<< HEAD
       explain: 'The letters printed on a key are only a label. What the key types is decided by the software layout. A Hungarian keyboard has Z and Y the other way round from English, '
         + 'and the key printed 0 sits where English puts the backtick \u2014 so under the wrong layout "Zebra0" types as "Yebra`" and the password fails every time, with nothing broken. '
         + 'On Windows, Alt+Shift or Windows+Space switches layout; on a Mac, Control+Space. Easy to press by accident, and nothing on screen says it happened.'
+=======
+      explain: 'On Hungarian keyboards, Z and Y are inverted compared to English QWERTY, and number keys carry accented characters (ö, ü, ó). Accidentally pressing Alt+Shift or Windows+Space switches the software layout, causing passwords to fail silently. Toggling it back in Settings solves it with zero parts.'
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     },
 
     display_brightness_zero: {
@@ -903,10 +914,14 @@
       wrongFix: {
         screen: 'Replacing a perfectly working display panel because the brightness shortcut key was pressed.'
       },
+<<<<<<< HEAD
       explain: 'A torch held against the glass is the standard test, and it tells you one precise thing: the panel is drawing a picture, and the light behind it is off. '
         + 'That is very often a real hardware fault \u2014 a failed backlight driver, a blown fuse on the board, a damaged cable \u2014 and none of those is fixed by a new screen either. '
         + 'But some laptops let the brightness go all the way to off, and one keypress in the dark can do it. So the order matters: '
         + 'rule out the free explanation before you open the machine, and never quote for a panel when the panel just proved it works.'
+=======
+      explain: 'Modern LED displays can dim down to complete darkness. Shining a bright light at the panel shows whether the LCD crystals are still displaying content. Pressing the FN brightness key or moving the brightness slider in software illuminates the screen immediately without spending fifty thousand forint on a screen.'
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
     },
 
     audio_device_swapped: {
@@ -916,13 +931,21 @@
       severity: 'low',
       noPartNeeded: true,
       complaints: [
+<<<<<<< HEAD
         { t: 'No sound at all. Games, YouTube and Discord are totally silent. Even the startup chime stopped.', os: ['macos'] },
         { t: 'No sound at all. Games, YouTube and Discord are totally silent. Even the little sound when I plug a USB stick in has gone.', os: ['windows'] },
+=======
+        'No sound at all. Games, YouTube and Discord are totally silent. Even the startup chime stopped.',
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
         'I unplugged my gaming headset on Sunday and since then the speakers have never worked.'
       ],
       customerTheory: 'They think the audio DAC or amplifier chip on the motherboard is fried.',
       readings: {
+<<<<<<< HEAD
         activity: { memPressurePct: 32, swapGB: 0.2, topProc: 'Browser', topProcMemGB: 0.9, topProcCpuPct: 4, note: 'The audio service is running normally and is sending sound out \u2014 to wherever the output is set to go. Nothing here is broken.' },
+=======
+        activity: { memPressurePct: 32, swapGB: 0.2, topProc: 'coreaudiod', topProcMemGB: 0.5, topProcCpuPct: 1, note: 'Sound settings show default output device is set to disconnected HDMI Digital Audio (Muted), instead of Internal Speakers.' },
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
         visual: { note: 'Speaker cones are intact, audio jack has zero debris or bent contacts.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4400, note: 'Storage fine.' },
         power: { watts: 45, negotiated: 'ATX/DC', seats: true, note: 'Power delivery normal.' }

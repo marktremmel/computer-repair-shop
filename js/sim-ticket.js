@@ -251,7 +251,11 @@
     },
     swap_gpu_cable: {
       id: 'swap_gpu_cable', label: 'Move HDMI cable to dedicated graphics card port', icon: '🔌',
+<<<<<<< HEAD
       onlyMachines: ['tower_pc'], labourHours: 0.2, costFt: 0,
+=======
+      needsOpen: false, onlyMachines: ['tower_pc'], labourHours: 0.2, costFt: 0,
+>>>>>>> bd57278033a15074edb8b68a7b0f2c7befb9d5d4
       done: 'Cable moved down 15 cm from the motherboard iGPU port to the dedicated graphics card port. Dedicated GPU renders display output at full frame rates.',
       isFreeFix: true
     },
