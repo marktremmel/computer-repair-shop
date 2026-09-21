@@ -22,12 +22,13 @@
 
   /** The shop is a real place with a time of day, even before you go in. */
   function backdrop() {
-    var hour = new Date().getHours();
-    var byClock = hour < 10 ? 'shop-morning' : hour < 14 ? 'shop-noon'
-                : hour < 17 ? 'shop-afternoon' : hour < 21 ? 'shop-evening' : 'shop-night';
-    // Mostly the real time of day, sometimes another, so it is not the same
-    // picture every lesson.
-    return Math.random() < 0.7 ? byClock : BG[Math.floor(Math.random() * BG.length)];
+    var a11y = window.TechOpsA11y && window.TechOpsA11y.state ? window.TechOpsA11y.state() : null;
+    if (a11y && a11y.backdrop && a11y.backdrop !== 'auto') {
+      var k = a11y.backdrop;
+      if (k === 'sunset') k = 'evening';
+      return 'shop-' + k;
+    }
+    return BG[Math.floor(Math.random() * BG.length)];
   }
 
   function show(onPlay) {

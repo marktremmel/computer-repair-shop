@@ -15,7 +15,7 @@
 
   var KEY = 'techops.a11y';
 
-  var DEFAULTS = { text: 100, contrast: false, motion: false, dyslexic: false };
+  var DEFAULTS = { text: 100, contrast: false, motion: false, dyslexic: false, transparency: 35, backdrop: 'auto' };
 
   var OPTIONS = {
     text: [
@@ -23,6 +23,18 @@
       { v: 115, label: 'Large' },
       { v: 132, label: 'Larger' },
       { v: 150, label: 'Largest' }
+    ],
+    backdrops: [
+      { id: 'auto', label: 'Auto' },
+      { id: 'morning', label: 'Morning' },
+      { id: 'noon', label: 'Midday' },
+      { id: 'afternoon', label: 'Afternoon' },
+      { id: 'golden-hour', label: 'Golden hour' },
+      { id: 'sunset', label: 'Sunset' },
+      { id: 'dusk', label: 'Dusk' },
+      { id: 'night', label: 'Night' },
+      { id: 'rain', label: 'Rain' },
+      { id: 'snow', label: 'Snow' }
     ]
   };
 
@@ -43,13 +55,19 @@
   function apply() {
     var r = document.documentElement;
     var scale = (state.text / 100).toFixed(3);
+    var trans = ((state.transparency == null ? 35 : state.transparency) / 100).toFixed(2);
     r.style.setProperty('--a11y-scale', scale);
+    r.style.setProperty('--win-transparency', trans);
     r.setAttribute('data-text-size', state.text);
     r.setAttribute('data-contrast', state.contrast ? 'high' : 'normal');
     r.setAttribute('data-motion', state.motion ? 'reduced' : 'normal');
     r.setAttribute('data-typeface', state.dyslexic ? 'readable' : 'normal');
     if (document.body) {
       document.body.style.setProperty('--a11y-scale', scale);
+      document.body.style.setProperty('--win-transparency', trans);
+    }
+    if (window.TechOpsAmbience && window.TechOpsAmbience.apply) {
+      window.TechOpsAmbience.apply();
     }
   }
 
@@ -79,12 +97,28 @@
         return '<button class="a11y-step' + (state.text === o.v ? ' on' : '') + '" data-a11y-text="' + o.v + '">'
           + o.label + '</button>';
       }).join('');
+      var curBg = state.backdrop || 'auto';
+      var bgList = OPTIONS.backdrops.map(function (b) {
+        return '<button class="a11y-step a11y-step-sm' + (curBg === b.id ? ' on' : '') + '" data-a11y-bg="' + b.id + '">'
+          + b.label + '</button>';
+      }).join('');
+      var curTrans = state.transparency == null ? 35 : state.transparency;
       var row = function (key, title, blurb, on) {
         return '<button class="a11y-row' + (on ? ' on' : '') + '" data-a11y-toggle="' + key + '">'
           + '<span class="a11y-box">' + (on ? '✓' : '') + '</span>'
           + '<span><b>' + title + '</b><span>' + blurb + '</span></span></button>';
       };
       return '<div class="a11y">'
+        + '<div class="a11y-sec"><div class="a11y-label">Window &amp; panel transparency</div>'
+        + '<div class="a11y-slider-row">'
+        + '<input type="range" class="a11y-slider" data-a11y-range="transparency" min="0" max="85" step="5" value="' + curTrans + '">'
+        + '<span class="a11y-val-disp">' + curTrans + '%</span>'
+        + '</div>'
+        + '<div class="a11y-slider-bounds"><span>Solid (0%)</span><span>Balanced (35%)</span><span>Glass (85%)</span></div>'
+        + '<div class="a11y-note">Adjusts how clearly the workshop background shows through windows, cards, and lab panels.</div></div>'
+        + '<div class="a11y-sec"><div class="a11y-label">Shop background &amp; weather</div>'
+        + '<div class="a11y-steps a11y-bg-picks">' + bgList + '</div>'
+        + '<div class="a11y-note">Choose Auto to follow bench hours and dynamic weather, or lock a specific mood.</div></div>'
         + '<div class="a11y-sec"><div class="a11y-label">Text size</div>'
         + '<div class="a11y-steps">' + t + '</div>'
         + '<div class="a11y-note">Everything scales together, so nothing overlaps at the larger sizes.</div></div>'
@@ -109,6 +143,27 @@
       root.querySelectorAll('[data-a11y-text]').forEach(function (b) {
         b.addEventListener('click', function () {
           set('text', +b.getAttribute('data-a11y-text'));
+          if (after) after();
+        });
+      });
+      root.querySelectorAll('[data-a11y-bg]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          set('backdrop', b.getAttribute('data-a11y-bg'));
+          if (after) after();
+        });
+      });
+      root.querySelectorAll('[data-a11y-range]').forEach(function (slider) {
+        var k = slider.getAttribute('data-a11y-range');
+        var disp = root.querySelector('.a11y-val-disp');
+        slider.addEventListener('input', function () {
+          var val = +slider.value;
+          state[k] = val;
+          if (disp) disp.textContent = val + '%';
+          apply();
+        });
+        slider.addEventListener('change', function () {
+          var val = +slider.value;
+          set(k, val);
           if (after) after();
         });
       });

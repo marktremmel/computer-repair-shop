@@ -9,11 +9,13 @@
   'use strict';
 
   var PHASES = [
-    { id: 'morning',   from: 0.00, label: 'morning',       img: 'assets/bg/shop-morning.webp',   tint: '#cfe3ff', warmth: 0.15 },
-    { id: 'noon',      from: 0.22, label: 'midday',        img: 'assets/bg/shop-noon.webp',      tint: '#ffffff', warmth: 0.00 },
-    { id: 'afternoon', from: 0.48, label: 'afternoon',     img: 'assets/bg/shop-afternoon.webp', tint: '#ffe0b8', warmth: 0.35 },
-    { id: 'evening',   from: 0.72, label: 'golden hour',   img: 'assets/bg/shop-evening.webp',   tint: '#ffb877', warmth: 0.6  },
-    { id: 'night',     from: 0.90, label: 'after closing', img: 'assets/bg/shop-night.webp',     tint: '#8fa8d8', warmth: 0.1  }
+    { id: 'morning',     from: 0.00, label: 'morning',       img: 'assets/bg/shop-morning.webp',     tint: '#cfe3ff', warmth: 0.15 },
+    { id: 'noon',        from: 0.20, label: 'midday',        img: 'assets/bg/shop-noon.webp',        tint: '#ffffff', warmth: 0.00 },
+    { id: 'afternoon',   from: 0.40, label: 'afternoon',     img: 'assets/bg/shop-afternoon.webp',   tint: '#ffe0b8', warmth: 0.35 },
+    { id: 'golden-hour', from: 0.60, label: 'golden hour',   img: 'assets/bg/shop-golden-hour.webp', tint: '#ffb877', warmth: 0.6  },
+    { id: 'sunset',      from: 0.75, label: 'sunset',        img: 'assets/bg/shop-evening.webp',     tint: '#ff8a50', warmth: 0.8  },
+    { id: 'dusk',        from: 0.86, label: 'dusk',          img: 'assets/bg/shop-dusk.webp',        tint: '#7986cb', warmth: 0.3  },
+    { id: 'night',       from: 0.94, label: 'after closing', img: 'assets/bg/shop-night.webp',       tint: '#8fa8d8', warmth: 0.1  }
   ];
 
   var HOURS_IN_DAY = 6;   // one bench day, matching TechOpsJobs.HOURS_PER_DAY
@@ -38,11 +40,38 @@
     return out;
   }
 
+  var BACKDROPS = {
+    'morning':     { id: 'morning',     label: 'morning',       img: 'assets/bg/shop-morning.webp' },
+    'noon':        { id: 'noon',        label: 'midday',        img: 'assets/bg/shop-noon.webp' },
+    'afternoon':   { id: 'afternoon',   label: 'afternoon',     img: 'assets/bg/shop-afternoon.webp' },
+    'golden-hour': { id: 'golden-hour', label: 'golden hour',   img: 'assets/bg/shop-golden-hour.webp' },
+    'sunset':      { id: 'sunset',      label: 'sunset',        img: 'assets/bg/shop-evening.webp' },
+    'dusk':        { id: 'dusk',        label: 'dusk',          img: 'assets/bg/shop-dusk.webp' },
+    'night':       { id: 'night',       label: 'after closing', img: 'assets/bg/shop-night.webp' },
+    'rain':        { id: 'rain',        label: 'rainy',         img: 'assets/bg/shop-rain.webp' },
+    'snow':        { id: 'snow',        label: 'snowy',         img: 'assets/bg/shop-snow.webp' }
+  };
+
   var Ambience = {
     PHASES: PHASES,
+    BACKDROPS: BACKDROPS,
     current: null,
 
-    phase: function () { return phaseAt(progress()); },
+    phase: function () {
+      var a11y = window.TechOpsA11y && window.TechOpsA11y.state ? window.TechOpsA11y.state() : null;
+      if (a11y && a11y.backdrop && a11y.backdrop !== 'auto') {
+        if (BACKDROPS[a11y.backdrop]) return BACKDROPS[a11y.backdrop];
+      }
+      var S = window.TechOpsShop && window.TechOpsShop.state;
+      var base = phaseAt(progress());
+      if (S && S.weather === 'rain') {
+        return { id: 'rain', label: 'rainy ' + base.label, img: 'assets/bg/shop-rain.webp' };
+      }
+      if (S && S.weather === 'snow') {
+        return { id: 'snow', label: 'snowy ' + base.label, img: 'assets/bg/shop-snow.webp' };
+      }
+      return base;
+    },
 
     /** Clock face for the HUD. The shop day runs 08:00–20:00. */
     clock: function () {
@@ -53,9 +82,15 @@
 
     /** Called when the clock rolls over to a new day. */
     newDay: function (shop) {
-      // Somewhere between first thing and mid-afternoon — never starting at
-      // the same hour twice in a row.
-      shop.state.dayStart = 0.02 + shop.rng() * 0.6;
+      var roll = shop.rng ? shop.rng() : Math.random();
+      if (roll < 0.15) {
+        shop.state.weather = 'rain';
+      } else if (roll < 0.30) {
+        shop.state.weather = 'snow';
+      } else {
+        shop.state.weather = 'clear';
+      }
+      shop.state.dayStart = 0.02 + (shop.rng ? shop.rng() : Math.random()) * 0.45;
     },
 
     apply: function () {
@@ -66,6 +101,7 @@
         this.current = ph.id;
         // Cross-fade: the new plate fades in over the old one, then replaces it.
         var next = document.createElement('div');
+        next.className = 'shop-plate';
         var imgUrl = ph.img + (window.TECHOPS_BUILD ? '?v=' + window.TECHOPS_BUILD : '');
         next.style.backgroundImage = 'url("' + imgUrl + '")';
         host.appendChild(next);
