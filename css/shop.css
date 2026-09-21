@@ -136,8 +136,11 @@ p { margin: 0 0 10px; }
 .rail-empty .big { font-size: calc(40px * var(--a11y-scale, 1)); display: block; margin-bottom: 12px; opacity: .5; }
 
 .card {
-  background: var(--panel); border: 1px solid var(--line);
+  background: rgba(19, 23, 31, calc(1 - var(--win-transparency, 0.35) * 0.35));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
   border-radius: var(--radius); padding: 14px;
+  transition: background .2s ease;
 }
 .card-head {
   display: flex; align-items: center; gap: 8px;
@@ -320,15 +323,20 @@ html[data-brand-dark="1"] .btn-primary { color: #fff; }
    =========================================================================== */
 .modal-veil {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(5,8,12,.78); backdrop-filter: blur(7px);
+  background: rgba(5,8,12, calc(0.78 - var(--win-transparency, 0.35) * 0.30));
+  backdrop-filter: blur(calc(7px - var(--win-transparency, 0.35) * 3px));
+  -webkit-backdrop-filter: blur(calc(7px - var(--win-transparency, 0.35) * 3px));
   display: grid; place-items: center; padding: 24px;
   animation: fade .2s;
 }
 .modal {
-  background: var(--panel); border: 1px solid var(--line);
+  background: rgba(19, 24, 34, calc(0.98 - var(--win-transparency, 0.35) * 0.32));
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--line);
   border-radius: 18px; box-shadow: var(--shadow);
   max-width: 720px; width: 100%; max-height: 88vh; overflow-y: auto;
   animation: modalIn .3s cubic-bezier(.2,.9,.3,1);
+  transition: background .2s ease;
 }
 @keyframes modalIn { from { opacity: 0; transform: translateY(18px) scale(.97); } }
 .modal-head { padding: 20px 24px 0; }
@@ -336,7 +344,10 @@ html[data-brand-dark="1"] .btn-primary { color: #fff; }
 .modal-foot {
   padding: 14px 24px; border-top: 1px solid var(--line);
   display: flex; justify-content: flex-end; gap: 10px;
-  position: sticky; bottom: 0; background: var(--panel);
+  position: sticky; bottom: 0;
+  background: rgba(19, 24, 34, calc(0.98 - var(--win-transparency, 0.35) * 0.32));
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  transition: background .2s ease;
 }
 
 /* ── toasts ────────────────────────────────────────────────────────── */
@@ -577,21 +588,42 @@ html[data-brand-dark="1"] .brand-mark .ic, html[data-brand-dark="1"] .brand-mark
 #shopdrop::after {
   content: ''; position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(10,14,20,.30) 0%, rgba(10,14,20,.52) 42%, rgba(10,14,20,.80) 100%);
+  opacity: calc(1 - var(--win-transparency, 0.35) * 0.7);
+  transition: opacity .3s ease;
 }
 .workspace, .topbar { background-color: transparent; }
-.topbar { background: linear-gradient(180deg, rgba(18,25,37,.93), rgba(13,19,28,.88)); backdrop-filter: blur(14px); }
-.rail { background: rgba(17,22,31,.82); backdrop-filter: blur(16px); }
-.stage-nav { background: rgba(17,22,31,.72); backdrop-filter: blur(14px); }
-.stage-body { background: rgba(10,14,20,.42); backdrop-filter: blur(2px); }
+.topbar {
+  background: linear-gradient(180deg, rgba(18,25,37, calc(0.96 - var(--win-transparency, 0.35) * 0.2)), rgba(13,19,28, calc(0.92 - var(--win-transparency, 0.35) * 0.2)));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.rail {
+  background: rgba(17,22,31, calc(0.92 - var(--win-transparency, 0.35) * 0.35));
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  transition: background .2s ease;
+}
+.stage-nav {
+  background: rgba(17,22,31, calc(0.85 - var(--win-transparency, 0.35) * 0.35));
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  transition: background .2s ease;
+}
+.stage-body {
+  background: rgba(10,14,20, calc(0.60 - var(--win-transparency, 0.35) * 0.45));
+  backdrop-filter: blur(calc(6px - var(--win-transparency, 0.35) * 4px));
+  -webkit-backdrop-filter: blur(calc(6px - var(--win-transparency, 0.35) * 4px));
+  transition: background .2s ease;
+}
 
 /* On the counter you are standing in the shop, so let it show through. */
 body[data-view="counter"] .stage-body,
-body[data-view="intake"]  .stage-body { background: rgba(10,14,20,.10); backdrop-filter: none; }
+body[data-view="intake"]  .stage-body { background: rgba(10,14,20, calc(0.20 - var(--win-transparency, 0.35) * 0.15)); backdrop-filter: none; }
 body[data-view="counter"] .card,
 body[data-view="intake"] .card {
-  background: rgba(19,25,35,.80); backdrop-filter: blur(13px) saturate(1.15);
-  border-color: rgba(255,255,255,.10);
+  background: rgba(19,25,35, calc(0.90 - var(--win-transparency, 0.35) * 0.35));
+  backdrop-filter: blur(13px) saturate(1.15);
+  -webkit-backdrop-filter: blur(13px) saturate(1.15);
+  border-color: rgba(255,255,255, calc(0.08 + var(--win-transparency, 0.35) * 0.08));
   box-shadow: 0 14px 38px rgba(0,0,0,.42);
+  transition: background .2s ease;
 }
 body[data-view="counter"] .view-head p,
 body[data-view="intake"] .view-head p { text-shadow: 0 1px 10px rgba(0,0,0,.85); }
@@ -1002,6 +1034,26 @@ html[data-typeface="readable"] .ps-d { line-height: 1.75; }
 }
 .a11y-row.on .a11y-box { border-color: var(--green); }
 .a11y-note { font-size: calc(11.8px * var(--a11y-scale, 1)); color: var(--ink-3); line-height: 1.55; margin-top: 7px; }
+.a11y-step-sm { padding: 5px 10px; font-size: calc(11.5px * var(--a11y-scale, 1)); }
+.a11y-bg-picks { gap: 5px; }
+.a11y-slider-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.a11y-slider {
+  flex: 1; -webkit-appearance: none; appearance: none; height: 6px;
+  border-radius: 999px; background: var(--line); outline: none; cursor: pointer;
+}
+.a11y-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--amber); cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4); transition: transform .1s ease;
+}
+.a11y-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.a11y-slider::-moz-range-thumb {
+  width: 18px; height: 18px; border: none;
+  border-radius: 50%; background: var(--amber); cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+}
+.a11y-val-disp { font-family: var(--mono); font-size: calc(12.5px * var(--a11y-scale, 1)); color: var(--amber); min-width: 38px; text-align: right; }
+.a11y-slider-bounds { display: flex; justify-content: space-between; font-size: calc(10.5px * var(--a11y-scale, 1)); color: var(--ink-3); margin-top: 4px; }
 
 /* ===========================================================================
    Title screen — the shop from the outside

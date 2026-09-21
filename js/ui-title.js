@@ -17,7 +17,8 @@
 
   var BG = [
     'shop-morning', 'shop-noon', 'shop-afternoon', 'shop-golden-hour',
-    'shop-evening', 'shop-dusk', 'shop-night', 'shop-rain', 'shop-snow'
+    'shop-evening', 'shop-dusk', 'shop-night', 'shop-overcast',
+    'shop-rain', 'shop-sleet', 'shop-snow'
   ];
 
   /** The shop is a real place with a time of day, even before you go in. */

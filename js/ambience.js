@@ -48,7 +48,9 @@
     'sunset':      { id: 'sunset',      label: 'sunset',        img: 'assets/bg/shop-evening.webp' },
     'dusk':        { id: 'dusk',        label: 'dusk',          img: 'assets/bg/shop-dusk.webp' },
     'night':       { id: 'night',       label: 'after closing', img: 'assets/bg/shop-night.webp' },
+    'overcast':    { id: 'overcast',    label: 'overcast',      img: 'assets/bg/shop-overcast.webp' },
     'rain':        { id: 'rain',        label: 'rainy',         img: 'assets/bg/shop-rain.webp' },
+    'sleet':       { id: 'sleet',       label: 'sleet',         img: 'assets/bg/shop-sleet.webp' },
     'snow':        { id: 'snow',        label: 'snowy',         img: 'assets/bg/shop-snow.webp' }
   };
 
@@ -70,6 +72,12 @@
       if (S && S.weather === 'snow') {
         return { id: 'snow', label: 'snowy ' + base.label, img: 'assets/bg/shop-snow.webp' };
       }
+      if (S && S.weather === 'sleet') {
+        return { id: 'sleet', label: 'sleet ' + base.label, img: 'assets/bg/shop-sleet.webp' };
+      }
+      if (S && S.weather === 'overcast') {
+        return { id: 'overcast', label: 'overcast ' + base.label, img: 'assets/bg/shop-overcast.webp' };
+      }
       return base;
     },
 
@@ -83,10 +91,14 @@
     /** Called when the clock rolls over to a new day. */
     newDay: function (shop) {
       var roll = shop.rng ? shop.rng() : Math.random();
-      if (roll < 0.15) {
+      if (roll < 0.12) {
         shop.state.weather = 'rain';
-      } else if (roll < 0.30) {
+      } else if (roll < 0.22) {
         shop.state.weather = 'snow';
+      } else if (roll < 0.32) {
+        shop.state.weather = 'sleet';
+      } else if (roll < 0.44) {
+        shop.state.weather = 'overcast';
       } else {
         shop.state.weather = 'clear';
       }
@@ -97,7 +109,8 @@
       var ph = this.phase();
       var host = document.getElementById('shopdrop');
       if (!host) return;
-      if (this.current !== ph.id) {
+      var hasPlate = host.querySelector('.shop-plate');
+      if (this.current !== ph.id || !hasPlate) {
         this.current = ph.id;
         // Cross-fade: the new plate fades in over the old one, then replaces it.
         var next = document.createElement('div');

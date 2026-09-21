@@ -33,7 +33,9 @@
       { id: 'sunset', label: 'Sunset' },
       { id: 'dusk', label: 'Dusk' },
       { id: 'night', label: 'Night' },
+      { id: 'overcast', label: 'Overcast' },
       { id: 'rain', label: 'Rain' },
+      { id: 'sleet', label: 'Sleet' },
       { id: 'snow', label: 'Snow' }
     ]
   };
