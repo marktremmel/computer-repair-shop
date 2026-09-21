@@ -14,20 +14,31 @@
   var P    = window.TechOpsPeople;
   var esc  = function (s) { return UI.esc(s); };
 
-  var draft = { name: '', avatar: '🧑‍🔧', background: null, shop: '' };
+  var draft = { name: '', avatar: null, background: null, shop: '' };
 
   var SHOP_NAMES = ['Bit & Bolt', 'Kábel Kft.', 'Nyolcadik Kerületi Szerviz', 'Pixel Klinika',
                     'Csavar és Chip', 'TechOps Budapest', 'Alaplap Doktor', 'Zöld Mat Szerviz'];
 
   function show(onDone, opts) {
     opts = opts || {};
-    if (opts.reset) {
-      var cur = Shop.state.player || {};
-      draft = { name: cur.name || '', avatar: cur.avatar || 'ava-1',
-                shopColour: cur.shopColour, shopMark: cur.shopMark,
-                background: cur.background || null, shop: cur.shop || '' };
-      // A new set of faces every time you come back to this screen.
-      P.FACE_PRESETS.forEach(function (_, i) { P.FACE_PRESETS[i] = 'ava-' + Math.random().toString(36).slice(2, 8); });
+    var cur = (Shop.state && Shop.state.player) || {};
+    if (opts.reset || !draft.name) {
+      draft = { name: cur.name || draft.name || '',
+                avatar: cur.avatar || draft.avatar || (P.FACE_PRESETS && P.FACE_PRESETS[0]) || 'ava-1',
+                shopColour: cur.shopColour || draft.shopColour, shopMark: cur.shopMark || draft.shopMark,
+                background: cur.background || draft.background || null, shop: cur.shop || draft.shop || '' };
+    }
+    if (!draft.avatar || draft.avatar === '🧑‍🔧') {
+      draft.avatar = cur.avatar || (P.FACE_PRESETS && P.FACE_PRESETS[0]) || 'ava-1';
+    }
+    if (Shop.state && Shop.state.customFaces) {
+      Object.keys(Shop.state.customFaces).forEach(function (k) {
+        if (window.TechOpsPixel) window.TechOpsPixel.remember(k, Shop.state.customFaces[k]);
+        if (P.FACE_PRESETS.indexOf(k) === -1) P.FACE_PRESETS.unshift(k);
+      });
+    }
+    if (P.FACE_PRESETS.indexOf(draft.avatar) === -1) {
+      P.FACE_PRESETS.unshift(draft.avatar);
     }
     draft.shop = draft.shop || SHOP_NAMES[Math.floor(Math.random() * SHOP_NAMES.length)];
 
@@ -81,7 +92,12 @@
       draft.shop = document.getElementById('ch-shop').value;
       // Your actual current face, editable — not a fresh stranger.
       var existing = window.TechOpsPixel.editable(draft.avatar);
+      modal.el.style.display = 'none';
       window.TechOpsCharBuild.open(existing, function (built) {
+        if (!built) {
+          modal.el.style.display = '';
+          return;
+        }
         var key = 'custom-' + Math.random().toString(36).slice(2, 8);
         window.TechOpsPixel.remember(key, built);
         Shop.state.customFaces = Shop.state.customFaces || {};
@@ -90,6 +106,8 @@
         if (P.FACE_PRESETS.indexOf(key) === -1) P.FACE_PRESETS.unshift(key);
         Shop.emit('change');
         rerender();
+      }, function () {
+        modal.el.style.display = '';
       });
     });
 
@@ -143,6 +161,7 @@
                    shopColour: draft.shopColour, shopMark: draft.shopMark };
       var bg = P.background(draft.background);
       if (bg && !S.backgroundApplied) { bg.apply(S); S.backgroundApplied = true; }
+      Shop.save();
       Shop.emit('change');
       modal.close();
       if (window.sekAudio) window.sekAudio.playSuccessChime();

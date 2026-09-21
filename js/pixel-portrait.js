@@ -16,7 +16,7 @@
   var BASE = 'assets/pixel_portrait/Assets/Sprites/';
   var SIZE = 64;
 
-  var manifest = null;
+  var manifest = (typeof window !== 'undefined' && window.TechOpsPixelManifest) || null;
   var imgCache = {};
   var tintCache = {};
 
@@ -32,11 +32,10 @@
   }
 
   function loadManifest() {
-    if (manifest) return Promise.resolve(manifest);
-    if (window.TechOpsPixelManifest) {
+    if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
       manifest = window.TechOpsPixelManifest;
-      return Promise.resolve(manifest);
     }
+    if (manifest) return Promise.resolve(manifest);
     return fetch('js/pixel-manifest.json?v=' + (window.TECHOPS_BUILD || '1')).then(function (r) { return r.json(); }).then(function (m) {
       manifest = m; return m;
     }).catch(function (e) {
@@ -136,6 +135,9 @@
 
   /** The variants of a category that are actually usable. */
   function usable(cat) {
+    if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
+      manifest = window.TechOpsPixelManifest;
+    }
     if (!manifest || !manifest[cat]) return [];
     var skip = SKIP[cat] || {};
     return Object.keys(manifest[cat]).filter(function (k) { return !skip[k] && !/ Copy$/.test(k); });
@@ -172,12 +174,20 @@
 
   /** Skin-coloured parts follow the skin unless the player says otherwise. */
   function normaliseTints(ch) {
-    if (!ch || !ch.tints) return ch;
+    if (!ch) return ch;
+    ch.tints = ch.tints || {};
     var t = ch.tints;
-    if (!t.nose)  t.nose  = t.skin;
-    if (!t.ears)  t.ears  = t.skin;
-    if (!t.marks) t.marks = shade(t.skin, 0.78);
-    if (!t.blush) t.blush = '#d98a86';
+    if (!t.skin)   t.skin   = SKIN[0];
+    if (!t.hair)   t.hair   = HAIR[0];
+    if (!t.iris)   t.iris   = IRIS[0];
+    if (!t.lip)    t.lip    = LIP[0];
+    if (!t.inner)  t.inner  = CLOTH[0];
+    if (!t.outer)  t.outer  = CLOTH[1] || CLOTH[0];
+    if (!t.accent) t.accent = HAIR[12] || HAIR[0];
+    if (!t.nose)   t.nose   = t.skin;
+    if (!t.ears)   t.ears   = t.skin;
+    if (!t.marks)  t.marks  = shade(t.skin, 0.78);
+    if (!t.blush)  t.blush  = '#d98a86';
     return ch;
   }
 
@@ -284,6 +294,11 @@
   /** Composite a character onto a canvas. Resolves with the canvas. */
   function draw(ch, px) {
     px = px || 128;
+    if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
+      manifest = window.TechOpsPixelManifest;
+    }
+    if (!ch) return Promise.reject(new Error('No character to draw'));
+    ch.parts = ch.parts || {};
     normaliseTints(ch);
     matchSkinTones(ch);
     var c = document.createElement('canvas');
@@ -294,7 +309,7 @@
     var jobs = [];
     ORDER.forEach(function (cat) {
       var v = ch.parts[cat];
-      if (!v || !manifest[cat] || !manifest[cat][v]) return;
+      if (!v || !manifest || !manifest[cat] || !manifest[cat][v]) return;
       var L = manifest[cat][v];                 // { C, L, O, n1..n4, x } -> paths
       var tintKey = TINT_OF[cat];
       var tint = tintKey ? ch.tints[tintKey] : null;
@@ -361,7 +376,11 @@
     if (!key) return null;
     var c = custom[key];
     if (c) { try { return JSON.parse(JSON.stringify(c)); } catch (e) { return c; } }
+    if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
+      manifest = window.TechOpsPixelManifest;
+    }
     if (!manifest) return null;
+    if (key === '🧑‍🔧' || key === 'default') key = 'ava-1';
     return generate(key, opts || {});
   }
 
@@ -387,7 +406,12 @@
     generate: generate,
     draw: draw,
     mount: mount,
-    manifest: function () { return manifest; },
+    manifest: function () {
+      if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
+        manifest = window.TechOpsPixelManifest;
+      }
+      return manifest;
+    },
     remember: remember,
     editable: editable,
     custom: function (k) { return custom[k]; },

@@ -830,6 +830,41 @@
       wrongFix: {},
       explain: 'A decoupling capacitor is a tiny ceramic part that steadies a rail. When one fails, it usually fails short: a direct path from the rail to ground. The supply is fine and correctly refuses to power a short, so a new supply trips in exactly the same way, and a power reset changes nothing. Nothing is visible. A multimeter finds it in seconds, in continuity mode with the power off. Replace that one capacitor with a part of the same value and voltage rating, and the rail reads thousands of ohms again.'
     },
+    laptop_rail_short: {
+      id: 'laptop_rail_short',
+      title: 'Shorted decoupling capacitor on 20 V DC-in',
+      appliesTo: ['thinkpad_t480'],
+      severity: 'high',
+      complaints: [
+        'Completely dead. When I plug the USB-C charger in, the little light blinks once, and then the charger turns itself off.',
+        'It shut down with a faint click yesterday while plugged into the dock and will not turn on at all.'
+      ],
+      customerTheory: 'They believe the motherboard has completely fried or the battery exploded internally.',
+      readings: {
+        meter: {
+          dcin: { label: 'DC in', v: '0.4 \u03a9 to ground', beep: true,
+            note: 'Power off, continuity mode: the 20 V DC-in rail beeps to ground at 0.4 \u03a9. A healthy rail reads tens of thousands of ohms. The USB-C charger detects this dead short and trips its protection instantly. '
+              + 'Injecting 1 V into the rail makes a single 0805 ceramic capacitor right beside the input inductor heat up.' },
+          sysbus: { label: 'System rail', v: '0.00 V', note: 'The primary rail is shorted, so the charging and system buck regulators never receive power.' },
+          vcore:  { label: 'CPU core', v: '0.00 V', note: 'No power reaching the board.' }
+        },
+        power: { watts: 0, negotiated: '0 W (short protection tripped)', seats: true,
+          note: 'The USB-C supply blinks for a fraction of a second and immediately shuts down to protect itself from the dead short on the board.' },
+        visual: { note: 'No burn marks, no smoke residue, no cracked chips. Ceramic capacitors fail short internally with zero visible external indication.' },
+        thermal: { idleC: 22, loadC: 22, fanRpm: 0, note: 'Room temperature; machine cannot power on.' },
+        battery: { healthPct: 84, cycleCount: 290, status: 'NORMAL', note: 'Unplugging the battery leaves the dead short on the board intact \u2014 proving the fault is on the motherboard, not inside the battery pack.' }
+      },
+      after: {
+        power: 'charger negotiates 20 V / 3.25 A normally, charges battery and powers the machine.',
+        thermal: 'boots to desktop, idle 38 \u00b0C, fan spins smoothly.'
+      },
+      fixedBy: { kind: 'action', id: 'replace_shorted_cap', needsPartCat: 'caps' },
+      wrongFix: {
+        battery: 'A brand-new battery will not help when the 20 V input rail itself is shorted to ground.',
+        thermal: 'Thermal paste has nothing to do with an electrical short on the power rail.'
+      },
+      explain: 'Ceramic decoupling capacitors fail short, while resistors fail open. When a tiny MLCC capacitor on the primary 20 V rail suffers dielectric breakdown, it connects the 20 V rail directly to ground. The USB-C charger detects the zero-ohm path and cuts power to protect against fire. The motherboard is not dead \u2014 lifting the shorted capacitor and soldering in a fresh ceramic capacitor of matching voltage rating restores the rail and brings the laptop back to life.'
+    },
     gpu_cable_wrong_port: {
       id: 'gpu_cable_wrong_port',
       title: 'Monitor plugged into motherboard HDMI',

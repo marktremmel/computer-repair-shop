@@ -41,13 +41,16 @@
 
   var TONE_LABEL = { nose: 'Nose shade', ears: 'Ear shade', misc: 'Detail shade', makeup: 'Make-up shade' };
 
-  var ch = null, tab = 'face', onDone = null, modal = null;
+  var ch = null, tab = 'face', onDone = null, onCancel = null, modal = null;
 
   function audio(fn) { if (window.sekAudio && window.sekAudio[fn]) window.sekAudio[fn](); }
 
   function ensure() {
     if (!ch) ch = P().generate('build-' + Math.random().toString(36).slice(2, 8), {});
+    if (!ch) ch = { seed: 'build-1', archetype: 'normie', age: 25, parts: {}, numVariant: {}, tints: {} };
     ch.parts = ch.parts || {};
+    ch.tints = ch.tints || {};
+    if (P().normaliseTints) P().normaliseTints(ch);
     return ch;
   }
 
@@ -59,20 +62,22 @@
     P().draw(clone, 108).then(function (c) {
       c.className = 'pixel-portrait';
       el.innerHTML = ''; el.appendChild(c);
-    });
+    }).catch(function () {});
   }
 
   function paintPreview() {
-    var host = document.getElementById('cb-preview');
+    var host = modal ? modal.el.querySelector('#cb-preview') : document.getElementById('cb-preview');
     if (!host) return;
     P().draw(ch, 320).then(function (c) {
       c.className = 'pixel-portrait';
       host.innerHTML = ''; host.appendChild(c);
+    }).catch(function (e) {
+      console.warn('CharBuild preview draw error:', e);
     });
   }
 
   function body() {
-    var man = P().manifest();
+    var man = P().manifest() || (typeof window !== 'undefined' && window.TechOpsPixelManifest) || {};
     var T = TABS.filter(function (x) { return x.id === tab; })[0];
 
     var sections = T.cats.map(function (cat) {
@@ -262,22 +267,44 @@
     });
   }
 
-  /** @param start  an existing character to edit, or null for a fresh one */
-  function open(start, done) {
+  /** @param start   an existing character to edit, or null for a fresh one
+   *  @param done    callback when user confirms with That is me
+   *  @param cancel  callback when user cancels or closes */
+  function open(start, done, cancel) {
     onDone = done;
-    if (!P().manifest()) { P().load().then(function () { open(start, done); }); return; }
-    ch = start || null; ensure();
+    onCancel = cancel;
+    if (!P().manifest()) {
+      P().load().then(function () { open(start, done, cancel); });
+      return;
+    }
+    try {
+      ch = start ? JSON.parse(JSON.stringify(start)) : null;
+    } catch (e) {
+      ch = start || null;
+    }
+    ensure();
     tab = 'face';
     modal = UI.modal('<div class="modal-head"><h3>Build your character</h3>'
       + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Every piece is yours to pick. '
       + 'Portraits from <a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">Pixel Portrait Creator</a> by Lyime.</div></div>'
       + '<div class="modal-body"></div>'
-      + '<div class="modal-foot"><button class="btn" data-close>Cancel</button>'
-      + '<button class="btn btn-primary" id="cb-done">That is me</button></div>', { sticky: true });
+      + '<div class="modal-foot"><button class="btn" id="cb-cancel" data-close>Cancel</button>'
+      + '<button class="btn btn-primary" id="cb-done">That is me</button></div>', {
+        sticky: true,
+        onClose: function () {
+          if (onCancel) {
+            var c = onCancel;
+            onCancel = null;
+            c();
+          }
+        }
+      });
     paint();
     modal.el.querySelector('#cb-done').addEventListener('click', function () {
+      var saved = JSON.parse(JSON.stringify(ch));
+      onCancel = null;
       modal.close();
-      if (onDone) onDone(ch);
+      if (onDone) onDone(saved);
     });
   }
 

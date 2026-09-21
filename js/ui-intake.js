@@ -99,6 +99,7 @@
     // Only the meter finds this one. Looking shows nothing, and the charge
     // test says what a latched controller would say too.
     ps5_rail_short: ['meter'],
+    laptop_rail_short: ['meter'],
     keyboard_layout_swap: ['activity', 'visual'],
     display_brightness_zero: ['visual', 'power'],
     audio_device_swapped: ['activity', 'visual']

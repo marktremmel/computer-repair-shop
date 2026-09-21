@@ -100,8 +100,10 @@
 
     var you = document.getElementById('t-you');
     if (you) you.addEventListener('click', function () {
+      var curAv = (Shop.state.player && Shop.state.player.avatar) || 'ava-1';
+      var existing = window.TechOpsPixel.editable(curAv);
       window.TechOpsCharBuild.open(
-        window.TechOpsPixel.editable(Shop.state.player.avatar),
+        existing,
         function (ch) {
           if (!ch) return;
           var key = 'custom-' + Date.now().toString(36);
@@ -110,17 +112,15 @@
           Shop.state.customFaces[key] = ch;
           Shop.state.player.avatar = key;
           Shop.save();
-          if (window.TechOpsApp) window.TechOpsApp.refreshAll();
-          // Swap this one portrait in place rather than rebuilding the screen.
-          // Re-running show() tore the whole title down and put it back, which
-          // looked like the character vanishing.
           var slot = document.querySelector('#t-you .pface');
           if (slot) {
             slot.dataset.seed = key;
+            slot.dataset.painted = '1';
             window.TechOpsPixel.mount(slot, ch, 264);
           }
           var nameEl = document.querySelector('.title-you-name');
           if (nameEl) nameEl.textContent = Shop.state.player.name || 'you';
+          if (window.TechOpsApp) window.TechOpsApp.refreshAll();
         });
     });
 

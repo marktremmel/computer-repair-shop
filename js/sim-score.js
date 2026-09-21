@@ -208,10 +208,11 @@
         conductivePaste = true;
         findings.push({ axis: 'safety', good: false, text: 'Liquid metal in a customer machine. It works brilliantly right up until it migrates, and then it shorts a board you do not own.' });
       }
-      if (p.cat === 'caps' && fault.id === 'ps5_rail_short' && p.spec.volts === 'unknown') {
+      if (p.cat === 'caps' && (fault.id === 'ps5_rail_short' || fault.id === 'laptop_rail_short') && p.spec.volts === 'unknown') {
         fitScore -= 18;
         capsUnrated = true;
-        findings.push({ axis: 'fit', good: false, text: 'An unmarked capacitor on the 12 V rail. If it is rated below the rail voltage it fails short again, and nobody can tell you what that one is rated for.' });
+        var railName = fault.id === 'laptop_rail_short' ? '20 V' : '12 V';
+        findings.push({ axis: 'fit', good: false, text: 'An unmarked capacitor on the ' + railName + ' rail. If it is rated below the rail voltage it fails short again, and nobody can tell you what that one is rated for.' });
       }
     });
     axes.fit = clamp(fitScore);
@@ -452,6 +453,9 @@
       body = opener + ' Fixed properly, priced fairly, and they did not try to sell me anything I did not need. ' + (good[0] ? good[0].text : '');
     } else {
       body = opener + ' It works now, but — ' + bad.slice(0, 2).map(function (f) { return f.text; }).join(' ');
+    }
+    if (ticket.tension) {
+      body += ' Felt a bit cross-examined at the counter, though.';
     }
 
     // ── Reputation and comeback ───────────────────────────────────────

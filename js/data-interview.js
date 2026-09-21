@@ -339,6 +339,15 @@
     heat:    { w: 'cold', t: 'It is not on long enough to get warm.' },
     history: { w: 'cold', t: 'Nobody has opened it.' }
   };
+  ANSWERS.laptop_rail_short = {
+    when:    { w: 'warm', t: 'Yesterday morning. It was working fine on the desk, then it just shut off suddenly and would not turn on again.' },
+    power:   { w: 'hot',  t: 'When I plug the USB-C charger in, the little light blinks once, then the charger LED goes completely dark.', s: ['meter', 'power'] },
+    trigger: { w: 'hot',  t: 'I plugged in a cheap phone charger from a gas station to top up both devices.', s: ['meter'] },
+    noise:   { w: 'warm', t: 'A tiny faint pop right when it happened, like a bubble popping.' },
+    drop:    { w: 'cold', t: 'Never dropped, no spills.' },
+    heat:    { w: 'cold', t: 'It is stone cold. It does not even warm up when left plugged in.' },
+    history: { w: 'cold', t: 'No one has ever taken the back off.' }
+  };
 
   /** When a fault says nothing about a question, the customer still answers. */
   var DEFAULTS = {
@@ -408,6 +417,10 @@
     ps5_rail_short: [
       { id: 'surge', from: 'when', q: 'Was it on a surge-protected strip, or straight into the wall?',
         a: { w: 'hot', t: 'Straight into the wall. The television was on a strip, and the television is fine.', s: ['meter'] } }
+    ],
+    laptop_rail_short: [
+      { id: 'charger_type', from: 'trigger', q: 'What kind of charger was it?',
+        a: { w: 'hot', t: 'An unbranded 65 W fast charger from the petrol station. It felt suspiciously hot right before the laptop clicked off.', s: ['meter'] } }
     ]
   };
 

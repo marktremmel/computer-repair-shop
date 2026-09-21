@@ -283,15 +283,23 @@
       var existing = window.TechOpsPixel.editable(cur.avatar);
       m.close();
       window.TechOpsCharBuild.open(existing, function (built) {
+        if (!built) {
+          openBook();
+          return;
+        }
         var key = 'custom-' + Math.random().toString(36).slice(2, 8);
         window.TechOpsPixel.remember(key, built);
         Shop.state.customFaces = Shop.state.customFaces || {};
         Shop.state.customFaces[key] = built;
         Shop.state.player.avatar = key;
+        Shop.save();
         Shop.emit('change');
         // Repaint everything, so the new face is live without a reload.
         window.TechOpsApp.refreshAll();
         UI.toast('That is you', 'Your face is updated everywhere in the shop.', 'good');
+        TAB = 'you';
+        openBook();
+      }, function () {
         TAB = 'you';
         openBook();
       });

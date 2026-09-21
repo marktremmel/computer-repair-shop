@@ -115,7 +115,7 @@ fixed; the rail now skips anything it does not recognise.
 |---|---|---|
 | Swollen "spicy pillow" battery, safety-first removal | 🟡 | `battery_swollen` exists with a pull gesture and a metal-tool penalty. The IPA-softening step and the disposal bucket are not modelled. |
 | PS5 liquid-metal dry-out | ✅ | `ps5_liquid_metal`. Swab the old metal out (a scrape gesture that punishes pushing beads toward the barrier), brush a new film on (a trace). Liquid metal is correct here and is not penalised as unsafe; paste resolves it but costs fit and can come back. The laptop-written `thermal_paste_dead` no longer lands on the PS5. |
-| Shorted decoupling cap on a power rail | ✅ | `ps5_rail_short`, on the PS5's 12 V rail. Only the multimeter reveals it: looking shows nothing, and a power reset changes nothing. Fixed by lifting the part with hot tweezers; an unmarked capacitor of unknown voltage rating costs fit and can fail again. A laptop version is still to do. |
+| Shorted decoupling cap on a power rail | ✅ | `ps5_rail_short` on the PS5's 12 V rail, and `laptop_rail_short` on the ThinkPad's 20 V DC-in rail. Only the multimeter reveals it: looking shows nothing, and a power reset changes nothing. Fixed by lifting the part with hot tweezers; an unmarked capacitor of unknown voltage rating costs fit and can fail again. Verified across both machines. |
 | Notification abuse, captive portal | ✅ | `browser_push_spam`, `captive_portal_loop`. |
 | Deceptive browser extensions | ⬜ | |
 
@@ -125,8 +125,8 @@ fixed; the rail now skips anything it does not recognise.
 
 | Proposed | Status | Notes |
 |---|---|---|
-| Multimeter and rail prober | ✅ | Continuity and DC volts. No resistance-mode switching yet. |
-| Multi-turn interviews | ✅ | Answers open follow-ups, which can chain. Bench findings open things to put to the customer, sometimes with a choice of tone. Eight faults have them. |
+| Multimeter and rail prober | ✅ | Continuity and DC volts on desktop, console, and laptop rails. |
+| Multi-turn interviews | ✅ | Answers open follow-ups, which can chain. Bench findings open things to put to the customer, with curious vs blunt choices affecting `t.tension`, now reflected directly in customer reviews and debriefings. Nine faults have them. |
 | Multi-job juggling | ⬜ | |
 | Swipe mode for phones | ⬜ | |
 | HU / EN localisation | ⬜ | |
@@ -140,7 +140,7 @@ fixed; the rail now skips anything it does not recognise.
 |---|---|---|
 | Recurring characters (Béla bácsi, Eszter, Gábor, János, Kovács úr, Tamás) | ⬜ | Needs the "consequences with names" system from `REVIEW.md`. |
 | Dialogue tree: the pink liquid indicator | ✅ | Unless they confessed at the counter, the customer now denies any spill. Visual inspection unlocks the confrontation. Blunt gets "it must be the humidity" and nothing useful; curious gets "my son, a glass of cola" — and sugar is why it cannot wait. Adapted to our fault (board corrosion, not a trackpad flex). |
-| Dialogue tree: the counterfeit charger | 🟡 | On `dead_no_power`, laptops and handhelds only: the night-market charger, then the click and the smell. Our fault is a latched power controller, so this is a lead, not the cause; a blown USB-C power controller is not modelled. |
+| Dialogue tree: the counterfeit charger | ✅ | On `dead_no_power` and `laptop_rail_short`: unbranded charger lead, click, faint pop, and smell. |
 | Seasonal interludes | ⬜ | |
 
 ---
@@ -149,6 +149,7 @@ fixed; the rail now skips anything it does not recognise.
 
 | Problem | Status | Notes |
 |---|---|---|
+| Character Builder blank at start / menu save issues | ✅ | Manifest was null until promise microtask completed, ignoring synchronous offline manifest; initial emoji placeholder `'🧑‍🔧'` corrupted seed generation; title screen refreshed while async mount raced; and dossier `openBuilder()` missed calling `Shop.save()`. All fixed and verified. |
 | Waiting for the next customer usually brought nobody new | ✅ | The old queue was kept and topped up. Waiting now sends them away first. |
 | Only one customer to choose from | ✅ | Three wait from reputation 25 upward. A bad name now costs quiet days after every job instead. The careful shop still out-earns the careless one over 40 and 90 days. |
 | Phone and tablet lab showed card recovery and a resale wipe whatever the fault | ✅ | Replaced by the device itself: Battery & charging (drag the cable in, hold the button to restart), a touch test you paint with a finger, and Storage. The same three pages for every fault, so opening them gives nothing away. Card recovery appears only once its fault is diagnosed. |
@@ -160,13 +161,9 @@ fixed; the rail now skips anything it does not recognise.
 ## 8. What to do next, in order
 
 1. **A scripted first job** before the walk round ends.
-2. **Recurring characters.** Follow-ups give them something to remember: the
-   curious/blunt choice already sets `t.tension`, and nothing reads it yet.
-3. **A laptop rail short**, so the meter is not a PS5-only instrument.
+2. **Recurring characters** with named persistent memory across shifts.
+3. **Deceptive browser extensions** (`browser_rogue_extension`).
 
-*Verification for everything marked ✅: `tools/coverage.js`, `tools/scoring.js`
-(31 scenarios), `tools/playthrough.js`, and a browser sweep of all 167 machine × fault
-pairs (5,254 clicks, no errors). Each new job was also played through by hand:
-the iPad charge re-test, the touch test, the storage cleanup and the restart hold;
-the LCI confrontation; the charger thread; the PS5 capacitor from meter to
-confirmed fix.*
+*Verification for everything marked ✅: `tools/coverage.js` (13 machines, 36 faults),
+`tools/scoring.js` (31 scenarios), `tools/playthrough.js` (2,520 simulated plays, 0 errors),
+and browser testing of Character Builder creation, modification, saving, and persistence.*

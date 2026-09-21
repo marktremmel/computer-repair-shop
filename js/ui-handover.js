@@ -111,7 +111,7 @@
   function comebackFault(cat, t) {
     var map = { storage: ['dying_hdd'], ram: ['bad_ram_stick'], battery: ['battery_swollen'],
                 screen: ['cracked_screen'], fan: ['fan_seized'], thermal: ['thermal_paste_dead', 'ps5_liquid_metal'],
-                flex: ['port_lint'], caps: ['blown_caps', 'ps5_rail_short'] };
+                flex: ['port_lint'], caps: ['blown_caps', 'ps5_rail_short', 'laptop_rail_short'] };
     var m = J.machine(t);
     var hit = (map[cat] || []).filter(function (id) {
       var f = window.TechOpsFaults.get(id);

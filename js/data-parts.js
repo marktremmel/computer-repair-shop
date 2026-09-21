@@ -625,16 +625,16 @@
       id: 'mlcc_unmarked', cat: 'caps', vendor: 'sz_direct',
       name: 'Unmarked ceramic capacitors, 0603 (bag of 50)',
       priceFt: 500, deliveryDays: 18, warrantyMonths: 0, risk: 0.35,
-      fits: ['ps5pro'],
+      fits: ['ps5pro', 'thinkpad_t480'],
       spec: { value: 'unmarked', volts: 'unknown', dielectric: 'unknown' },
       pitch: 'Fifty of them for the price of a bus ticket.',
-      catch: 'Ceramic capacitors carry no printing, so you are trusting the bag. Put a 6 V part on a 12 V rail and it fails short again \u2014 the same fault, in a few weeks.'
+      catch: 'Ceramic capacitors carry no printing, so you are trusting the bag. Put a 6 V part on a 12 V or 20 V rail and it fails short again \u2014 the same fault, in a few weeks.'
     },
     {
       id: 'mlcc_murata', cat: 'caps', vendor: 'ipon',
       name: 'Murata 22 \u00b5F 25 V X5R ceramic, 0603 (strip of 10)',
       priceFt: 1400, deliveryDays: 2, warrantyMonths: 0, risk: 0.02,
-      fits: ['ps5pro'],
+      fits: ['ps5pro', 'thinkpad_t480'],
       spec: { value: '22 \u00b5F', volts: '25 V', dielectric: 'X5R' },
       pitch: 'Known value, known voltage rating, off a manufacturer\u2019s reel.',
       catch: 'Nothing. Match the value and the voltage rating to the part that came off.'

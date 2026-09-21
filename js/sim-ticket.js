@@ -226,8 +226,8 @@
     },
     replace_shorted_cap: {
       id: 'replace_shorted_cap', label: 'Lift the shorted capacitor and fit a new one', icon: '🔥', tool: 'solder_iron',
-      needsStep: 'cooler', onlyMachines: ['ps5pro'], needsPartCat: 'caps', labourHours: 1.4, costFt: 0,
-      done: 'The shorted part is off with hot tweezers, and the rail reads 2.1 k\u03a9 to ground again. A new capacitor of the same value and voltage rating sits in its place.'
+      needsStep: 'cooler', onlyMachines: ['ps5pro', 'thinkpad_t480'], needsPartCat: 'caps', labourHours: 1.4, costFt: 0,
+      done: 'The shorted part is off with hot tweezers, and the rail reads thousands of ohms to ground again. A new capacitor of the same value and voltage rating sits in its place.'
     },
     reseat_sensor: {
       id: 'reseat_sensor', label: 'Reseat the battery sensor flex', icon: '🌡️', tool: 'spudger',
@@ -503,6 +503,9 @@
           && machine.teardown.indexOf('cooler') !== -1) return 'cooler';
       if (want === 'battery_connector' && !machine.battery
           && machine.teardown.indexOf('psu_switch') !== -1) return 'psu_switch';
+      // Laptops have no 'cooler' step; the board rails are reached once the battery is isolated.
+      if (want === 'cooler' && machine.teardown.indexOf('cooler') === -1
+          && machine.teardown.indexOf('battery_connector') !== -1) return 'battery_connector';
       return want;
     },
 
