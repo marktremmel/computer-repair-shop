@@ -173,7 +173,7 @@
       id: 'nora', archetype: 'normie', name: 'Nóra', age: 19, avatar: '📚',
       tag: 'first-year · thesis on Friday',
       useCase: 'student',
-      machines: ['mbp13_2012', 'thinkpad_t480', 'inspiron15'],
+      machines: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'mbneo'],
       budgetFt: [15000, 35000], urgencyDays: [1, 2],
       voice: 'panicked',
       lines: {
@@ -239,20 +239,37 @@
       return null;
     },
     useCase: function (id) { return USE_CASES[id]; },
-    greet: function (c, state) {
+    /** What this person remembers about the shop, if anything. */
+    memory: function (c, state) {
+      if (!c || !state || !state.customerMemory) return null;
+      var mem = state.customerMemory[c.id] || state.customerMemory[c.name];
+      if (!mem || !mem.repairs || !mem.repairs.length) return null;
+      var last = mem.repairs[mem.repairs.length - 1];
+      var sore = last.accused || last.wasOvercharged || last.soldUnneeded || last.stars <= 2;
+      return { visits: mem.visits, last: last, mood: sore ? 'sore' : last.stars >= 4 ? 'happy' : 'neutral' };
+    },
+    /**
+     * The line a returning customer opens with. It has to match what actually
+     * happened: a cheap job that went badly is not "that steep bill", and
+     * somebody back under warranty is not "running like new".
+     */
+    greet: function (c, state, ticket) {
       if (!c) return '';
-      var mem = state && state.customerMemory && (state.customerMemory[c.id] || state.customerMemory[c.name]);
-      if (mem && mem.repairs && mem.repairs.length) {
-        var last = mem.repairs[mem.repairs.length - 1];
-        if (last.stars >= 4) {
-          return 'Good to see you again! That ' + last.machine + ' you worked on on Day ' + last.day + ' is running like new. But today...';
-        }
-        if (last.wasOvercharged || last.stars <= 2) {
-          return 'I am back because your shop is on my way home, but I remember that steep bill on Day ' + last.day + '. Let us keep it fair today.';
-        }
-        return 'Back again! You helped me out with my ' + last.machine + ' a few days back.';
-      }
-      return (c.lines && c.lines.greet) || '';
+      var m = this.memory(c, state);
+      if (!m) return (c.lines && c.lines.greet) || '';
+      var L = m.last, day = 'Day ' + L.day;
+      if (ticket && ticket.warranty) return 'You had this on ' + day + '. I was pleased when I picked it up. I am less pleased now.';
+      if (L.accused) return 'Last time you as good as called me a liar about that spill. I have come back because you are close. Let us keep it civil.';
+      if (L.wasOvercharged) return 'I remember that bill on ' + day + '. I have come back, but I will be reading this one line by line.';
+      if (L.soldUnneeded) return 'Last time you sold me a part, and my nephew says it did not need one. I will be asking more questions today.';
+      if (L.comeback) return 'The last repair came back on me, and you put it right. So here I am again.';
+      if (L.late) return 'Last time it took longer than you said. I need this one back when you promise it.';
+      if (L.stars <= 2) return 'Last time did not go well. You are the nearest shop, so here I am. Let us see.';
+      var same = ticket && ticket.machineId && window.TechOpsMachines
+        && (window.TechOpsMachines.get(ticket.machineId) || {}).name === L.machine;
+      if (L.stars >= 4 && same) return 'You sorted my ' + L.machine + ' out on ' + day + ', so I came straight back. It has something new wrong with it now.';
+      if (L.stars >= 4) return 'Good to see you again! The ' + L.machine + ' you did on ' + day + ' is still going perfectly. I told my neighbour about you.';
+      return 'Back again. You had my ' + L.machine + ' on ' + day + '.';
     }
   };
 })(window);

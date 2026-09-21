@@ -38,8 +38,10 @@
     var types = machine.screws;
     var isPhone = machine.kind === 'phone';
     var base = gluedShut(machine) ? 0 : (isPhone ? 2 : (machine.kind === 'desktop' ? 4 : 6));
-    // Not every machine of a type is screwed together the same way.
-    var wobble = base ? ((hashCode(ticket.id) % 3) - 1) : 0;
+    // Not every machine of a type is screwed together the same way — unless we
+    // know exactly how this one is (the MacBook Neo: eight pentalobes).
+    var wobble = base && !machine.caseScrews ? ((hashCode(ticket.id) % 3) - 1) : 0;
+    if (machine.caseScrews) base = machine.caseScrews;
     var n = Math.max(0, base + wobble);
 
     // Someone has been in here before, and they were not careful. This is the
@@ -95,19 +97,9 @@
       return { filled: true, text: p.name };
     }
     // Only the instrument that genuinely finds this fault reveals it in the bay —
-    // running an unrelated test must not hand you the answer.
-    var REVEALED_BY = {
-      dying_hdd: ['smart', 'listen', 'bench'],
-      bad_ram_stick: ['memtest'],
-      ram_starved: ['activity'],
-      fan_seized: ['thermal', 'visual'],
-      thermal_paste_dead: ['thermal', 'visual'],
-      battery_swollen: ['battery', 'visual'],
-      cracked_screen: ['visual'],
-      port_lint: ['power', 'visual'],
-      usbc_cc_short: ['power', 'visual']
-    };
-    var found = (REVEALED_BY[f.id] || []).some(function (x) { return ticket.testsRun.indexOf(x) !== -1; });
+    // running an unrelated test must not hand you the answer. One map, in
+    // ui-intake.js; a second copy here had already drifted from it.
+    var found = window.TechOpsIntake.revealedBy(f.id).some(function (x) { return ticket.testsRun.indexOf(x) !== -1; });
     var faulty = (f.fixedBy.kind === 'part' && f.fixedBy.cat === cat) ||
                  (f.fixedBy.kind === 'action' && f.fixedBy.needsPartCat === cat);
 
@@ -158,7 +150,9 @@
     charge_port:['usbcp', 'usbch', 'usbcs', 'usbct', 'usbcl', 'usbc', 'usbc1'],
     display_flex:['displ', 'disp', 'dispp', 'dispd', 'dispt', 'bright'],
     cpu:        ['socket', 'cpu', 'apu', 'soc', 'die'],
-    psu_switch: ['atx24', 'io', 'vrm']
+    psu_switch: ['atx24', 'io', 'vrm'],
+    usb_board:  ['usbcp'],
+    battery_screws: ['battc']
   };
 
   /** region id -> the chip this machine's board actually has for it. */
@@ -177,8 +171,10 @@
    * so pick the one that can actually be done next rather than the first match.
    */
   function regionForChip(machine, chipId, ticket) {
+    // Only regions this machine actually has: the Neo's port connector also
+    // matches the generic charge-port region, which is an iPhone step.
     var hits = Object.keys(REGION_CHIP).filter(function (k) {
-      return chipForRegion(machine, k) === chipId;
+      return machine.teardown.indexOf(k) !== -1 && chipForRegion(machine, k) === chipId;
     });
     if (!hits.length) return null;
     if (!ticket) return hits[0];
@@ -304,7 +300,12 @@
       { cat: 'screen',  step: 'screen_lift', label: 'Display' },
       { cat: 'flex',    step: 'charge_port', label: 'Charge port' }
     ];
-    return defs.filter(function (d) { return m.teardown.indexOf(d.step) !== -1; });
+    // A machine can reach the same bay by its own step: the MacBook Neo's
+    // battery is unscrewed rather than peeled, and its ports are a module.
+    var ALT = { battery: 'battery_screws', charge_port: 'usb_board' };
+    return defs.map(function (d) {
+      return ALT[d.step] && m.teardown.indexOf(ALT[d.step]) !== -1 ? Object.assign({}, d, { step: ALT[d.step] }) : d;
+    }).filter(function (d) { return m.teardown.indexOf(d.step) !== -1; });
   }
 
   /**
@@ -334,6 +335,21 @@
       return { type: 'pull', start: tab, tolerance: 5,
         title: 'Draw out the adhesive tab',
         hint: 'Slow and even, in line with the tab. Snatch it and it snaps off flush under the battery.' };
+    }
+    // MacBook Neo: the port module comes off its press connector straight up.
+    if (stepId === 'usb_board' && at) {
+      return { type: 'lift', start: at, tolerance: 4,
+        title: 'Lift the port module off its press connector',
+        hint: 'Screws out, then straight up off the connector. Rock it and you bend the contacts on a part that is otherwise the easiest repair in the machine.' };
+    }
+    // ...and the battery is screwed down: work along the row of screws.
+    if (stepId === 'battery_screws') {
+      var eb = boardEdge(machine, 6);
+      return { type: 'trace', tolerance: 5,
+        path: [{ x: eb.x0, y: eb.y1 }, { x: eb.x1, y: eb.y1 }],
+        start: { x: eb.x0, y: eb.y1 },
+        title: 'Take out the battery screws',
+        hint: 'Along the row, one screw after the next, with the driver square in each head. No heat, no pull tabs \u2014 this pack is not glued.' };
     }
     if (stepId === 'cut_adhesive') {
       var e = boardEdge(machine, 5);
@@ -894,6 +910,26 @@
       }
     }
 
+    if (actionId === 'clean_contacts' && !t._scrubbed) {
+      var stageC2 = gestureHost();
+      if (stageC2) {
+        var atC2 = (stageC2.classList.contains('board-stage') && chipCentre(m, 'charge_port')) || { x: 50, y: 86 };
+        window.TechOpsPrecision.run({
+          type: 'scrape', host: stageC2, start: atC2, tolerance: 4, strokes: 6,
+          title: 'Scrub the contacts',
+          hint: 'Brush wet with isopropyl alcohol, short strokes along the contact tongue. Wander off it and you are scrubbing the shell.',
+          offText: 'Off the tongue \u2014 that is the metal shell, not the contacts.',
+          strokeText: 'Another pass along the contacts.',
+          onDone: function (res) {
+            if (res.aborted || !res.ok) { state.msg = 'Brush down.'; return render(); }
+            t._scrubbed = true;
+            doAction('clean_contacts');
+          }
+        });
+        return;
+      }
+    }
+
     if (actionId === 'clean_port') {
       var stage = gestureHost();
       if (stage && !t._scraped) {
@@ -918,15 +954,19 @@
     t.actionsDone.push(actionId);
     t.labourHours += a.labourHours;
     audio(actionId === 'clean_fins' ? 'playAirBlow' : 'playScrew');
-    state.msg = a.done;
+    // Some actions find something different depending on what is actually
+    // wrong: a pick in a port with no lint in it comes out empty.
+    var doneText = (a.doneByFault && a.doneByFault[J.fault(t).id]) || a.done;
+    state.msg = doneText;
     // Anything you do to the machine can change what the instruments say, so
     // every test you already ran becomes worth running again. Without this a
     // repair made by hand (scraping a port, reseating a cable) left you with
     // no way to see whether it had worked.
     t.retestNeeded = true;
     var again = confirmingTests(t);
-    UI.toast(a.label, a.done + (again.length
-      ? ' Re-run ' + again.join(' or ') + ' to see whether it worked.' : ''), 'good');
+    UI.toast(a.label, doneText + (again.length
+      ? ' Re-run ' + again.join(' or ') + ' to see whether it worked.' : ''),
+      doneText === a.done ? 'good' : 'info');
     Shop.emit('change');
     render();
   }
@@ -1362,9 +1402,6 @@
           || t.openSteps.indexOf('reconnect_power') !== -1)) return;
       if (aid === 'lever_battery' && !((t.snappedTabs || 0) >= 2 && t.openSteps.indexOf('battery') === -1)) return;
       if (!J.hasStepFor(a, m)) return;
-      if (aid === 'clean_port' && ['port_lint', 'usbc_cc_short'].indexOf(J.fault(t).id) === -1 && m.kind !== 'phone' && m.teardown.indexOf('charge_port') === -1) {
-        // still offer it — cleaning a port is never wrong, just sometimes pointless
-      }
       var done = !a.repeatable && t.actionsDone.indexOf(aid) !== -1;
       var want = [];
       if (!done) {
@@ -1547,7 +1584,11 @@
       var mm = J.machine(Shop.state.ticket);
       // The board speaks in chip ids; the game speaks in region ids.
       var rid = J.STEPS[chipId] ? chipId : regionForChip(mm, chipId, Shop.state.ticket);
-      var bay = rid ? bayList(Shop.state.ticket).filter(function (b) { return b.step === rid; })[0] : null;
+      // One chip can be several regions (a battery's connector and its bay are
+      // the same place). With a part in hand, the one that matters is the bay.
+      var bays = bayList(Shop.state.ticket);
+      var bay = (rid ? bays.filter(function (b) { return b.step === rid; })[0] : null)
+        || bays.filter(function (b) { return REGION_CHIP[b.step] && chipForRegion(mm, b.step) === chipId; })[0] || null;
 
       g.addEventListener('click', function () {
         if (state.inHand !== null && bay) return install(state.inHand, bay.cat);
@@ -1561,7 +1602,7 @@
         var c = window.TechOpsBoards.forMachine(mm).chips.filter(function (x) { return x.id === chipId; })[0];
         var R = window.TechOpsChipRoles;
         if (c) {
-          state.msg = c.label + ' — ' + ((R.ROLES[c.role] || {}).what || 'part of the board.')
+          state.msg = (c.label || R.label(c.role)) + ' — ' + ((R.ROLES[c.role] || {}).what || 'part of the board.')
             + ' Nothing to do with it on this job.';
           audio('playKeyPop');
           return render();

@@ -15,16 +15,15 @@
       title: 'Failing hard drive',
       appliesTo: ['mbp13_2012', 'inspiron15', 'tower_pc'],
       requiresHdd: true,
-      severity: 'high',
       complaints: [
         'It takes like five minutes to turn on. Then the little rainbow wheel just spins forever.',
-        'My cousin said it needs more memory. Can you put more memory in it?'
+        'It has got so slow it takes an age just to start up. My cousin said it needs more memory. Can you put more memory in it?'
       ],
       customerTheory: 'They are sure it needs more RAM. Almost everybody says this.',
       readings: {
-        smart: { health: 'FAILING', reallocated: 1247, pending: 88, hours: 31204, note: 'Reallocated sector count is climbing. Pending sectors means data it cannot read back.' },
-        bench: { seqMBps: 41, randIops: 68, latencyMs: 840, note: 'Seek latency over 800 ms. A healthy drive answers in under 15.' },
-        listen: { note: 'A rhythmic click every few seconds, then a pause, then the click again.' },
+        smart: { abnormal: true, health: 'FAILING', reallocated: 1247, pending: 88, hours: 31204, note: 'Reallocated sector count is climbing. Pending sectors means data it cannot read back.' },
+        bench: { abnormal: true, seqMBps: 41, randIops: 68, latencyMs: 840, note: 'Seek latency over 800 ms. A healthy drive answers in under 15.' },
+        listen: { abnormal: true, note: 'A rhythmic click every few seconds, then a pause, then the click again.' },
         activity: { memPressurePct: 34, swapGB: 0.2, topProc: 'Finder', topProcMemGB: 0.4, note: 'Memory is fine. It is waiting on the disk, not on RAM.' },
         memtest: { passes: 4, errors: 0, note: 'Memory is clean. Whatever this is, it is not RAM.' }
       },
@@ -38,16 +37,15 @@
     disk_full: {
       id: 'disk_full',
       title: 'Boot drive completely full',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'ipad_air', 'mbp14_m3'],
-      severity: 'low',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'ipad_air', 'mbp14_m3', 'mbneo'],
       noPartNeeded: true,
       complaints: [
         'It keeps saying "Your disk is almost full" and now Pages won\'t even let me save.',
-        'I think I need a bigger computer. Everything is broken.'
+        'It keeps nagging about space and now nothing will save. I think I need a bigger computer. Everything is broken.'
       ],
       customerTheory: 'They are ready to buy a whole new machine over this.',
       readings: {
-        storage_used: { usedPct: 99, freeGB: 2.1, biggest: 'Downloads — 214 GB of duplicated video exports', note: '214 GB of it is one folder of exported videos, most of them saved twice.' },
+        storage_used: { abnormal: true, usedPct: 99, freeGB: 2.1, biggest: 'Downloads — 214 GB of duplicated video exports', note: '214 GB of it is one folder of exported videos, most of them saved twice.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4102, note: 'The drive itself is perfectly healthy.' },
         bench: { seqMBps: 120, randIops: 4200, latencyMs: 9, note: 'Slower than rated — an almost-full SSD has nowhere to write, so it slows down. This recovers when space is freed.' },
         activity: { memPressurePct: 41, swapGB: 3.8, topProc: 'kernel_task', topProcMemGB: 1.2, note: 'Swap is high only because there is no disk space left to swap into.' }
@@ -70,14 +68,13 @@
       id: 'ram_starved',
       title: 'Not enough memory for the workload',
       appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'tower_pc'],
-      severity: 'medium',
       complaints: [
         'It is fine until I open the editing program. Then everything turns to treacle and the fans go mad.',
-        'Yesterday it froze for two minutes while I was exporting.'
+        'It crawls whenever I edit, and yesterday it froze for two minutes while I was exporting.'
       ],
       customerTheory: 'They assume the processor is too old.',
       readings: {
-        activity: { memPressurePct: 94, swapGB: 14.2, topProc: 'Adobe Premiere Pro', topProcMemGB: 7.1, note: 'Memory pressure is in the red and the machine has pushed 14 GB out to swap. It is using the disk as slow, fake RAM.' },
+        activity: { abnormal: true, memPressurePct: 94, swapGB: 14.2, topProc: 'Adobe Premiere Pro', topProcMemGB: 7.1, note: 'Memory pressure is in the red and the machine has pushed 14 GB out to swap. It is using the disk as slow, fake RAM.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2900, note: 'Drive is healthy.' },
         memtest: { passes: 4, errors: 0, note: 'No errors. The RAM works — there is just not enough of it.' },
         bench: { seqMBps: 540, randIops: 82000, latencyMs: 0.1, note: 'Disk is fast. The stalling is not storage.' },
@@ -94,14 +91,13 @@
       id: 'bad_ram_stick',
       title: 'One failing memory module',
       appliesTo: ['mbp13_2012', 'thinkpad_t480', 'tower_pc', 'inspiron15'],
-      severity: 'high',
       complaints: [
         'It crashes. Not when I do anything special — just, randomly. Sometimes twice a day, sometimes not for a week.',
-        'I already reinstalled the whole operating system and it still does it.'
+        'It crashes at random, no pattern at all. I already reinstalled the whole operating system and it still does it.'
       ],
       customerTheory: 'They think they caught a virus.',
       readings: {
-        memtest: { passes: 4, errors: 1183, failAddr: '0x2F41A008', note: '1183 errors, all in one address range, all on the module in slot B. That is a physically bad chip.' },
+        memtest: { abnormal: true, passes: 4, errors: 1183, failAddr: '0x2F41A008', note: '1183 errors, all in one address range, all on the module in slot B. That is a physically bad chip.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 8800, note: 'Drive is fine.' },
         activity: { memPressurePct: 38, swapGB: 0.4, topProc: 'Safari', topProcMemGB: 1.9, note: 'Nothing unusual while it is up.' },
         thermal: { idleC: 41, loadC: 74, fanRpm: 3600, note: 'Temperatures normal.' },
@@ -119,15 +115,14 @@
       title: 'Dried thermal paste and blocked fins',
       // Not the PS5: it has no paste on the APU. See ps5_liquid_metal.
       appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'tower_pc', 'imac_m1', 'mbp14_m3', 'steamdeck', 'switch2'],
-      severity: 'medium',
       complaints: [
         'It sounds like a hairdryer and then it just switches itself off in the middle of a match.',
-        'It has done this since about spring. It used to be quiet.'
+        'Since about spring it roars like a hairdryer and then switches itself off. It used to be quiet.'
       ],
       customerTheory: 'They want you to "put a better fan in it".',
       readings: {
-        thermal: { idleC: 62, loadC: 99, fanRpm: 5600, throttleMhz: 800, note: 'Hits 99 °C in forty seconds under load, then clocks down to 800 MHz to survive. That is the stutter they feel.' },
-        visual: { note: 'The paste under the heatsink has gone grey and cracked like dry mud. The fin stack behind the fan is packed solid with a felt mat of dust.' },
+        thermal: { abnormal: true, idleC: 62, loadC: 99, fanRpm: 5600, throttleMhz: 800, note: 'Hits 99 °C in forty seconds under load, then clocks down to 800 MHz to survive. That is the stutter they feel.' },
+        visual: { abnormal: true, note: 'The paste under the heatsink has gone grey and cracked like dry mud. The fin stack behind the fan is packed solid with a felt mat of dust.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 12400, note: 'Drive is healthy.' },
         memtest: { passes: 4, errors: 0, note: 'Memory is clean.' },
         activity: { memPressurePct: 46, swapGB: 0.9, topProc: 'Steam', topProcMemGB: 2.2, note: 'Normal, right up until the thermal throttle kicks in.' }
@@ -143,15 +138,14 @@
       id: 'fan_seized',
       title: 'Seized cooling fan',
       appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'tower_pc', 'imac_m1', 'mbp14_m3', 'steamdeck', 'switch2', 'ps5pro'],
-      severity: 'high',
       complaints: [
         'There was a horrible grinding noise for a week, and then it went quiet. Now it gets too hot to touch.',
-        'Quiet is good though, right?'
+        'It ground for a week and then went silent, and now it is too hot to hold. Quiet is good though, right?'
       ],
       customerTheory: 'They think the noise stopping means it fixed itself.',
       readings: {
-        thermal: { idleC: 78, loadC: 101, fanRpm: 0, throttleMhz: 600, note: 'Fan RPM reads zero while the chip sits at 78 °C doing nothing at all.' },
-        visual: { note: 'The fan does not turn when you flick the blades — the bearing has seized solid. There is a burnt smell around the hub.' },
+        thermal: { abnormal: true, idleC: 78, loadC: 101, fanRpm: 0, throttleMhz: 600, note: 'Fan RPM reads zero while the chip sits at 78 °C doing nothing at all.' },
+        visual: { abnormal: true, note: 'The fan does not turn when you flick the blades — the bearing has seized solid. There is a burnt smell around the hub.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 9100, note: 'Drive is fine, though heat is not kind to it.' },
         memtest: { passes: 4, errors: 0, note: 'Memory clean.' }
       },
@@ -165,18 +159,17 @@
     battery_swollen: {
       id: 'battery_swollen',
       title: 'Swollen battery',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'iphone12', 'inspiron15', 'thinkpad_t480', 'ipad_air', 'mbp14_m3', 'steamdeck', 'switch2', 'iphone17'],
-      severity: 'critical',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'iphone12', 'inspiron15', 'thinkpad_t480', 'ipad_air', 'mbp14_m3', 'steamdeck', 'switch2', 'iphone17', 'mbneo'],
       complaints: [
         { t: 'The trackpad has stopped clicking properly, and it only lasts about forty minutes now.', kind: ['laptop'] },
         { t: 'The screen has started lifting away from the frame on one side, and it only lasts a couple of hours now.', kind: ['phone', 'tablet'] },
         { t: 'The back has started to bulge and the buttons on one side feel spongy. It barely lasts an hour now.', kind: ['handheld'] },
-        'Also the bottom is a bit... curved? It wobbles on the table.'
+        'The bottom has gone a bit... curved? It wobbles on the table, and the battery runs out in no time.'
       ],
       customerTheory: 'They think the trackpad broke and the battery thing is separate.',
       readings: {
-        battery: { cycles: 1412, healthPct: 58, condition: 'Service Recommended', designMah: 6700, currentMah: 3886, note: '1412 cycles on a 1000-cycle pack, down to 58% of design capacity.' },
-        visual: { note: 'The centre cells are visibly domed — the pack is pressing up against the underside of the trackpad, which is why it will not click. This is a fire risk, not a cosmetic issue.' },
+        battery: { abnormal: true, cycles: 1412, healthPct: 58, condition: 'Service Recommended', designMah: 6700, currentMah: 3886, note: '1412 cycles on a 1000-cycle pack, down to 58% of design capacity.' },
+        visual: { abnormal: true, note: 'The centre cells are visibly domed — the pack is pressing up against the underside of the trackpad, which is why it will not click. This is a fire risk, not a cosmetic issue.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 15600, note: 'Drive is fine.' },
         thermal: { idleC: 46, loadC: 81, fanRpm: 3900, note: 'Within spec.' }
       },
@@ -189,17 +182,16 @@
     port_lint: {
       id: 'port_lint',
       title: 'Charge port packed with pocket lint',
-      appliesTo: ['iphone12', 'thinkpad_t480', 'mba_m1', 'ipad_air', 'mbp14_m3', 'switch2', 'steamdeck', 'iphone17'],
-      severity: 'low',
+      appliesTo: ['iphone12', 'thinkpad_t480', 'mba_m1', 'ipad_air', 'mbp14_m3', 'switch2', 'steamdeck', 'iphone17', 'mbneo'],
       noPartNeeded: true,
       complaints: [
         'It only charges if I hold the cable at exactly the right angle and put a book on it.',
-        'I have already bought three new cables. None of them work properly.'
+        'It barely charges. I have already bought three new cables. None of them work properly.'
       ],
       customerTheory: 'They are certain the port is broken and want it replaced.',
       readings: {
-        power: { watts: 0, negotiated: 'none', seats: false, note: 'The plug stops about 2 mm short of home. No data pins make contact, so no charging negotiation happens at all.' },
-        visual: { note: 'Shine a light in: a compacted grey felt disc of pocket lint, pressed into a solid pad at the bottom of the port by three years of plugging in.' },
+        power: { abnormal: true, watts: 0, negotiated: 'none', seats: false, note: 'The plug stops about 2 mm short of home. No data pins make contact, so no charging negotiation happens at all.' },
+        visual: { abnormal: true, note: 'Shine a light in: a compacted grey felt disc of pocket lint, pressed into a solid pad at the bottom of the port by three years of plugging in.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 6200, note: 'Nothing wrong with the storage.' },
         battery: { cycles: 380, healthPct: 91, condition: 'Normal', designMah: 2815, currentMah: 2561, note: 'Battery is healthy. It just is not getting charged.' },
         meter: {
@@ -225,8 +217,8 @@
     usbc_cc_short: {
       id: 'usbc_cc_short',
       title: 'Corroded USB-C configuration pin',
-      appliesTo: ['thinkpad_t480', 'inspiron15', 'switch2', 'mbp14_m3', 'iphone17'],
-      severity: 'medium',
+      // Machines that actually charge over USB-C. (The Inspiron 15 3000 takes a barrel jack.)
+      appliesTo: ['thinkpad_t480', 'mba_m1', 'mbp14_m3', 'switch2', 'steamdeck', 'iphone17', 'ipad_air', 'mbneo'],
       noPartNeeded: true,
       complaints: [
         'It only charges if I plug the USB-C cable in upside down. In one direction nothing happens, in the other it charges.',
@@ -234,8 +226,8 @@
       ],
       customerTheory: 'They think their wall socket or battery is dead.',
       readings: {
-        visual: { note: 'Magnifier into the socket: pin A5 (CC1) has green copper corrosion crust bridging against the shield. Pin B5 (CC2) is clean and shiny.' },
-        power: { watts: 2, negotiated: '5V / 0.5A trickle', seats: true, note: 'Cable seats fully, but Power Delivery CC communication handshake fails on one orientation; falls back to 5V trickle mode.' },
+        visual: { abnormal: true, note: 'Magnifier into the socket: pin A5 (CC1) has green copper corrosion crust bridging against the shield. Pin B5 (CC2) is clean and shiny.' },
+        power: { abnormal: true, watts: 2, negotiated: '5V / 0.5A trickle', seats: true, note: 'Cable seats fully, but Power Delivery CC communication handshake fails on one orientation; falls back to 5V trickle mode.' },
         battery: { healthPct: 88, cycles: 290, condition: 'Normal', note: 'Cell health is good. Issue is charge negotiation.' },
         meter: {
           vbus: { label: 'USB in', v: '5.08 V', note: 'Only standard 5V USB standby rail present. The 20V/15V PD rail never triggers.' },
@@ -246,8 +238,9 @@
         power: 'clean 20V/3.25A USB-PD handshake negotiated in both plug orientations. Fast charging restored.',
         battery: 'charging rapidly under normal Power Delivery wattage.'
       },
-      fixedBy: { kind: 'action', id: 'clean_port' },
+      fixedBy: { kind: 'action', id: 'clean_contacts' },
       wrongFix: {
+        flex: 'A new charge port for a contact that isopropyl alcohol and a brush would have cleaned. It works — so would the old one have.',
         battery: 'A new battery changes nothing. The issue is the communication pin negotiating wattage, not the cell storing it.'
       },
       explain: 'USB-C is reversible for users, but internally uses Configuration Channel (CC1 and CC2) pins to negotiate orientation and high-voltage USB-PD. If one pin is bridged by corrosion or lint, the machine defaults to safe 5V trickle charging or only works in one orientation. Cleaning the pins restores full fast charging in seconds for zero parts.'
@@ -257,14 +250,13 @@
       id: 'cracked_screen',
       title: 'Shattered display',
       appliesTo: ['iphone12', 'mbp13_2012', 'ipad_air', 'switch2', 'steamdeck', 'iphone17'],
-      severity: 'high',
       complaints: [
         'It went out of my pocket onto the tram tracks. It still works but there is glass in my thumb.',
         'The bottom third does not respond to touch at all any more.'
       ],
       customerTheory: 'No mystery here — but which replacement panel you fit is the whole decision.',
       readings: {
-        visual: { note: 'Spiderweb from the lower left corner. Digitiser is dead across the bottom third. The panel itself still lights up, so the connector and the board are fine.' },
+        visual: { abnormal: true, note: 'Spiderweb from the lower left corner. Digitiser is dead across the bottom third. The panel itself still lights up, so the connector and the board are fine.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3300, note: 'Storage fine.' },
         battery: { cycles: 240, healthPct: 94, condition: 'Normal', designMah: 2815, currentMah: 2646, note: 'Battery fine — do not let anyone talk you into replacing it "while it is open" if it does not need it.' },
         power: { watts: 20, negotiated: 'USB-PD 9V/2.2A', seats: true, note: 'Charging normally.' }
@@ -278,16 +270,15 @@
       id: 'sd_formatted',
       title: 'Card formatted by mistake',
       appliesTo: ['iphone12', 'ipad_air', 'inspiron15', 'mbp13_2012', 'thinkpad_t480', 'mba_m1'],
-      severity: 'high',
       noPartNeeded: true,
       complaints: [
         'The camera asked if it should format the card and I pressed yes because I press yes to everything.',
-        'Everything from the whole trip was on it. Four hundred photos. Please tell me they are not gone.'
+        'The card says it is empty now. Everything from the whole trip was on it. Four hundred photos. Please tell me they are not gone.'
       ],
       customerTheory: 'They think formatting destroyed the photos. It did not — not yet.',
       readings: {
-        storage_used: { usedPct: 1, freeGB: 63.4, biggest: 'nothing — the card reads as empty', note: 'The card says it is empty. It is not; the index that lists the files was erased, and the files themselves are still sitting there untouched.' },
-        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 0, note: 'The card itself is in perfect health. Nothing is broken here.' },
+        storage_used: { abnormal: true, usedPct: 1, freeGB: 63.4, biggest: 'nothing — the card reads as empty', note: 'The card says it is empty. It is not; the index that lists the files was erased, and the files themselves are still sitting there untouched.' },
+        smart: { decisive: true, health: 'GOOD', reallocated: 0, pending: 0, hours: 0, note: 'The card itself is in perfect health. Nothing is broken here.' },
         visual: { note: 'An ordinary SD card with no physical damage at all.' }
       },
       fixedBy: { kind: 'action', id: 'card_recovery' },
@@ -301,17 +292,16 @@
       id: 'os_wrecked',
       title: 'Operating system will not boot',
       appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3'],
-      severity: 'high',
       noPartNeeded: true,
       complaints: [
         { t: 'It updated overnight and now it just shows a folder with a question mark on it.', os: ['macos'] },
         { t: 'It updated overnight and now it goes straight to a blue screen that says Automatic Repair, round and round.', os: ['windows'] },
-        'I have tried turning it off and on about forty times.'
+        'It will not start up properly since the update. I have tried turning it off and on about forty times.'
       ],
       customerTheory: 'They are certain the hard drive has died and want a new one.',
       readings: {
-        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 6400, note: 'The drive is healthy. It reads and writes perfectly \u2014 there is simply no bootable system on it any more.' },
-        bench: { seqMBps: 530, randIops: 71000, latencyMs: 0.1, note: 'Full speed. Nothing mechanical or electrical is wrong.' },
+        smart: { decisive: true, health: 'GOOD', reallocated: 0, pending: 0, hours: 6400, note: 'The drive is healthy. It reads and writes perfectly \u2014 there is simply no bootable system on it any more.' },
+        bench: { decisive: true, seqMBps: 530, randIops: 71000, latencyMs: 0.1, note: 'Full speed. Nothing mechanical or electrical is wrong.' },
         memtest: { passes: 4, errors: 0, note: 'Memory clean.' },
         visual: { note: 'Nothing wrong inside.' },
         storage_used: { usedPct: 61, freeGB: 180, biggest: 'Users — 190 GB of their files, all still there', note: 'Every one of their files is intact. Only the system is broken.' }
@@ -327,15 +317,14 @@
       id: 'migration',
       title: 'New machine, old life',
       appliesTo: ['mba_m1', 'mbp14_m3', 'imac_m1', 'inspiron15'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'I bought this new one but everything I own is still on the old one and I do not know how to move it.',
-        'My son said just drag it across but drag what across exactly?'
+        'I have a new computer and everything is still on the old one. My son said just drag it across but drag what across exactly?'
       ],
       customerTheory: 'They expect to lose everything and have half accepted it.',
       readings: {
-        storage_used: { usedPct: 4, freeGB: 480, biggest: 'nothing yet — it is brand new', note: 'The new machine is empty. The question is what comes across and what does not.' },
+        storage_used: { decisive: true, usedPct: 4, freeGB: 480, biggest: 'nothing yet — it is brand new', note: 'The new machine is empty. The question is what comes across and what does not.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2, note: 'Two hours of use. It is new.' },
         activity: { memPressurePct: 22, swapGB: 0, topProc: 'Finder', topProcMemGB: 0.3, note: 'Nothing running. Nothing wrong.' },
         visual: { note: 'Immaculate. Do not take this one apart.' }
@@ -349,16 +338,15 @@
       id: 'no_backup',
       title: 'No backup, and they are about to need one',
       appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'mba_m1'],
-      severity: 'medium',
       noPartNeeded: true,
       complaints: [
         'It made a noise. It is probably nothing. Can you just check it?',
-        'Everything is on here. My whole business. No, I have not got a copy anywhere.'
+        'It has started making a faint ticking noise. Everything is on here. My whole business. No, I have not got a copy anywhere.'
       ],
       customerTheory: 'They came in about a noise. The noise is the least of it.',
       readings: {
-        smart: { health: 'WARNING', reallocated: 84, pending: 6, hours: 27400, note: '84 reallocated sectors and climbing. This drive is not dead \u2014 but it has started dying, and there is no copy of anything on it.' },
-        listen: { note: 'A faint tick every so often. Easy to miss. Not easy to un-hear.' },
+        smart: { abnormal: true, health: 'WARNING', reallocated: 84, pending: 6, hours: 27400, note: '84 reallocated sectors and climbing. This drive is not dead \u2014 but it has started dying, and there is no copy of anything on it.' },
+        listen: { abnormal: true, note: 'A faint tick every so often. Easy to miss. Not easy to un-hear.' },
         bench: { seqMBps: 310, randIops: 2100, latencyMs: 42, note: 'Slower than it should be, with occasional long pauses where it retries a bad sector.' },
         storage_used: { usedPct: 74, freeGB: 62, biggest: 'Work — 180 GB of invoices, quotes and photos', note: 'Everything they earn with, on one ageing drive, with no copy.' }
       },
@@ -370,8 +358,7 @@
     water_damage: {
       id: 'water_damage',
       title: 'Liquid damage',
-      appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'iphone12', 'iphone17', 'switch2', 'steamdeck', 'ipad_air', 'tower_pc'],
-      severity: 'critical',
+      appliesTo: ['mbp13_2012', 'thinkpad_t480', 'inspiron15', 'iphone12', 'iphone17', 'switch2', 'steamdeck', 'ipad_air', 'tower_pc', 'mbneo'],
       complaints: [
         'A glass of orange juice went over it. I dried it with a hairdryer and put it in rice and it worked for two days.',
         { t: 'It is doing strange things now. Keys typing by themselves, and it gets warm in one corner.', kind: ['laptop', 'desktop', 'aio'] },
@@ -387,9 +374,9 @@
           vbat: { label: 'Battery rail', v: '41 \u03a9 to ground', beep: true,
             note: 'Power off, 41 \u03a9 from the battery rail to ground where it should be thousands. Something wet is conducting.' }
         },
-        visual: { note: 'Corrosion on the board around one corner: dull green-white crust on the pins of two connectors, and the liquid-contact indicator strip has gone bright red.' },
-        power: { watts: 12, negotiated: 'USB-PD 5V/2.4A', seats: true, note: 'Charging, but drawing oddly and getting warm at the corner where the corrosion is.' },
-        thermal: { idleC: 58, loadC: 86, fanRpm: 3800, note: 'One area runs hot that should not — current is going somewhere it should not go.' },
+        visual: { abnormal: true, note: 'Corrosion on the board around one corner: dull green-white crust on the pins of two connectors, and the liquid-contact indicator strip has gone bright red.' },
+        power: { abnormal: true, watts: 12, negotiated: 'USB-PD 5V/2.4A', seats: true, note: 'Charging, but drawing oddly and getting warm at the corner where the corrosion is.' },
+        thermal: { abnormal: true, idleC: 58, loadC: 86, fanRpm: 3800, note: 'One area runs hot that should not — current is going somewhere it should not go.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 5100, note: 'The drive is fine. The damage is on the board.' },
         memtest: { passes: 4, errors: 0, note: 'Memory passes — today.' }
       },
@@ -404,11 +391,10 @@
       id: 'dead_no_power',
       title: 'No sign of life',
       appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'steamdeck', 'switch2', 'tower_pc', 'ps5pro'],
-      severity: 'high',
       noPartNeeded: true,
       complaints: [
         'Completely dead. No light, no sound, no fan, nothing. It is as though it is not a computer any more.',
-        'I have left it charging all night and it makes no difference.'
+        'It will not switch on at all. I have left it charging all night and it makes no difference.'
       ],
       customerTheory: 'They have decided the machine is finished and are half expecting you to confirm it.',
       readings: {
@@ -421,8 +407,8 @@
           vbat: { label: 'Battery rail', v: '3.84 V',
             note: 'The battery is charged and connected. The power is there; the board just is not starting.' }
         },
-        power: { watts: 0, negotiated: 'none', seats: true, note: 'The plug seats and the charger is fine, but the machine draws nothing at all — not even the trickle a sleeping board takes.' },
-        battery: { cycles: 340, healthPct: 88, condition: 'Normal', designMah: 6700, currentMah: 5896, note: 'The pack itself holds charge perfectly well. It is simply not being asked for any.' },
+        power: { abnormal: true, watts: 0, negotiated: 'none', seats: true, note: 'The plug seats and the charger is fine, but the machine draws nothing at all — not even the trickle a sleeping board takes.' },
+        battery: { decisive: true, cycles: 340, healthPct: 88, condition: 'Normal', designMah: 6700, currentMah: 5896, note: 'The pack itself holds charge perfectly well. It is simply not being asked for any.' },
         visual: { note: 'No corrosion, no burn marks, no swelling. Nothing wrong that you can see \u2014 which is itself informative.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3900, note: 'Pulled and read in an enclosure: the drive is perfect.' }
       },
@@ -436,16 +422,16 @@
     no_internet: {
       id: 'no_internet',
       title: 'Full bars, no internet',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3'],
-      severity: 'medium',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3', 'mbneo'],
       noPartNeeded: true,
       netBreak: 'dns',
       complaints: [
         'It says it is connected to the Wi-Fi. Full bars. But nothing loads, not a single page.',
-        'My phone works fine on the same Wi-Fi, so it must be the computer.'
+        'The computer says connected but no page will load. My phone works fine on the same Wi-Fi, so it must be the computer.'
       ],
       customerTheory: 'They are convinced the Wi-Fi card has failed and want it replaced.',
       readings: {
+        network: { abnormal: true, note: 'The chain breaks partway. Walk it hop by hop in the Network app: where the first hop fails is the fault.' },
         activity: { memPressurePct: 31, swapGB: 0.2, topProc: 'Safari', topProcMemGB: 1.1, note: 'Nothing wrong with the machine itself. It is idle and waiting.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 5200, note: 'Storage fine.' },
         visual: { note: 'Nothing to see. A network fault is not a physical fault.' },
@@ -462,15 +448,15 @@
       id: 'router_down',
       title: 'Nothing in the house has internet',
       appliesTo: ['mbp13_2012', 'inspiron15', 'imac_m1', 'thinkpad_t480'],
-      severity: 'low',
       noPartNeeded: true,
       netBreak: 'isp',
       complaints: [
         'Nothing works. Not the computer, not the telly, not my phone unless I turn the Wi-Fi off.',
-        'I assume the computer has given something to the rest of them.'
+        'Nothing in the house will go online \u2014 not the computer, not the telly. I assume the computer has given something to the rest of them.'
       ],
       customerTheory: 'They think the computer infected the whole house.',
       readings: {
+        network: { abnormal: true, note: 'This machine has an address and the router answers, but nothing past the router ever replies. The fault is outside the building.' },
         activity: { memPressurePct: 28, swapGB: 0.1, topProc: 'Finder', topProcMemGB: 0.4, note: 'The machine is perfectly healthy and perfectly idle.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 8800, note: 'Fine.' },
         visual: { note: 'Nothing wrong with the hardware.' }
@@ -486,17 +472,16 @@
       id: 'smc_confused',
       title: 'Hardware controller confused',
       appliesTo: ['mbp13_2012', 'mba_m1', 'mbp14_m3', 'imac_m1'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'The fans run flat out from the moment it starts, even sitting on the desk doing nothing. And the keyboard backlight has stopped.',
-        { t: 'It also will not sleep when I shut the lid any more.', kind: ['laptop'] },
-        { t: 'It also will not go to sleep on its own any more \u2014 the screen just stays on all night.', kind: ['aio', 'desktop'] }
+        { t: 'The fans roar even when it is doing nothing, and it will not sleep when I shut the lid any more.', kind: ['laptop'] },
+        { t: 'The fans roar even when it is doing nothing, and it will not go to sleep on its own any more \u2014 the screen just stays on all night.', kind: ['aio', 'desktop'] }
       ],
       customerTheory: 'They are sure the fan is broken and want a new one fitted.',
       readings: {
-        thermal: { idleC: 41, loadC: 72, fanRpm: 6200, note: 'Fans at maximum while the chip sits at 41 \u00b0C. The temperature does not justify the noise at all \u2014 something is telling the fans to run, and it is not the heat.' },
-        visual: { note: 'Fan spins freely, fins are clear, paste looks recent. Nothing physically wrong.' },
+        thermal: { abnormal: true, idleC: 41, loadC: 72, fanRpm: 6200, note: 'Fans at maximum while the chip sits at 41 \u00b0C. The temperature does not justify the noise at all \u2014 something is telling the fans to run, and it is not the heat.' },
+        visual: { decisive: true, note: 'Fan spins freely, fins are clear, paste looks recent. Nothing physically wrong.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4100, note: 'Drive fine.' },
         battery: { cycles: 260, healthPct: 92, condition: 'Normal', designMah: 6700, currentMah: 6164, note: 'Battery fine, but it is charging oddly \u2014 another thing the same controller handles.' },
         memtest: { passes: 4, errors: 0, note: 'Memory clean.' }
@@ -512,18 +497,17 @@
       id: 'nvram_lost',
       title: 'Settings that will not stick',
       appliesTo: ['mbp13_2012', 'mba_m1', 'imac_m1', 'mbp14_m3'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'Every time it starts, the volume is back to maximum and it asks me which disk to start from.',
-        'The clock is wrong as well. I set it, and by the next morning it is wrong again.'
+        'It keeps forgetting its settings. The clock is wrong every morning, however many times I set it.'
       ],
       customerTheory: 'They think it has a virus that resets everything.',
       readings: {
-        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 7100, note: 'Drive healthy, and the system on it is intact.' },
+        smart: { decisive: true, health: 'GOOD', reallocated: 0, pending: 0, hours: 7100, note: 'Drive healthy, and the system on it is intact.' },
         storage_used: { usedPct: 58, freeGB: 190, biggest: 'Photos Library — 82 GB', note: 'Nothing unusual in the storage.' },
         activity: { memPressurePct: 33, swapGB: 0.3, topProc: 'Safari', topProcMemGB: 1.2, note: 'Nothing running that should not be.' },
-        visual: { note: 'Clean inside. Worth noting the small coin cell on the board \u2014 that is what keeps these settings alive.' }
+        visual: { decisive: true, note: 'Clean inside. Worth noting the small coin cell on the board \u2014 that is what keeps these settings alive.' }
       },
       fixedBy: { kind: 'action', id: 'reset_nvram' },
       wrongFix: {
@@ -536,38 +520,35 @@
       id: 'locked_out',
       title: 'Locked out of their own machine',
       appliesTo: ['mbp13_2012', 'mba_m1', 'inspiron15', 'thinkpad_t480', 'mbp14_m3'],
-      severity: 'medium',
       noPartNeeded: true,
       complaints: [
         'I have forgotten the password. It is my own computer, I have the receipt, I just cannot get in.',
-        'My daughter set it up for me four years ago and she does not remember either.'
+        'It will not take my password any more. My daughter set it up for me four years ago and she does not remember it either.'
       ],
       customerTheory: 'They expect to be told everything has to be wiped.',
       readings: {
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 9600, note: 'Drive is healthy and completely readable.' },
-        storage_used: { usedPct: 66, freeGB: 150, biggest: 'Users — 210 GB of their documents and photos', note: 'Everything they own is on here, intact and behind one forgotten password.' },
+        storage_used: { decisive: true, usedPct: 66, freeGB: 150, biggest: 'Users — 210 GB of their documents and photos', note: 'Everything they own is on here, intact and behind one forgotten password.' },
         visual: { note: 'Nothing wrong with it. This is not a hardware problem at all.' }
       },
       fixedBy: { kind: 'action', id: 'reset_password' },
       wrongFix: {
         storage: 'You wiped it and started fresh. They can get in now, and four years of photographs are gone, and none of that was necessary.'
       },
-      explain: 'A forgotten password is not a broken machine and almost never needs an erase. Recovery mode has a reset tool; on machines with an account attached there is an online route. The part that matters is the part people skip: proving the machine is actually theirs. A shop that resets passwords without asking for proof is a shop that launders stolen laptops.',
-      needsProof: true
+      explain: 'A forgotten password is not a broken machine and almost never needs an erase. Recovery mode has a reset tool; on machines with an account attached there is an online route. The part that matters is the part people skip: proving the machine is actually theirs. A shop that resets passwords without asking for proof is a shop that launders stolen laptops.'
     },
 
     sticky_keys: {
       id: 'sticky_keys',
       title: 'Keys sticking after a spill',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3'],
-      severity: 'low',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'mbneo'],
       complaints: [
         'Three keys need a proper thump. It was a bit of lemonade, weeks ago, and I wiped it up straight away.',
-        'The rest of it is completely fine, which is why I left it so long.'
+        'A few keys need a proper thump before they type. The rest of it is completely fine, which is why I left it so long.'
       ],
       customerTheory: 'They want the whole keyboard replaced and are braced for the price.',
       readings: {
-        visual: { note: 'Sugar residue under three keycaps \u2014 slightly tacky, visibly crystalline at the edges of the scissor mechanism. No corrosion anywhere on the board itself.' },
+        visual: { abnormal: true, note: 'Sugar residue under three keycaps \u2014 slightly tacky, visibly crystalline at the edges of the scissor mechanism. No corrosion anywhere on the board itself.' },
         power: { watts: 30, negotiated: 'USB-PD 9V/3.3A', seats: true, note: 'Charging normally.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3200, note: 'Fine.' },
         thermal: { idleC: 43, loadC: 75, fanRpm: 3300, note: 'Normal.' }
@@ -582,17 +563,16 @@
     runaway_process: {
       id: 'runaway_process',
       title: 'Runaway process / scareware',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3'],
-      severity: 'medium',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3', 'mbneo'],
       noPartNeeded: true,
       complaints: [
         { t: 'It got really slow last Tuesday and a window keeps popping up saying my Mac has three viruses and I have to call a number.', os: ['macos'] },
         { t: 'It got really slow last Tuesday and a window keeps popping up saying Windows has three viruses and I have to call a number.', os: ['windows'] },
-        'The fan is on all the time even when I am not doing anything.'
+        'It is slow for no reason and the fan is on all the time even when I am not doing anything.'
       ],
       customerTheory: 'They want you to wipe and reinstall everything, losing all their photos.',
       readings: {
-        activity: { memPressurePct: 52, swapGB: 1.1, topProc: 'MacKeeperHelper', topProcMemGB: 2.4, topProcCpuPct: 340, note: 'One process called MacKeeperHelper is eating 340% CPU and it launches itself again after every restart.' },
+        activity: { abnormal: true, memPressurePct: 52, swapGB: 1.1, topProc: 'MacKeeperHelper', topProcMemGB: 2.4, topProcCpuPct: 340, note: 'One process called MacKeeperHelper is eating 340% CPU and it launches itself again after every restart.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 5400, note: 'Drive is healthy.' },
         memtest: { passes: 4, errors: 0, note: 'Memory clean.' },
         thermal: { idleC: 71, loadC: 88, fanRpm: 5200, note: 'Running hot at idle — because it is never actually idle.' },
@@ -610,11 +590,10 @@
       id: 'bent_socket_pins',
       title: 'Bent socket contacts',
       appliesTo: ['tower_pc'],
-      severity: 'critical',
       noPartNeeded: true,
       complaints: [
         'My cousin and I built it on Saturday. You press the button, the fans spin for about half a second, and it clicks off.',
-        'There is a little red light on the board next to where it says CPU. We bought the wrong motherboard, did we not.'
+        'We built it ourselves and it will not start \u2014 there is a little red light on the board next to where it says CPU. We bought the wrong motherboard, did we not.'
       ],
       customerTheory: 'They are sure the board arrived faulty and want you to confirm it so they can send it back.',
       readings: {
@@ -622,8 +601,8 @@
           vcore: { label: 'CPU core', v: '0.4 \u03a9 to ground', beep: true,
             note: 'A dead short on the processor supply. Lift the CPU and measure again: if it disappears, the short is in the socket \u2014 two bent contacts touching \u2014 not on the board.' }
         },
-        visual: { note: 'Lift the processor and look into the socket under a light: three of the gold contacts in one corner are folded flat and two of them are touching each other. The little triangle on the chip is not where the triangle on the socket is — it went in a quarter turn out and the clamp was forced shut on top of it.' },
-        power: { watts: 14, negotiated: 'none', seats: true, note: 'The supply reaches 14 W and cuts. Short-circuit protection trips on the standby rail before anything can boot.' },
+        visual: { abnormal: true, note: 'Lift the processor and look into the socket under a light: three of the gold contacts in one corner are folded flat and two of them are touching each other. The little triangle on the chip is not where the triangle on the socket is — it went in a quarter turn out and the clamp was forced shut on top of it.' },
+        power: { abnormal: true, watts: 14, negotiated: 'none', seats: true, note: 'The supply reaches 14 W and cuts. Short-circuit protection trips on the standby rail before anything can boot.' },
         thermal: { idleC: 23, loadC: 23, fanRpm: 0, note: 'Room temperature. It never stays on long enough to make heat.' },
         memtest: { passes: 0, errors: 0, note: 'Cannot run. The memory controller lives in the processor and the processor never comes up.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2, note: 'Brand new drive, two hours on it from the shop test.' }
@@ -640,10 +619,9 @@
       id: 'blown_caps',
       title: 'Failed filter capacitors',
       appliesTo: ['tower_pc'],
-      severity: 'high',
       complaints: [
         'It is perfect in the morning. Email, spreadsheets, hours of it. The second my son starts a game it restarts — no warning, no blue screen, just off and back on.',
-        'Someone told me the power supply is too small, so I bought a bigger one. It did exactly the same thing.'
+        'It restarts on its own the moment a game starts. Someone told me the power supply is too small, so I bought a bigger one. It did exactly the same thing.'
       ],
       customerTheory: 'They have already replaced the power supply and are now convinced the graphics card is dying.',
       readings: {
@@ -652,9 +630,9 @@
             note: 'Rock steady \u2014 and that is the lesson. A multimeter averages over a fraction of a second, so it cannot see the 460 mV of ripple '
               + 'that appears under load. That takes an oscilloscope, or your eyes on the tops of the capacitors. The right instrument matters as much as the reading.' }
         },
-        visual: { note: 'Two of the small aluminium cans in the row beside the processor socket are domed on top instead of flat, and one has crusted brown residue around the vent scoring. The rest of the row is flat and clean, which is what makes these two obvious.' },
+        visual: { abnormal: true, note: 'Two of the small aluminium cans in the row beside the processor socket are domed on top instead of flat, and one has crusted brown residue around the vent scoring. The rest of the row is flat and clean, which is what makes these two obvious.' },
         bench: { seqMBps: 505, randIops: 71000, latencyMs: 0.1, note: 'Storage is fine — when it stays on long enough to test.' },
-        power: { watts: 410, negotiated: 'ATX 12V', seats: true, ripplemV: 460, note: 'Ripple on the 12 V rail reaches 460 mV under load. The ATX specification allows 120 mV. At idle it sits at 40 mV, which is why it is fine all morning.' },
+        power: { abnormal: true, watts: 410, negotiated: 'ATX 12V', seats: true, note: 'Ripple on the 12 V rail reaches 460 mV under load. The ATX specification allows 120 mV. At idle it sits at 40 mV, which is why it is fine all morning.' },
         thermal: { idleC: 38, loadC: 79, fanRpm: 1500, note: 'Cooling is doing its job. Temperature is not the problem.' },
         memtest: { passes: 2, errors: 0, note: 'Two clean passes, then the machine restarted mid-test. The restart is the symptom, not a memory error.' }
       },
@@ -672,16 +650,15 @@
       // The sensor in question lives on the battery flex, so this is a portable
       // fault. An iMac has no battery and would fail a different sensor entirely.
       appliesTo: ['mbp13_2012', 'mba_m1', 'mbp14_m3'],
-      severity: 'high',
       noPartNeeded: true,
       complaints: [
         'It has gone treacle slow. I type and the letters arrive five seconds later. Everything does.',
-        'A shop told me it is overheating and needs a new fan. But feel it — it is stone cold. It is cold and it is slow.'
+        'It is painfully slow, and it is stone cold \u2014 feel it. A shop told me it is overheating and needs a new fan.'
       ],
       customerTheory: 'They have been told it is overheating, and they can feel for themselves that it is not, so they have stopped trusting anybody.',
       readings: {
-        activity: { memPressurePct: 34, swapGB: 0.4, topProc: 'kernel_task', topProcMemGB: 1.2, topProcCpuPct: 720, note: 'kernel_task is using 720% CPU. It is not a virus and it is not a runaway app — it is part of the system, and this is what it does on purpose.' },
-        thermal: { idleC: 24, loadC: 26, fanRpm: 1100, throttleMhz: 400, note: 'Twenty-four degrees, and the clock is pinned at 400 MHz anyway. The machine is throttling itself hard while being completely cold.' },
+        activity: { abnormal: true, memPressurePct: 34, swapGB: 0.4, topProc: 'kernel_task', topProcMemGB: 1.2, topProcCpuPct: 720, note: 'kernel_task is using 720% CPU. It is not a virus and it is not a runaway app — it is part of the system, and this is what it does on purpose.' },
+        thermal: { abnormal: true, idleC: 24, loadC: 26, fanRpm: 1100, throttleMhz: 400, note: 'Twenty-four degrees, and the clock is pinned at 400 MHz anyway. The machine is throttling itself hard while being completely cold.' },
         visual: { note: 'No dust, no damage, fins clear, fan spins freely. Nothing here explains anything.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 6100, note: 'Drive fine.' },
         memtest: { passes: 4, errors: 0, note: 'Memory clean.' },
@@ -698,8 +675,7 @@
     browser_push_spam: {
       id: 'browser_push_spam',
       title: 'Fake system alerts from a website',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3', 'ipad_air'],
-      severity: 'medium',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'mbp14_m3', 'ipad_air', 'mbneo'],
       noPartNeeded: true,
       complaints: [
         'Every twenty seconds a warning slides in from the corner. "5 SYSTEM THREATS FOUND. Renew your antivirus now." It looks exactly like the ones from the computer itself.',
@@ -707,6 +683,7 @@
       ],
       customerTheory: 'They believe the machine is infected and are frightened of losing everything on it.',
       readings: {
+        browser: { abnormal: true, note: 'Pages load normally, but alerts keep sliding in from the corner \u2014 \u201c5 threats found\u201d \u2014 and each one is signed by fast-cleaner-mac.info. A website is sending them, not the operating system.' },
         activity: { memPressurePct: 33, swapGB: 0.2, topProc: 'Safari', topProcMemGB: 1.4, topProcCpuPct: 9, note: 'Nothing is running away. No unusual process, no launch agent, no background installer. The machine is idle.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3800, note: 'Drive fine.' },
         storage_used: { usedPct: 41, freeGB: 290, biggest: 'Photos Library — 44 GB', note: 'Nothing has been dumped onto the disk.' },
@@ -724,8 +701,7 @@
     captive_portal_loop: {
       id: 'captive_portal_loop',
       title: 'Stuck behind a hotspot login',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'ipad_air'],
-      severity: 'low',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'mbp14_m3', 'ipad_air', 'mbneo'],
       noPartNeeded: true,
       netBreak: 'site',
       complaints: [
@@ -734,6 +710,7 @@
       ],
       customerTheory: 'They think the caf\u00e9 network is hacked and are worried something has already been taken.',
       readings: {
+        browser: { abnormal: true, note: 'Every HTTPS site stops at a certificate warning, and the certificate was issued by CafeNet-Gateway rather than the site. A plain http:// address reaches a Wi-Fi login page instead.' },
         activity: { memPressurePct: 30, swapGB: 0.1, topProc: 'Safari', topProcMemGB: 0.9, topProcCpuPct: 4, note: 'Idle, waiting on the network.' },
         visual: { note: 'Nothing physical. The wireless card is seated and the antenna leads are on.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2900, note: 'Drive fine.' },
@@ -750,8 +727,7 @@
     browser_rogue_extension: {
       id: 'browser_rogue_extension',
       title: 'Deceptive browser extension redirecting search',
-      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'tower_pc', 'mbp14_m3'],
-      severity: 'medium',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'tower_pc', 'mbp14_m3', 'mbneo'],
       noPartNeeded: true,
       complaints: [
         'Every time I try to search Google, it redirects to "SearchZone Pro" and fills the screen with shady adverts.',
@@ -759,6 +735,7 @@
       ],
       customerTheory: 'They think they have a nasty rootkit virus and need an expensive SSD wipe or new network card.',
       readings: {
+        browser: { abnormal: true, note: 'Typing an address goes straight there. Searching for anything does not: the address bar flicks through searchzone.top and lands on a page of sponsored results.' },
         activity: { memPressurePct: 28, swapGB: 0.1, topProc: 'Browser', topProcMemGB: 1.1, topProcCpuPct: 6, note: 'System load is completely normal. No rogue operating system processes.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3400, note: 'Drive healthy.' },
         storage_used: { usedPct: 45, freeGB: 260, biggest: 'Documents — 18 GB', note: 'Disk space normal.' },
@@ -777,15 +754,14 @@
       id: 'console_full',
       title: 'No room left for the game',
       appliesTo: ['ps5pro', 'switch2'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'He got the game for his birthday and it will not install. It downloads for two hours and then says there is not enough space.',
-        'The shop said we need the bigger console. We are not buying a second one.'
+        'The new game will not install \u2014 not enough space, it says. The shop said we need the bigger console. We are not buying a second one.'
       ],
       customerTheory: 'They have been told the console is too small and are about to replace a perfectly good machine.',
       readings: {
-        storage_used: { usedPct: 97, freeGB: 24, biggest: 'Call of Duty — 248 GB', note: 'Twenty-four gigabytes free out of two terabytes. One shooter is taking 248 GB on its own, and eleven of the installed games have not been launched in over a year.' },
+        storage_used: { abnormal: true, usedPct: 97, freeGB: 24, biggest: 'Call of Duty — 248 GB', note: 'Twenty-four gigabytes free out of two terabytes. One shooter is taking 248 GB on its own, and eleven of the installed games have not been launched in over a year.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3100, note: 'The internal drive is healthy. It is full, which is a different thing.' },
         bench: { seqMBps: 5200, randIops: 210000, latencyMs: 0.05, note: 'Reading and writing at full speed. Nothing wrong with the drive.' },
         thermal: { idleC: 41, loadC: 74, fanRpm: 2100, note: 'Cooling normal.' },
@@ -801,21 +777,22 @@
     charge_port_dead: {
       id: 'charge_port_dead',
       title: 'Damaged charge port',
-      appliesTo: ['iphone12', 'iphone17', 'ipad_air', 'switch2', 'steamdeck'],
-      severity: 'high',
+      appliesTo: ['iphone12', 'iphone17', 'ipad_air', 'switch2', 'steamdeck', 'mbneo'],
       complaints: [
         'You have to hold the cable at an angle and not breathe. Last night it did not charge at all and I got to work on four percent.',
-        'It started after I left the cable plugged in and the dog pulled the whole thing off the table.'
+        'It hardly charges any more. It started after I left the cable plugged in and the dog pulled the whole thing off the table.'
       ],
       customerTheory: 'They assume the battery has gone, because the thing they notice is that it runs out.',
       readings: {
         meter: {
           vbus: { label: 'USB in', v: '0 \u2013 5.0 V',
-            note: 'Jumps between nothing and five volts as you touch the cable. The charger is fine and so is the battery; the contact in the port is not.' }
+            note: 'Jumps between nothing and five volts as you touch the cable. The charger is fine and so is the battery; the contact in the port is not.' },
+          dcin: { label: 'DC in', v: '0 \u2013 20 V',
+            note: 'Flicks between nothing and twenty volts as the cable moves. The charger is fine; the contact in the port is not.' }
         },
-        power: { watts: 3, negotiated: 'USB 5V/0.5A only', seats: false, note: 'The plug rocks in the socket instead of clicking home, and it only ever negotiates the slowest possible charge. Push it sideways and the wattage jumps, then dies.' },
-        visual: { note: 'Under magnification the port shell is splayed on one side and two of the contacts inside are pushed back out of line. This is mechanical damage, not dirt — there is nothing in there to clean out.' },
-        battery: { cycles: 260, healthPct: 91, condition: 'Normal', designMah: 3240, currentMah: 2948, note: 'Ninety-one percent health. The battery is in good shape — it is just rarely getting a full charge into it.' },
+        power: { abnormal: true, watts: 3, negotiated: 'USB 5V/0.5A only', seats: false, note: 'The plug rocks in the socket instead of clicking home, and it only ever negotiates the slowest possible charge. Push it sideways and the wattage jumps, then dies.' },
+        visual: { abnormal: true, note: 'Under magnification the port shell is splayed on one side and two of the contacts inside are pushed back out of line. This is mechanical damage, not dirt — there is nothing in there to clean out.' },
+        battery: { decisive: true, cycles: 260, healthPct: 91, condition: 'Normal', designMah: 3240, currentMah: 2948, note: 'Ninety-one percent health. The battery is in good shape — it is just rarely getting a full charge into it.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4100, note: 'Storage fine.' },
         thermal: { idleC: 33, loadC: 61, fanRpm: 0, note: 'Normal.' }
       },
@@ -827,23 +804,22 @@
       wrongFix: {
         battery: 'A new battery in a device that cannot charge it. It lasts exactly as long as the old one did, because the old one was never the problem — and they have paid for a battery and still cannot plug it in.'
       },
-      explain: 'A battery that runs out and a port that will not take charge look identical from the outside, and the customer will almost always name the battery. The two readings that separate them are sitting right next to each other: battery health is fine, and the port will not negotiate more than the fallback half-amp. Pull on a plugged-in cable hard enough and you splay the port shell — after that it makes contact at an angle or not at all. On most phones and handhelds the port is on its own small flex board precisely because it is the part that wears out, so this is a replaceable component and not a new device.'
+      explain: 'A battery that runs out and a port that will not take charge look identical from the outside, and the customer will almost always name the battery. The two readings that separate them are sitting right next to each other: battery health is fine, and the port will not negotiate more than the fallback half-amp. Pull on a plugged-in cable hard enough and you splay the port shell — after that it makes contact at an angle or not at all. On most phones and handhelds the port is on its own small flex board precisely because it is the part that wears out, so this is a replaceable component and not a new device. The MacBook Neo does the same thing: its two USB-C ports are one small module on a press connector, so a damaged port never turns into logic-board work.'
     },
 
     ps5_liquid_metal: {
       id: 'ps5_liquid_metal',
       title: 'Liquid metal dried out under the cooler',
       appliesTo: ['ps5pro'],
-      severity: 'medium',
       complaints: [
         'It says "Your PS5 is too hot" and switches itself off, always halfway through a long match. It never used to.',
         'The fan is louder than the television now. Somebody online said it is because I stand it upright.'
       ],
       customerTheory: 'They have read that standing it upright ruins the liquid metal, and mostly want to know whether to lay it flat.',
       readings: {
-        thermal: { idleC: 58, loadC: 104, fanRpm: 4900, throttleMhz: 1400,
+        thermal: { abnormal: true, idleC: 58, loadC: 104, fanRpm: 4900, throttleMhz: 1400,
           note: 'The chip reaches 104 \u00b0C a few minutes into a demanding game and the console shuts down to protect itself. The fan is at full speed the whole time \u2014 it is working; the heat is just not reaching the heatsink.' },
-        visual: { note: 'The fan and the dust catchers are clean, so this is not dust. With the cooler lifted: the liquid metal has gone grey and grainy along one edge of the die, and a third of the die is bare. A few silver beads have escaped onto the foam barrier round the chip \u2014 none past it.' },
+        visual: { abnormal: true, note: 'The fan and the dust catchers are clean, so this is not dust. With the cooler lifted: the liquid metal has gone grey and grainy along one edge of the die, and a third of the die is bare. A few silver beads have escaped onto the foam barrier round the chip \u2014 none past it.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 7300, note: 'The SSD is fine.' }
       },
       after: {
@@ -861,10 +837,9 @@
       id: 'ps5_rail_short',
       title: 'Shorted capacitor on the 12 V rail',
       appliesTo: ['ps5pro'],
-      severity: 'high',
       complaints: [
         'It beeps once, the light flashes blue for a second, and then nothing. Every single time.',
-        'It went like this after the big storm. It was plugged in but switched off.'
+        'It beeps once and switches straight off. It went like this after the big storm \u2014 it was plugged in but switched off.'
       ],
       customerTheory: 'They are sure the power supply has blown and want a new one fitted.',
       readings: {
@@ -891,7 +866,6 @@
       id: 'laptop_rail_short',
       title: 'Shorted decoupling capacitor on 20 V DC-in',
       appliesTo: ['thinkpad_t480'],
-      severity: 'high',
       complaints: [
         'Completely dead. When I plug the USB-C charger in, the little light blinks once, and then the charger turns itself off.',
         'It shut down with a faint click yesterday while plugged into the dock and will not turn on at all.'
@@ -909,7 +883,7 @@
           note: 'The USB-C supply blinks for a fraction of a second and immediately shuts down to protect itself from the dead short on the board.' },
         visual: { note: 'No burn marks, no smoke residue, no cracked chips. Ceramic capacitors fail short internally with zero visible external indication.' },
         thermal: { idleC: 22, loadC: 22, fanRpm: 0, note: 'Room temperature; machine cannot power on.' },
-        battery: { healthPct: 84, cycleCount: 290, status: 'NORMAL', note: 'Unplugging the battery leaves the dead short on the board intact \u2014 proving the fault is on the motherboard, not inside the battery pack.' }
+        battery: { decisive: true, cycles: 290, healthPct: 84, condition: 'Normal', note: 'Unplugging the battery leaves the dead short on the board intact \u2014 proving the fault is on the motherboard, not inside the battery pack.' }
       },
       after: {
         power: 'charger negotiates 20 V / 3.25 A normally, charges battery and powers the machine.',
@@ -926,15 +900,14 @@
       id: 'gpu_cable_wrong_port',
       title: 'Monitor plugged into motherboard HDMI',
       appliesTo: ['tower_pc'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'I cleaned behind my desk on Sunday and plugged everything back in. Now all my games run at 4 FPS like a slideshow, but YouTube and email are fine!',
-        'I think my graphics card burned out when I vacuumed.'
+        'Games have run like a slideshow since I vacuumed behind the desk. I think my graphics card burned out.'
       ],
       customerTheory: 'They are convinced the dedicated graphics card is dead and are bracing to buy a new GPU.',
       readings: {
-        visual: { note: 'Looking at the back of the case settles it immediately: the HDMI cable is plugged into the top motherboard port, while the dedicated NVIDIA RTX graphics card at the bottom sits completely empty.' },
+        visual: { abnormal: true, note: 'Looking at the back of the case settles it immediately: the HDMI cable is plugged into the top motherboard port, while the dedicated NVIDIA RTX graphics card at the bottom sits completely empty.' },
         thermal: { idleC: 36, loadC: 62, fanRpm: 1200, note: 'CPU runs normally; GPU fans are idling at zero RPM because it is not being asked to render anything.' },
         power: { watts: 85, negotiated: 'ATX 12V', seats: true, note: 'Tower draws barely 85 W under 3D games — the dedicated card is never engaging.' },
         bench: { seqMBps: 3400, randIops: 180000, latencyMs: 0.05, note: 'Storage is fast and healthy.' }
@@ -951,14 +924,14 @@
       id: 'keyboard_layout_swap',
       title: 'Keyboard layout switched in software',
       appliesTo: ['thinkpad_t480', 'inspiron15', 'mba_m1'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'My password fails every time, but I know it is right! I tried twenty times and it locked me out. The keyboard must be broken.',
-        'It happened right after my little brother was playing around with the buttons.'
+        'My password stopped working right after my little brother was playing around with the buttons.'
       ],
       customerTheory: 'They think the keyboard controller has died or keys are sending ghost keystrokes.',
       readings: {
+        settings: { abnormal: true, note: 'Keyboard \u203a Input sources is set to U.S. on a Hungarian keyboard. Typed on it, Zebra0 comes out as Yebra` \u2014 the Z and Y have swapped and the 0 has moved.' },
         activity: { memPressurePct: 29, swapGB: 0.1, topProc: 'Browser', topProcMemGB: 0.8, note: 'Every process is normal and the keyboard is registering every press. Whatever is wrong, the machine is not struggling \u2014 the keys are arriving, just not as the letters on them.' },
         visual: { note: 'The physical keyboard is in perfect condition. Every keycap is clean, switches rebound crisply, zero liquid residue.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 2400, note: 'Drive fine.' },
@@ -977,16 +950,16 @@
       id: 'display_brightness_zero',
       title: 'Backlight brightness dimmed to zero',
       appliesTo: ['inspiron15', 'thinkpad_t480'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         'The screen went completely pitch black yesterday. The green power light is on and I hear the fan, but nothing appears on screen.',
-        'The shop near the station told me the LCD screen is dead and quoted 55,000 Ft.'
+        'The screen has gone black. The shop near the station told me the LCD screen is dead and quoted 55,000 Ft.'
       ],
       customerTheory: 'They expect to buy an expensive replacement display panel.',
       readings: {
-        visual: { note: 'Shining a phone flashlight at an angle against the black glass reveals desktop icons, folders and the cursor moving underneath! The LCD matrix is generating images, but the LED backlight brightness is set to 0%.' },
-        power: { watts: 22, negotiated: 'USB-PD 20V/1.1A', seats: true, note: 'Machine is awake, booted and drawing power normally.' },
+        settings: { abnormal: true, note: 'Displays \u203a Brightness is at zero. The panel is switched on and showing an image with no light behind it.' },
+        visual: { abnormal: true, note: 'Shining a phone flashlight at an angle against the black glass reveals desktop icons, folders and the cursor moving underneath! The LCD matrix is generating images, but the LED backlight brightness is set to 0%.' },
+        power: { decisive: true, watts: 22, negotiated: 'USB-PD 20V/1.1A', seats: true, note: 'Machine is awake, booted and drawing power normally.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3100, note: 'Drive healthy.' },
         thermal: { idleC: 38, loadC: 65, fanRpm: 1800, note: 'Temperatures normal.' }
       },
@@ -1004,15 +977,15 @@
       id: 'audio_device_swapped',
       title: 'Sound muted or routed to phantom device',
       appliesTo: ['tower_pc', 'mbp13_2012', 'inspiron15'],
-      severity: 'low',
       noPartNeeded: true,
       complaints: [
         { t: 'No sound at all. Games, YouTube and Discord are totally silent. Even the startup chime stopped.', os: ['macos'] },
         { t: 'No sound at all. Games, YouTube and Discord are totally silent. Even the little sound when I plug a USB stick in has gone.', os: ['windows'] },
-        'I unplugged my gaming headset on Sunday and since then the speakers have never worked.'
+        'No sound from the speakers at all since I unplugged my gaming headset on Sunday.'
       ],
       customerTheory: 'They think the audio DAC or amplifier chip on the motherboard is fried.',
       readings: {
+        settings: { abnormal: true, note: 'Sound \u203a Output is set to a USB headset that is not plugged in. The built-in speakers are in the list, unselected.' },
         activity: { memPressurePct: 32, swapGB: 0.2, topProc: 'Browser', topProcMemGB: 0.9, topProcCpuPct: 4, note: 'The audio service is running normally and is sending sound out \u2014 to wherever the output is set to go. Nothing here is broken.' },
         visual: { note: 'Speaker cones are intact, audio jack has zero debris or bent contacts.' },
         smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4400, note: 'Storage fine.' },
@@ -1070,6 +1043,10 @@
     // to, and saying "quiet, no clicking" implied there might have been.
     var couldSpin = !machine.storageSoldered && (machine.storageBuses || []).indexOf('sata3') !== -1;
     return {
+      // What a browser does when nothing is wrong with it.
+      browser: { note: 'Searches land on the search engine, sites load normally, and nothing asks for permissions it should not have.' },
+      settings: { note: 'Displays, Sound and Keyboard are set the way you would expect for this machine.' },
+      network: { note: 'Every hop answers: address, router, provider, DNS and a real site.' },
       meter: meterBaseline(machine),
       smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 4200, note: 'No reallocated or pending sectors. This drive is fine.' },
       bench: { seqMBps: 520, randIops: 74000, latencyMs: 0.1, note: 'Normal for the bus in this machine.' },
@@ -1108,6 +1085,7 @@
           base[k] = Object.assign({}, base[k] || {}, fault.readings[k]);
         });
       }
+      if (base.battery && machine.battery && machine.battery.designCycles) base.battery.designCycles = machine.battery.designCycles;
       // Some readings only make sense on one kind of machine: 214 GB of
       // exports cannot be sitting on a 64 GB iPad.
       var on = fault && fault.readingsOn && fault.readingsOn[machine.kind];

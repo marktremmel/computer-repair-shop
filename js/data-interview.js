@@ -165,8 +165,8 @@
     },
 
     browser_push_spam: {
-      trigger: { w: 'hot',  t: 'They come in from the top right corner. Same place the real messages come from. "5 SYSTEM THREATS FOUND", and a button that says renew.', s: ['activity'] },
-      installed: { w: 'hot',  t: 'No, and I have been very careful. I never clicked the download. Though there was a film site my nephew used, and it asked me something and I pressed the blue one.', s: ['activity'] },
+      trigger: { w: 'hot',  t: 'They come in from the top right corner. Same place the real messages come from. "5 SYSTEM THREATS FOUND", and a button that says renew.', s: ['browser'] },
+      installed: { w: 'hot',  t: 'No, and I have been very careful. I never clicked the download. Though there was a film site my nephew used, and it asked me something and I pressed the blue one.', s: ['browser'] },
       when:    { w: 'warm', t: 'About two weeks. It was fine before that.' },
       usage:   { w: 'warm', t: 'Email, the news, photographs of the grandchildren. Nothing clever.' },
       heat:    { w: 'cold', t: 'Not hot at all. It behaves perfectly otherwise.' },
@@ -176,7 +176,7 @@
     },
 
     captive_portal_loop: {
-      trigger: { w: 'hot',  t: 'Only at the caf\u00e9 and only at the hotel. At home it is perfect. Every site gives the same red warning about the connection not being private.', s: ['activity'] },
+      trigger: { w: 'hot',  t: 'Only at the caf\u00e9 and only at the hotel. At home it is perfect. Every site gives the same red warning about the connection not being private.', s: ['browser'] },
       when:    { w: 'warm', t: 'Every time I go somewhere with free Wi-Fi, so — always, but only there.' },
       installed: { w: 'cold', t: 'Nothing new on it.' },
       heat:    { w: 'cold', t: 'No, it is fine.' },
@@ -187,8 +187,8 @@
     },
 
     browser_rogue_extension: {
-      trigger: { w: 'hot',  t: 'Every time I search Google for recipes or homework, the page blinks and sends me to "SearchZone Pro" with massive flashing ads.', s: ['activity'] },
-      installed: { w: 'hot',  t: 'I only added a free PDF reader tool and an online coupon finder from the web last Tuesday. They said they were completely safe.', s: ['activity'] },
+      trigger: { w: 'hot',  t: 'Every time I search Google for recipes or homework, the page blinks and sends me to "SearchZone Pro" with massive flashing ads.', s: ['browser'] },
+      installed: { w: 'hot',  t: 'I only added a free PDF reader tool and an online coupon finder from the web last Tuesday. They said they were completely safe.', s: ['browser'] },
       when:    { w: 'warm', t: 'Started right after I downloaded that PDF converter tool last week.' },
       usage:   { w: 'warm', t: 'Just everyday web browsing, searching and studying.' },
       heat:    { w: 'cold', t: 'Not overheating at all. It runs quiet and cool.' },
@@ -273,17 +273,17 @@
   };
 
   ANSWERS.no_internet = {
-    trigger: { w: 'hot',  t: 'It shows full bars and says connected. Nothing loads. Not one page.', s: ['activity'] },
+    trigger: { w: 'hot',  t: 'It shows full bars and says connected. Nothing loads. Not one page.', s: ['network'] },
     when:    { w: 'warm', t: 'Since Thursday. Nothing changed that I know of.' },
     installed: { w: 'cold', t: 'I have not installed anything.' },
-    history: { w: 'hot',  t: 'My other devices are fine on the same Wi-Fi. It is only this one.', s: ['activity'] },
+    history: { w: 'hot',  t: 'My other devices are fine on the same Wi-Fi. It is only this one.', s: ['network'] },
     noise:   { w: 'cold', t: 'No noises.' },
     heat:    { w: 'cold', t: 'Normal temperature.' }
   };
   ANSWERS.router_down = {
-    trigger: { w: 'hot',  t: 'Nothing in the house works. The telly, my phone, all of it \u2014 unless I use mobile data.', s: ['activity'] },
+    trigger: { w: 'hot',  t: 'Nothing in the house works. The telly, my phone, all of it \u2014 unless I use mobile data.', s: ['network'] },
     when:    { w: 'warm', t: 'This morning. All at once.' },
-    history: { w: 'hot',  t: 'Everything went at the same moment, which is what worried me.', s: ['activity'] },
+    history: { w: 'hot',  t: 'Everything went at the same moment, which is what worried me.', s: ['network'] },
     installed: { w: 'cold', t: 'Nothing installed.' },
     heat:    { w: 'cold', t: 'Cool as anything.' }
   };
@@ -319,25 +319,25 @@
     power:   { w: 'cold', t: 'Charges fine.' }
   };
   ANSWERS.gpu_cable_wrong_port = {
-    trigger: { w: 'hot',  t: 'I dusted behind the desk on Sunday and plugged the monitor back in. Web browsing is fine, but as soon as I start a 3D game it drops to 3 frames per second and stutters like a slideshow.', s: ['visual', 'bench'] },
+    trigger: { w: 'hot',  t: 'I dusted behind the desk on Sunday and plugged the monitor back in. Web browsing is fine, but as soon as I start a 3D game it drops to 3 frames per second and stutters like a slideshow.', s: ['visual'] },
     history: { w: 'warm', t: 'I unplugged and moved the PC to clean behind the desk last weekend.' },
     noise:   { w: 'cold', t: 'Fans spin quietly, no clicking or grinding.' },
     heat:    { w: 'cold', t: 'Stays cool, the graphics card fans do not even turn on.' }
   };
   ANSWERS.keyboard_layout_swap = {
-    trigger: { w: 'hot',  t: 'My password fails every time at the login screen, even though I know it by heart! It starts with "Zebra" and ends with "0".', s: ['visual', 'activity'] },
+    trigger: { w: 'hot',  t: 'My password fails every time at the login screen, even though I know it by heart! It starts with "Zebra" and ends with "0".', s: ['settings'] },
     when:    { w: 'warm', t: 'Started yesterday afternoon right after my classmate borrowed it to write an English essay.' },
     drop:    { w: 'cold', t: 'Never dropped or spilled on. Keys physically press down smoothly.' },
     noise:   { w: 'cold', t: 'Silent and smooth.' }
   };
   ANSWERS.display_brightness_zero = {
-    trigger: { w: 'hot',  t: 'The screen looks completely dead and pitch black, but when I shine my phone flashlight right up against the glass, I can faintly see my desktop wallpaper and cursor moving!', s: ['visual', 'power'] },
+    trigger: { w: 'hot',  t: 'The screen looks completely dead and pitch black, but when I shine my phone flashlight right up against the glass, I can faintly see my desktop wallpaper and cursor moving!', s: ['visual', 'settings'] },
     when:    { w: 'warm', t: 'Happened while I was adjusting volume and screen settings in the dark during a lecture.' },
     power:   { w: 'warm', t: 'Power LED is solid on and the fans are running normally.' },
     drop:    { w: 'cold', t: 'Never dropped, glass is completely uncracked.' }
   };
   ANSWERS.audio_device_swapped = {
-    trigger: { w: 'hot',  t: 'All sound vanished completely. YouTube videos play, games run, but the built-in speakers produce zero sound, not even a click.', s: ['activity', 'visual'] },
+    trigger: { w: 'hot',  t: 'All sound vanished completely. YouTube videos play, games run, but the built-in speakers produce zero sound, not even a click.', s: ['settings'] },
     when:    { w: 'warm', t: 'Right after I unplugged my USB headset and external gaming monitor on Sunday.' },
     noise:   { w: 'cold', t: 'Completely quiet.' },
     drop:    { w: 'cold', t: 'No drops, no water.' }

@@ -14,6 +14,8 @@
 (function (window) {
   'use strict';
 
+  function xml(v) { return String(v).replace(/[&<>"]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]; }); }
+
   // ── drawing ─────────────────────────────────────────────────────────
 
   /**
@@ -88,7 +90,7 @@
         + '<circle cx="' + cx1 + '" cy="' + cy1 + '" r="7.5" class="reg-badge-bg"/>'
         + '<text x="' + cx1 + '" y="' + (cy1 + 1) + '" class="reg-badge-text" style="font-size:calc(9.5px * var(--a11y-scale, 1))">⦿</text></g>';
     }
-    return o + cBadge + '<title>' + (c.label || c.role) + '</title></g>';
+    return o + cBadge + '<title>' + xml(c.title || c.label || c.role) + '</title></g>';
   }
 
   /** Copper fan-out from the big package, which is what a board actually looks like. */
@@ -133,9 +135,9 @@
 
     if (opts.inspect) {
       L.chips.forEach(function (c) {
-        if (c.cutout) return;
+        if (c.cutout || !c.label) return;
         svg += '<text class="bchip-label" x="' + (c.x + c.w / 2) + '" y="' + (c.y + c.h + 11)
-          + '" text-anchor="middle">' + (c.label || '') + '</text>';
+          + '" text-anchor="middle">' + xml(c.label || '') + '</text>';
       });
     }
     return svg + '</svg>';

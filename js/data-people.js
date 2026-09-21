@@ -82,8 +82,8 @@
   };
 
   var MACHINES_FOR = {
-    email:    ['mbp13_2012', 'inspiron15', 'imac_m1'],
-    student:  ['inspiron15', 'mba_m1', 'iphone12', 'ipad_air', 'mbp13_2012', 'switch2', 'iphone17'],
+    email:    ['mbp13_2012', 'inspiron15', 'imac_m1', 'mbneo'],
+    student:  ['inspiron15', 'mba_m1', 'iphone12', 'ipad_air', 'mbp13_2012', 'switch2', 'iphone17', 'mbneo'],
     gamer:    ['tower_pc', 'thinkpad_t480', 'steamdeck', 'switch2', 'ps5pro'],
     video:    ['tower_pc', 'thinkpad_t480', 'imac_m1', 'mbp14_m3'],
     office:   ['mba_m1', 'inspiron15', 'iphone12', 'imac_m1', 'ipad_air'],

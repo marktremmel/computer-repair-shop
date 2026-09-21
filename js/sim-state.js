@@ -120,6 +120,9 @@
     range: function (lo, hi) { return Math.floor(lo + this.rng() * (hi - lo + 1)); },
 
     save: function () {
+      // A practice job runs on a throwaway copy of the shop. Never let it
+      // overwrite the real shift in storage.
+      if (this.state && this.state.practice) return;
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.state)); } catch (e) { /* private mode */ }
     },
 

@@ -8,7 +8,7 @@ what is worth doing next, and why.
 
 ## 1. What it is now, honestly
 
-A repair shop with 13 machines, 29 faults, 57 parts, four vendors and six
+A repair shop with 14 machines, 38 faults, 68 parts, four vendors and six
 customer types. A job runs: read the counter card → sit down and ask → measure
 what the answers pointed at → buy the part the customer can live with → do the
 work with your hands → set a price → find out what they thought.
@@ -114,9 +114,9 @@ Grouped by what they would buy, not by effort.
 
 ## 4. Content gaps, specifically
 
-- **ps5pro has 4 faults**, iphone17 has 5, against 23 for the 2012 MacBook. A
-  student who draws the PS5 twice sees the same job. Two honest additions are
-  written up in `ROADMAP.md`.
+- **The spread is still uneven**: the PS5 and the iPhone 17 have 5–8 faults against
+  24 for the 2012 MacBook. The fix is faults written for those machines, not
+  wider `appliesTo` lists.
 - **No fault teaches backups as a habit** rather than a rescue. `no_backup`
   exists but fires after the fact.
 - **Nothing covers a scam that costs money** — a phishing page, a fake invoice,
@@ -130,11 +130,11 @@ Grouped by what they would buy, not by effort.
 **Measured**, and re-measured on every change:
 - Every machine × fault pair is winnable, reachable and has a decisive
   interview answer (`coverage.js`).
-- The scoring invariants hold across 27 scenarios (`scoring.js`).
+- The scoring invariants hold across 31 scenarios (`scoring.js`).
 - Careful work beats careless work by 2.4 stars and wins over a shift; the same
   part suits different customers differently (`playthrough.js`).
-- 157 pairs × 8 screens × 2 teardown states render, and ~1,900 controls click,
-  with no uncaught errors.
+- All 194 machine × fault pairs are clicked through every screen (about 13,900
+  clicks) with no uncaught errors.
 
 **Not measured, and worth knowing:**
 - Whether any of it teaches anybody anything. No student has played it.

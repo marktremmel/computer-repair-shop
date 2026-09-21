@@ -60,7 +60,7 @@
                    why:  'A good name is what fills the counter tomorrow.',
                    progress: function (S) { return [Math.min(75, Math.round(S.reputation || 0)), 75]; } },
     chip_reader: { icon: '🔬', name: 'Reads boards',
-                   goal: 'Identify five chips in a row on the Chip ID bench.',
+                   goal: 'On the Chip ID bench, find five chips in a row on the real boards, each at the first try.',
                    why:  'Knowing what you are looking at is half of any repair.' }
   };
 
@@ -71,16 +71,11 @@
    * seeds a shop — but these are hand-checked to open with a useful lesson, so
    * a teacher can hand one to a class and know roughly what turns up.
    */
-  var SHIFT_CODES = [
-    { code: 'BUDAPEST', note: 'The default. A broad mix — good for a first lesson.' },
-    { code: 'DUNA',     note: 'Opens on tight deadlines. Teaches that delivery time is part of the price.' },
-    { code: 'FILLER',   note: 'Low budgets throughout. Forces the cheap-versus-lasting argument.' },
-    { code: 'PARLAMENT',note: 'Older machines. Lots of "is this even worth fixing?".' },
-    { code: 'METRO',    note: 'Phones and tablets. Glued-shut teardowns and screen choices.' },
-    { code: 'SZIGET',   note: 'Money about, deadlines loose. Over-specification is the trap here.' },
-    { code: 'LANCHID',  note: 'Heavy on the faults that need no parts at all.' },
-    { code: 'KELETI',   note: 'Busy and mixed. Good once the class knows the loop.' }
-  ];
+  // The notes live with the profiles that implement them (sim-ticket.js), so
+  // what a student reads about a code is what the code does.
+  var SHIFT_CODES = Object.keys(window.TechOpsJobs.SHIFT_PROFILES).map(function (code) {
+    return { code: code, note: window.TechOpsJobs.SHIFT_PROFILES[code].note };
+  });
 
   var App = {
     current: 'counter',

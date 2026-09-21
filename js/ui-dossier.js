@@ -176,6 +176,11 @@
       + 'The hand-in code is a <b>one-way grade report</b> for your teacher. It grades your whole shift '
       + 'and cannot be used to restore or edit marks. Save codes cannot be submitted as hand-in codes.</p>'
       + '<button class="btn btn-sm" id="d-goteacher">Open Teacher Report &amp; Hand-in Code</button>'
+
+      + '<div class="card-head" style="margin-top:22px">Are you the teacher?</div>'
+      + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.5;margin-bottom:10px">'
+      + 'Paste the class\u2019s hand-in codes to see every shift side by side. It runs in this browser; nothing is uploaded.</p>'
+      + '<button class="btn btn-sm" id="d-teacher">Decode the class\u2019s hand-in codes</button>'
       + '</div>';
   }
 

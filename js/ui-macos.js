@@ -34,6 +34,15 @@
     return window.TechOpsFaults.readingsFor(J.machine(t), J.fault(t))[id] || {};
   }
 
+  /** Using an app counts as the check it performs — once, at its bench time. */
+  function recordCheck(id) {
+    var t = Shop.state.ticket;
+    if (!t || t.testsRun.indexOf(id) !== -1) return;
+    t.testsRun.push(id);
+    t.labourHours += UI.INSTRUMENTS[id].hours;
+    Shop.emit('change');
+  }
+
   function runInstrument(id) {
     var t = Shop.state.ticket;
     if (t.testsRun.indexOf(id) !== -1) return false;
@@ -458,81 +467,6 @@
         d: 'A backup nobody has opened is a rumour. Open an invoice and a photo from the copy before you tell them it is safe.',
         game: 'verify', verb: 'Verify the copy' }
     ],
-    revoke_notifications: [
-      { id: 'prove', t: 'Show them nothing is installed',
-        d: 'Before touching a setting, open Activity Monitor together and look. No unknown process, no installer, nothing running. That is the reassurance they actually came in for \u2014 and it is also the evidence.',
-        game: 'settings', verb: 'Check what is running', path: ['Activity Monitor', 'CPU', 'All Processes'] },
-      { id: 'findsite', t: 'Find who was given permission',
-        d: 'Browser settings keep a list of every site allowed to send notifications. The culprit is a name on that list, not a virus on the disk. '
-         + 'On a Mac it is Safari \u203a Settings \u203a Websites \u203a Notifications; in Chrome and Edge it is Settings \u203a Privacy \u203a Site settings \u203a Notifications.',
-        game: 'notifications', verb: 'Open the notification list' },
-      { id: 'revoke', t: 'Remove it, and show them the list',
-        d: 'Deny is not enough on its own \u2014 remove it so the entry is gone. Then leave the list open and show them what Allow actually grants, because the next site will ask too.',
-        game: 'toggles3', verb: 'Remove the permission',
-        tgTitle: 'What actually stops the pop-ups?',
-        tgPrompt: 'Tick everything that is part of the fix. Leave the rest \u2014 charging for work nobody needs is the other way to get this job wrong.',
-        tgVerb: 'Do those',
-        tgOk: 'Right. One permission removed, one list explained, nothing installed and nothing charged for hardware.',
-        tgMiss: 'Not finished yet. You have not: ',
-        tgExtra: 'That is work the machine does not need. Nothing was installed here, so there is nothing to uninstall \u2014 and a clean install would take their photographs with it.',
-        items: [
-          { id: 'remove',  label: 'Remove the rogue site from the notification list', pick: true },
-          { id: 'show',    label: 'Show them where that list lives',                  pick: true },
-          { id: 'explain', label: 'Explain what pressing Allow actually granted',     pick: true },
-          { id: 'wipe',    label: 'Reinstall the operating system',                   pick: false },
-          { id: 'av',      label: 'Sell them an antivirus subscription',              pick: false },
-          { id: 'drive',   label: 'Replace the drive',                                pick: false }
-        ] }
-    ],
-    remove_extension: [
-      { id: 'prove', t: 'Show them system processes are clean',
-        d: 'Open Activity Monitor first. No rogue background processes or system rootkits. The operating system itself is healthy \u2014 the problem is inside the browser.',
-        game: 'settings', verb: 'Check running processes', path: ['Activity Monitor', 'CPU', 'All Processes'] },
-      { id: 'inspect', t: 'Inspect installed browser extensions',
-        d: 'Browser settings maintain a list of add-ons with permission to read and alter web traffic. Look under Settings › Extensions for add-ons claiming to be "Search Helpers" or "PDF Tools".',
-        verb: 'Open Browser extensions' },
-      { id: 'explain', t: 'Remove the rogue extension and explain permissions',
-        d: 'Remove the search-hijacking extension. Explain how webRequest permissions work so they avoid downloading random web toolbars in the future.',
-        game: 'toggles3', verb: 'Finish the repair',
-        tgTitle: 'How do you resolve extension search hijacking?',
-        tgPrompt: 'Tick the actions that belong in an honest repair. Leave the unnecessary upsells.',
-        tgVerb: 'Apply these',
-        tgOk: 'Spot on. Rogue extension uninstalled, search engine restored, and zero hardware or antivirus upsells.',
-        tgMiss: 'You missed a key step: ',
-        tgExtra: 'Selling a drive replacement or antivirus subscription for a browser extension is predatory.',
-        items: [
-          { id: 'rm',      label: 'Remove the rogue search hijacker from Extensions', pick: true },
-          { id: 'restore', label: 'Verify default search engine is restored',         pick: true },
-          { id: 'explain', label: 'Explain how extension permissions work',           pick: true },
-          { id: 'drive',   label: 'Replace the SSD drive',                            pick: false },
-          { id: 'av',      label: 'Sell a 20.000 Ft antivirus subscription',          pick: false }
-        ] }
-    ],
-    clear_portal: [
-      { id: 'chain', t: 'Prove the connection itself is fine',
-        d: 'Ping along the chain first. Address, router, gateway, DNS \u2014 all answer. It is only the last step that fails, which already rules out the wireless card they were about to pay for.',
-        game: 'settings', verb: 'Walk the chain', path: ['Network Utility', 'Ping', 'Trace the chain'] },
-      { id: 'http', t: 'Make one deliberate unencrypted request',
-        d: 'The gateway can only redirect a request it is allowed to read. HTTPS refuses to be read \u2014 correctly \u2014 so nothing can redirect it and every site fails. A plain HTTP address gives the portal something to intercept.',
-        game: 'type', verb: 'Open the probe address', cmd: 'http://captive.apple.com' },
-      { id: 'explain', t: 'Explain the warning before you clear it',
-        d: 'The certificate warning was right. Somebody really was answering for a site they do not own. Worth thirty seconds, because the next time they see that warning it might not be a caf\u00e9.',
-        game: 'toggles3', verb: 'Talk it through',
-        tgTitle: 'What is true about that warning?',
-        tgPrompt: 'Tick the statements you would actually stand behind. This is the part they take home with them.',
-        tgVerb: 'Say those',
-        tgOk: 'That is the honest version: the warning was doing its job, the caf\u00e9 is not sinister, and clicking through it somewhere that matters is the real risk.',
-        tgMiss: 'You have left out something worth saying: ',
-        tgExtra: 'You just taught somebody to ignore certificate warnings. The next one might be a bank.',
-        items: [
-          { id: 'right',   label: 'The warning was correct \u2014 something really was answering for that site', pick: true },
-          { id: 'gateway', label: 'It was the hotspot login page, not an attack',                     pick: true },
-          { id: 'careful', label: 'Clicking through it on a bank or email site is the dangerous case', pick: true },
-          { id: 'ignore',  label: 'These warnings are always a false alarm \u2014 just click through',   pick: false },
-          { id: 'virus',   label: 'The laptop has picked something up',                               pick: false },
-          { id: 'card',    label: 'The wireless card needs replacing',                                pick: false }
-        ] }
-    ],
     // Settings faults are fixed where they live. One step each: it opens the
     // Settings app on the right section, and the job completes when the
     // machine actually works again — the test tone plays, the screen lights,
@@ -662,45 +596,98 @@
     return shift && /[a-zà-ſ]/.test(c) ? c.toUpperCase() : c;
   }
 
+  /*
+   * The browser's extensions page. The same list on every machine, with the
+   * same neutral icon, so opening it gives nothing away. What separates the
+   * add-on doing the damage is only in its details — where it came from, when
+   * it arrived, and what it is allowed to do — which is exactly where a real
+   * technician has to look. Broad permissions alone prove nothing: an ad
+   * blocker needs to read every page too.
+   */
+  var EXTENSIONS = [
+    { id: 'ublock', name: 'uBlock Origin', from: 'Chrome Web Store', added: 'two years ago',
+      perms: ['Read and change all your data on all websites'],
+      why: 'That was their ad blocker. It needs to read every page to block anything — the broad permission is the job, not a warning sign.' },
+    { id: 'docs', name: 'Google Docs Offline', from: 'Installed with the browser', added: 'when the browser was installed',
+      perms: ['Read and change your data on docs.google.com'],
+      why: 'That one came with the browser. Now their documents will not open offline, and nothing else changed.' },
+    { id: 'dark', name: 'Dark Reader', from: 'Chrome Web Store', added: 'last year',
+      perms: ['Read and change all your data on all websites'],
+      why: 'They use that at night. Same broad permission as the ad blocker, for the same honest reason.' },
+    { id: 'pdf', name: 'PDF Express Converter', rogueOn: 'browser_rogue_extension',
+      clean: { from: 'Chrome Web Store', added: 'three months ago', perms: ['Read your download history'] },
+      bad: { from: 'Added by another program — not from the Web Store', added: 'last Tuesday',
+             perms: ['Read and change all your data on all websites', 'Change your search settings to: searchzone.top', 'Manage your downloads'] },
+      why: 'They use it for school PDFs, and nothing about this copy was doing any harm.' }
+  ];
+  function extInfo(x, f) {
+    if (!x.rogueOn) return x;
+    return Object.assign({}, x, f.id === x.rogueOn ? x.bad : x.clean, { rogue: f.id === x.rogueOn });
+  }
+
+  /** What searching does on this machine right now. */
+  function searchHijacked(t) {
+    return J.fault(t).id === 'browser_rogue_extension' && !(t._extRemoved || {}).pdf;
+  }
+
   function bodyBrowser() {
     var t = Shop.state.ticket;
     var f = J.fault(t);
     var tab = t._browserTab || 'web';
-    var nav = '<div class="app-tabs">'
-      + '<button class="app-tab' + (tab === 'web' ? ' on' : '') + '" data-btab="web">Web</button>'
-      + '<button class="app-tab' + (tab === 'perms' ? ' on' : '') + '" data-btab="perms">Settings › Notifications</button>'
-      + '<button class="app-tab' + (tab === 'exts' ? ' on' : '') + '" data-btab="exts">Settings › Extensions</button>'
-      + '</div>';
+    var tabs = [['web', 'Web'], ['perms', 'Settings › Notifications'], ['exts', 'Settings › Extensions'], ['search', 'Settings › Search engine']];
+    var nav = '<div class="app-tabs">' + tabs.map(function (x) {
+      return '<button class="app-tab' + (tab === x[0] ? ' on' : '') + '" data-btab="' + x[0] + '">' + x[1] + '</button>';
+    }).join('') + '</div>';
 
     if (tab === 'exts') {
-      var exts = [
-        { id: 'ublock', name: 'uBlock Origin', desc: 'Content blocker for advertising scripts.', rogue: false },
-        { id: 'dark_reader', name: 'Dark Reader', desc: 'Inverts web page brightness for night use.', rogue: false },
-        { id: 'search_zone', name: 'SearchZone & PDF Express', desc: 'Intercepts web searches and redirects queries to affiliate shopping engines.', rogue: true }
-      ].filter(function (x) {
-        return !x.rogue || f.id === 'browser_rogue_extension';
-      });
       var removed = t._extRemoved || {};
-      var rows = exts.map(function (x) {
-        var gone = removed[x.id] || (x.rogue && t.actionsDone.indexOf('remove_extension') !== -1);
-        return '<div class="mg-perm' + (gone ? ' gone' : '') + '"><span class="mg-fav">' + (x.rogue ? '⚠️' : '🧩') + '</span>'
-          + '<div><b>' + esc(x.name) + '</b><span>' + (gone ? 'uninstalled' : esc(x.desc)) + '</span></div>'
-          + (gone ? '' : '<button class="btn btn-sm" data-ext-rm="' + esc(x.id) + '">Remove</button>')
-          + '</div>';
+      var open = t._extOpen || null, confirm = t._extConfirm || null;
+      var rows = EXTENSIONS.map(function (x0) {
+        var x = extInfo(x0, f);
+        if (removed[x.id]) {
+          return '<div class="ext-card gone"><span class="ext-ic">' + extIcon() + '</span><div class="ext-main"><b>' + esc(x.name) + '</b>'
+            + '<span class="ext-sub">Removed</span></div></div>'
+            + (t._extSay === x.id ? '<div class="mg-say ' + (x.rogue ? 'ok' : 'bad') + '">' + esc(x.rogue
+                ? 'Gone. The search setting it was holding is free again — try a search on the Web tab.' : x.why) + '</div>' : '');
+        }
+        return '<div class="ext-card' + (open === x.id ? ' open' : '') + '"><span class="ext-ic">' + extIcon() + '</span>'
+          + '<div class="ext-main"><b>' + esc(x.name) + '</b><span class="ext-sub">' + esc(x.from) + '</span>'
+          + (open === x.id
+              ? '<dl class="ext-details"><dt>Added</dt><dd>' + esc(x.added) + '</dd><dt>Source</dt><dd>' + esc(x.from) + '</dd>'
+                + '<dt>It can</dt><dd><ul>' + x.perms.map(function (pp) { return '<li>' + esc(pp) + '</li>'; }).join('') + '</ul></dd></dl>'
+              : '')
+          + (confirm === x.id
+              ? '<div class="ext-confirm">Remove “' + esc(x.name) + '”? '
+                + '<button class="btn btn-xs btn-danger" data-ext-yes="' + x.id + '">Remove</button> '
+                + '<button class="btn btn-xs" data-ext-no>Cancel</button></div>'
+              : '')
+          + '</div><div class="ext-acts"><button class="btn btn-xs" data-ext-open="' + x.id + '">' + (open === x.id ? 'Hide' : 'Details') + '</button>'
+          + '<button class="btn btn-xs" data-ext-rm="' + x.id + '">Remove</button></div></div>';
       }).join('');
       return nav
-        + '<div class="app-crumb">Extensions — browser add-ons with permission to inspect and alter visited pages.</div>'
-        + '<div class="mg-perms">' + rows + '</div>'
-        + '<div id="ext-say" class="mg-say"></div>';
+        + '<div class="app-crumb">Extensions — add-ons running inside the browser on every page it opens.</div>'
+        + '<div class="ext-list">' + rows + '</div>';
+    }
+
+    if (tab === 'search') {
+      var hij = searchHijacked(t);
+      return nav
+        + '<div class="app-crumb">Search engine — what the address bar uses when you type words instead of an address.</div>'
+        + '<div class="set-row"><span>Search engine used in the address bar</span>'
+        + '<select class="mg-input" disabled><option>' + (hij ? 'SearchZone' : 'Google') + '</option></select></div>'
+        + (hij ? '<div class="ext-controlled">' + extIcon() + ' <span><b>PDF Express Converter</b> is controlling this setting.</span></div>'
+               : '<div class="hs-small" style="margin-top:6px">You choose this one. Nothing else is controlling it.</div>');
     }
 
     if (tab === 'perms') {
-      var sites = window.TechOpsMiniGames.NOTIFICATION_SITES.filter(function (x) {
-        return !x.rogue || f.id === 'browser_push_spam';
+      // The same sites on every machine. On most, the dodgy one was refused
+      // long ago; on the spam job it was allowed, and that is the evidence.
+      var sites = window.TechOpsMiniGames.NOTIFICATION_SITES.map(function (x) {
+        return x.rogue && f.id !== 'browser_push_spam' ? Object.assign({}, x, { a: 'Deny', blocked: true }) : x;
       });
-      var removed = t._permRemoved || {};
-      var rows = sites.map(function (x) {
-        var gone = removed[x.d] || (x.rogue && t.actionsDone.indexOf('revoke_notifications') !== -1);
+      var removedP = t._permRemoved || {};
+      var prow = sites.map(function (x) {
+        var gone = removedP[x.d] || (x.rogue && t.actionsDone.indexOf('revoke_notifications') !== -1);
         return '<div class="mg-perm' + (gone ? ' gone' : '') + '"><span class="mg-fav">' + esc(x.d.charAt(0).toUpperCase()) + '</span>'
           + '<div><b>' + esc(x.d) + '</b><span>' + (gone ? 'removed' : 'Notifications') + '</span></div>'
           + (gone ? '' : '<span class="mg-allow ' + (x.a === 'Allow' ? 'yes' : 'no') + '">' + x.a + '</span>'
@@ -709,21 +696,24 @@
       }).join('');
       return nav
         + '<div class="app-crumb">Websites › Notifications — every site allowed to send alerts to this machine.</div>'
-        + '<div class="mg-perms">' + rows + '</div>'
+        + '<div class="mg-perms">' + prow + '</div>'
         + '<div id="perm-say" class="mg-say"></div>';
     }
 
-    // Web tab: an address bar and whatever the network actually does with it.
-    var url = t._browserUrl || '';
+    // Web tab: an address bar and whatever the machine actually does with it.
+    var url = t._browserUrl || '', landed = t._browserLanded || url;
     var portal = f.id === 'captive_portal_loop' && t.actionsDone.indexOf('clear_portal') === -1;
-    var extHijack = f.id === 'browser_rogue_extension' && t.actionsDone.indexOf('remove_extension') === -1;
+    var spam = f.id === 'browser_push_spam' && t.actionsDone.indexOf('revoke_notifications') === -1;
     var page;
     if (!url) {
-      page = '<div class="web-page muted">Type an address, or pick one. Try more than one kind.</div>';
-    } else if (extHijack && /google|search|bing|yahoo/i.test(url)) {
-      page = '<div class="web-page cert"><b>⚠️ Redirected to SearchZone Pro (searchzone.top)</b>'
-        + '<p>Your search for <code>' + esc(url) + '</code> was intercepted by an installed extension and redirected to an ad-filled sponsored portal.</p>'
-        + '<p class="muted">Check installed extensions under <b>Settings › Extensions</b>.</p></div>';
+      page = '<div class="web-page muted">Type an address, or some words to search for. Try more than one kind.</div>';
+    } else if (/searchzone/.test(landed)) {
+      var q = decodeURIComponent((landed.split('q=')[1] || '').replace(/\+/g, ' '));
+      page = '<div class="web-page sz"><div class="sz-head">searchzone<b>.top</b></div>'
+        + '<div class="sz-q">Results for “' + esc(q) + '”</div>'
+        + ['Sponsored', 'Sponsored', 'Sponsored'].map(function (tag, k) {
+            return '<div class="sz-ad"><span>' + tag + '</span><b>' + ['Best deals on ' + esc(q), 'Download ' + esc(q) + ' FREE now', 'Clean your PC in 1 click'][k] + '</b></div>';
+          }).join('') + '</div>';
     } else if (portal && /^https:/i.test(url)) {
       var host = url.replace(/^https?:\/\//i, '').split('/')[0];
       page = '<div class="web-page cert"><b>Your connection is not private</b>'
@@ -731,22 +721,30 @@
         + '<code>CafeNet-Gateway</code>, not by anyone who owns ' + esc(host) + '.</p>'
         + '<p class="muted">NET::ERR_CERT_AUTHORITY_INVALID</p></div>';
     } else if (portal && /^http:/i.test(url)) {
-      page = '<div class="web-page portal"><b>🌐 CafeNet Free Wi-Fi</b>'
+      page = '<div class="web-page portal"><b>CafeNet Free Wi-Fi</b>'
         + '<p>Welcome. Please accept the terms of use to get online.</p>'
         + '<label class="web-check"><input type="checkbox" id="portal-agree"> I accept the terms of use</label>'
         + '<button class="btn btn-sm btn-primary" id="portal-go" style="margin-top:8px">Connect</button></div>';
     } else {
-      page = '<div class="web-page"><b>' + esc(url.replace(/^https?:\/\//i, '')) + '</b>'
+      page = '<div class="web-page"><b>' + esc(landed.replace(/^https?:\/\//i, '')) + '</b>'
         + '<p class="muted">Page loaded normally.</p></div>';
     }
-    var picks = ['https://nkp.hu', 'https://www.google.com', 'http://captive.apple.com', 'http://neverssl.com'];
+    if (spam && url) {
+      page += '<div class="push-toast"><b>⚠ 5 threats found on your device</b><span>fast-cleaner-mac.info · now</span></div>';
+    }
+    var picks = ['https://nkp.hu', 'weather budapest', 'http://captive.apple.com', 'http://neverssl.com'];
     return nav
       + '<div class="web-bar"><input class="mg-input" id="web-url" spellcheck="false" autocomplete="off" '
-      + 'placeholder="address" value="' + esc(url) + '"><button class="btn btn-sm" id="web-go">Go</button></div>'
+      + 'placeholder="address or search" value="' + esc(url) + '"><button class="btn btn-sm" id="web-go">Go</button></div>'
+      + (landed && landed !== url ? '<div class="web-landed">↪ ' + esc(landed.replace(/^https?:\/\//i, '')) + '</div>' : '')
       + '<div class="web-picks">' + picks.map(function (u) {
           return '<button class="web-pick" data-web="' + esc(u) + '">' + esc(u) + '</button>';
         }).join('') + '</div>'
       + page;
+  }
+
+  function extIcon() {
+    return '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 3h4v3a2 2 0 104 0V3h0v6h-3a2 2 0 100 4h3v8H9v-3a2 2 0 10-4 0v3H3v-8h3a2 2 0 100-4H3V3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>';
   }
 
   function bodySettings() {
@@ -854,23 +852,37 @@
       sub: 'The plug stops a couple of millimetres short and wobbles. Nothing happens on the screen at all.' };
     if (!fixed && id === 'charge_port_dead') return { cls: 'flicker', head: 'Charging … not charging',
       sub: 'The bolt comes and goes every time the cable moves. When it does hold, it is the slowest possible trickle.' };
+    // One CC pin corroded: the plug works one way up and not the other. Which
+    // way is fixed per job, so turning the plug over is the test.
+    if (!fixed && id === 'usbc_cc_short' && (t._hsFlip ? 1 : 0) === badSide(t)) return { cls: 'slow', head: 'Slow charger connected',
+      sub: 'Five volts at under half an amp \u2014 it has fallen back to basic USB power. The same cable and brick charge other phones at full speed.' };
     if (!fixed && id === 'water_damage') return { cls: 'liquid', head: 'Liquid detected in the USB-C connector',
       sub: 'Charging is switched off until the connector is dry. The device is protecting itself — it cannot tell corrosion from wet.' };
     var p = reading('power');
     return { cls: 'ok', head: 'Charging', sub: (p.negotiated && p.watts >= 10 ? p.negotiated : 'USB-PD 9V/2.2A') + ' · fast charge, steady even when you move the cable.' };
   }
 
+  function badSide(t) {
+    var h = 0, s = String(t.id || '');
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    return h % 2;
+  }
+
   function bodyHandset(t) {
     var m = J.machine(t);
     var tab = t._hsTab || 'battery';
-    var tabs = [['battery', 'Battery & charging'], ['touch', 'Touch test'], ['storage', m.kind === 'tablet' ? 'iPad storage' : 'iPhone storage']];
+    var tabs = [['battery', 'Battery & charging'], ['touch', 'Touch test'], ['storage', m.kind === 'tablet' ? 'iPad storage' : 'iPhone storage'], ['safari', 'Safari']];
     var head = '<div class="hs-tabs">' + tabs.map(function (x) {
       return '<button class="btn btn-sm' + (tab === x[0] ? ' btn-primary' : '') + '" data-hs-tab="' + x[0] + '">' + esc(x[1]) + '</button>';
     }).join('') + '</div>';
     if (t._hsBooting) {
       return head + '<div class="hs-screen ' + m.kind + ' booting"><div class="hs-boot"><span class="hs-spin"></span>Starting up\u2026</div></div>';
     }
-    var body = tab === 'touch' ? handsetTouch(t, m) : tab === 'storage' ? handsetStorage(t, m) : handsetBattery(t, m);
+    // Safari is the same browser the desktop lab has: a phone's web problems
+    // are found and fixed the same way.
+    var body = tab === 'touch' ? handsetTouch(t, m) : tab === 'storage' ? handsetStorage(t, m)
+      : tab === 'safari' ? '<div class="hs-screen ' + m.kind + ' hs-web">' + bodyBrowser() + '</div>'
+      : handsetBattery(t, m);
     return head + body;
   }
 
@@ -898,9 +910,11 @@
       + '<div class="hs-card"><div class="hs-title">Charger</div>'
       + (cs ? '<div class="hs-charge ' + cs.cls + '"><b>' + esc(cs.head) + '</b><div class="hs-small">' + esc(cs.sub) + '</div></div>'
             + '<button class="btn btn-xs" data-hs-unplug style="margin-top:8px">Unplug</button>'
-            : '<div class="hs-plugrow"><div class="hs-plug" data-hs-plug title="Drag the plug into the port">USB-C ▸</div>'
+            : '<div class="hs-plugrow"><div class="hs-plug' + (t._hsFlip ? ' flipped' : '') + '" data-hs-plug tabindex="0" role="button" aria-label="USB-C plug: drag it into the port, or press Enter" title="Drag the plug into the port">'
+              + '<span class="hs-plug-face">USB-C</span><span class="hs-plug-logo">' + (t._hsFlip ? 'logo down' : 'logo up') + '</span></div>'
               + '<div class="hs-port" data-hs-port>port</div></div>'
-              + '<div class="hs-small">Drag the cable into the port and watch the screen, not the cable.</div>')
+              + '<div class="hs-plugacts"><button class="hs-flip" data-hs-flip type="button" title="Turn the plug over">\u21bb Turn the plug over</button></div>'
+              + '<div class="hs-small">Drag the cable into the port and watch the screen, not the cable. USB-C goes in either way up \u2014 or should.</div>')
       + '</div>'
       + '<div class="hs-card"><div class="hs-title">Restart</div>'
       + '<button class="hs-side" data-hs-hold><span class="hs-fill"></span>Hold the top button</button>'
@@ -914,7 +928,7 @@
     for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) cells += '<i data-r="' + r + '"></i>';
     return '<div class="hs-screen ' + m.kind + '">'
       + '<div class="hs-small" style="margin-bottom:6px">Drag a finger over every square. A square that stays dark is glass that is not listening.</div>'
-      + '<div class="hs-grid" data-hs-grid data-rows="' + rows + '" style="grid-template-columns:repeat(' + cols + ',1fr)">' + cells + '</div>'
+      + '<div class="hs-grid" data-hs-grid tabindex="0" aria-label="Touch test: paint every square, or walk them with the arrow keys" data-rows="' + rows + '" data-cols="' + cols + '" style="grid-template-columns:repeat(' + cols + ',1fr)">' + cells + '</div>'
       + '<div class="hs-small" data-hs-touchsay style="margin-top:6px"></div></div>';
   }
 
@@ -984,9 +998,22 @@
       b.addEventListener('click', function () { t._hsPlugged = false; audio('playKeyPop'); render(); });
     });
 
+    host.querySelectorAll('[data-hs-flip]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pl = host.querySelector('[data-hs-plug]');
+        if (pl) pl.classList.add('turning');
+        audio('playKeyPop');
+        setTimeout(function () { t._hsFlip = !t._hsFlip; render(); }, 260);
+      });
+    });
+
     // The cable: a real drag, dropped on the port.
     var plug = host.querySelector('[data-hs-plug]'), port = host.querySelector('[data-hs-port]');
     if (plug && port) {
+      // Keyboard route: the same test at the same cost.
+      plug.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); plugIn(); }
+      });
       plug.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         var x0 = e.clientX, y0 = e.clientY;
@@ -1030,8 +1057,8 @@
     if (hold) {
       var timer = null;
       var cancel = function () { hold.classList.remove('holding'); clearTimeout(timer); timer = null; };
-      hold.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
+      var begin = function () {
+        if (timer) return;
         hold.classList.add('holding');
         timer = setTimeout(function () {
           cancel();
@@ -1050,6 +1077,15 @@
             Shop.emit('change'); render();
           }, 1400);
         }, 1500);
+      };
+      hold.addEventListener('pointerdown', function (e) { e.preventDefault(); begin(); });
+      // Holding Space or Enter is the same press-and-hold, for the same time.
+      hold.addEventListener('keydown', function (e) {
+        if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); begin(); }
+        else if (e.key === ' ' || e.key === 'Enter') e.preventDefault();
+      });
+      hold.addEventListener('keyup', function (e) {
+        if ((e.key === ' ' || e.key === 'Enter') && timer) { cancel(); UI.toast('Screen locked', 'That was a tap. Restarting needs the button held down until the slider appears.', 'info'); }
       });
       ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
         hold.addEventListener(ev, function () {
@@ -1093,6 +1129,21 @@
       grid.addEventListener('pointerdown', function (e) { painting = true; last = null; try { grid.setPointerCapture(e.pointerId); } catch (_) {} stroke(e.clientX, e.clientY); });
       grid.addEventListener('pointermove', function (e) { if (painting) stroke(e.clientX, e.clientY); });
       grid.addEventListener('pointerup', function () { painting = false; last = null; });
+      // Keyboard route: walk the grid square by square. Every square still has
+      // to be visited, as with a finger.
+      var gcols = +grid.getAttribute('data-cols'), cur = 0;
+      grid.addEventListener('keydown', function (e) {
+        var d = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: gcols, ArrowUp: -gcols }[e.key];
+        if (d === undefined) return;
+        e.preventDefault();
+        paint(grid.children[cur]);
+        var n = cur + d;
+        if (n < 0 || n >= grid.children.length) return;
+        if (Math.abs(d) === 1 && Math.floor(n / gcols) !== Math.floor(cur / gcols)) return;
+        cur = n;
+        paint(grid.children[cur]);
+      });
+      grid.addEventListener('focus', function () { paint(grid.children[cur]); });
     }
 
     // Storage: choose what goes.
@@ -1337,6 +1388,7 @@
 
     host.querySelectorAll('[data-ping]').forEach(function (b) {
       b.addEventListener('click', function () {
+        recordCheck('network');
         var t2 = Shop.state.ticket;
         t2.net = t2.net || {};
         t2.net[b.getAttribute('data-ping')] = true;
@@ -1395,9 +1447,28 @@
     var goUrl = function (u) {
       var t = Shop.state.ticket;
       u = String(u || '').trim();
-      if (u && !/^[a-z]+:\/\//i.test(u)) u = 'https://' + u;   // what a browser does
+      if (!u) return;
+      // Words, not an address: the address bar searches, like a real one.
+      var isSearch = /\s/.test(u) || !/\./.test(u);
+      if (!isSearch && !/^[a-z]+:\/\//i.test(u)) u = 'https://' + u;
+      var q = encodeURIComponent(u).replace(/%20/g, '+');
+      var landed = isSearch
+        ? (searchHijacked(t) ? 'https://searchzone.top/search?q=' + q : 'https://www.google.com/search?q=' + q)
+        : u;
       t._browserUrl = u;
-      t.labourHours += 0.05;
+      t._browserLanded = landed;
+      // Using the browser is the evidence for the faults that live in it.
+      if (t.testsRun.indexOf('browser') === -1) recordCheck('browser');
+      else t.labourHours += 0.05;
+      // And using it again after the repair is how you know it worked.
+      var fid = J.fault(t).id;
+      if (['browser_rogue_extension', 'browser_push_spam', 'captive_portal_loop'].indexOf(fid) !== -1 && fixedNow(t)
+          && !/searchzone/.test(landed) && !(fid === 'captive_portal_loop' && /^http:/i.test(u))) {
+        confirmFix(t, fid === 'browser_rogue_extension' ? 'The search went straight to the search engine. Nothing is in the way any more.'
+          : fid === 'browser_push_spam' ? 'Pages load and nothing slides in from the corner.'
+          : 'An HTTPS site loads with a valid certificate. They are online.');
+      }
+      Shop.emit('change');
       audio('playPing'); render();
     };
     var goBtn = host.querySelector('#web-go');
@@ -1425,9 +1496,15 @@
         var site = window.TechOpsMiniGames.NOTIFICATION_SITES.filter(function (x) { return x.d === d; })[0];
         t._permRemoved = t._permRemoved || {};
         t._permRemoved[d] = true;
-        if (site && site.rogue) {
+        if (site && site.rogue && J.fault(t).id === 'browser_push_spam') {
           completeAct('revoke_notifications');
           render();
+          return;
+        }
+        if (site && site.rogue) {
+          render();
+          var say0 = host.querySelector('#perm-say') || document.getElementById('perm-say');
+          if (say0) { say0.className = 'mg-say'; say0.textContent = 'It was already set to Deny, so nothing changes. Tidy, but not the problem on this machine.'; }
           return;
         }
         render();
@@ -1440,30 +1517,47 @@
         audio('playErrorBuzz');
       });
     });
+    host.querySelectorAll('[data-ext-open]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket, id = b.getAttribute('data-ext-open');
+        t._extOpen = t._extOpen === id ? null : id;
+        audio('playKeyPop'); render();
+      });
+    });
     host.querySelectorAll('[data-ext-rm]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var t = Shop.state.ticket;
-        var id = b.getAttribute('data-ext-rm');
+        Shop.state.ticket._extConfirm = b.getAttribute('data-ext-rm');
+        audio('playKeyPop'); render();
+      });
+    });
+    host.querySelectorAll('[data-ext-no]').forEach(function (b) {
+      b.addEventListener('click', function () { Shop.state.ticket._extConfirm = null; render(); });
+    });
+    host.querySelectorAll('[data-ext-yes]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket, id = b.getAttribute('data-ext-yes');
+        var x = extInfo(EXTENSIONS.filter(function (e) { return e.id === id; })[0], J.fault(t));
         t._extRemoved = t._extRemoved || {};
         t._extRemoved[id] = true;
-        if (id === 'search_zone') {
+        t._extConfirm = null;
+        t._extSay = id;
+        t.labourHours += 0.05;
+        if (x.rogue) {
           completeAct('remove_extension');
-          render();
-          return;
+        } else {
+          // Their add-on, gone. There is no undo on a customer's machine.
+          t.sloppySteps = (t.sloppySteps || 0) + 1;
+          audio('playErrorBuzz');
+          Shop.emit('change');
         }
         render();
-        var say = host.querySelector('#ext-say') || document.getElementById('ext-say');
-        if (say) {
-          say.className = 'mg-say bad';
-          say.textContent = 'That was a standard extension they installed on purpose. Read the description — the rogue extension is the one intercepting searches.';
-        }
-        audio('playErrorBuzz');
       });
     });
 
     // ── System Settings ──
     host.querySelectorAll('[data-stab]').forEach(function (b) {
       b.addEventListener('click', function () {
+        recordCheck('settings');
         Shop.state.ticket._settingsTab = b.getAttribute('data-stab');
         audio('playKeyPop'); render();
       });

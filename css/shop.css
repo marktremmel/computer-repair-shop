@@ -302,14 +302,6 @@ html[data-brand-dark="1"] .btn-primary { color: #fff; }
 }
 .speech + .speech { border-top-left-radius: 14px; opacity: .85; font-size: calc(13px * var(--a11y-scale, 1)); }
 
-.queue-list { display: flex; flex-direction: column; gap: 10px; }
-.queue-item {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--panel); border: 1px solid var(--line);
-  border-radius: 12px; padding: 12px; transition: .15s;
-}
-.queue-item:hover { border-color: #35425a; }
-
 /* ===========================================================================
    NOTE / CALLOUT
    =========================================================================== */
@@ -898,15 +890,6 @@ body[data-phase="morning"] #shopdrop::after {
 
 /* ── dossier controls ─────────────────────────────────────────────── */
 .dossier-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.badge-row { display: flex; flex-wrap: wrap; gap: 7px; }
-.badge-chip {
-  display: flex; align-items: center; gap: 7px;
-  background: var(--bg); border: 1px solid var(--line-soft); border-radius: 999px;
-  padding: 6px 12px; font-size: calc(12.3px * var(--a11y-scale, 1)); opacity: .45;
-}
-.badge-chip.on { opacity: 1; border-color: rgba(61,220,145,.4); background: rgba(61,220,145,.07); }
-.badge-chip i { font-style: normal; font-size: calc(10.5px * var(--a11y-scale, 1)); color: var(--ink-3); }
-.badge-chip.on i { color: var(--green); }
 #player-chip { cursor: pointer; transition: .14s; }
 #player-chip:hover { border-color: var(--amber); }
 .avatar-edit { position: relative; cursor: pointer; background: linear-gradient(160deg, #2b3546, #1a222f); }
@@ -1298,3 +1281,108 @@ html[data-motion="reduced"] .tour-card { transition: none; }
 }
 .fu-choice:hover { border-color: var(--amber); transform: translateX(2px); }
 .fu-why { margin: 6px 0 10px 44px; font-size: calc(12px * var(--a11y-scale, 1)); }
+
+/* Teacher decoder link on the title screen: quiet, but always there. */
+.title-teacher { background: none; border: 0; padding: 4px 0; margin-top: 6px; color: var(--ink-3); font: inherit;
+  font-size: calc(12px * var(--a11y-scale, 1)); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.title-teacher:hover { color: var(--ink); }
+
+/* ── Training ticket coach: a corner card that points, never clicks ── */
+.coach { position: fixed; left: 16px; bottom: 44px; z-index: 60; width: min(340px, calc(100vw - 32px));
+  background: var(--panel); border: 1px solid var(--amber); border-radius: 12px; padding: 12px 14px;
+  box-shadow: var(--shadow); font-size: calc(13px * var(--a11y-scale, 1)); line-height: 1.5; }
+.coach h4 { margin: 4px 0 4px; font-size: calc(14px * var(--a11y-scale, 1)); }
+.coach p { margin: 0 0 6px; color: var(--ink-2); }
+.coach-head { display: flex; justify-content: space-between; align-items: center; }
+.coach-tag { font-size: calc(10.5px * var(--a11y-scale, 1)); text-transform: uppercase; letter-spacing: .06em; color: var(--amber); }
+.coach-count { font-family: var(--mono); font-size: calc(11px * var(--a11y-scale, 1)); color: var(--ink-3); }
+.coach-where { color: var(--ink-3) !important; font-size: calc(12px * var(--a11y-scale, 1)); }
+.coach-acts { display: flex; justify-content: flex-end; }
+.coach-target { outline: 2px solid var(--amber) !important; outline-offset: 3px; border-radius: 10px;
+  animation: coachPulse 1.6s ease-in-out infinite; }
+@keyframes coachPulse { 50% { outline-color: rgba(240,168,48,.25); } }
+@media (prefers-reduced-motion: reduce) { .coach-target { animation: none; } }
+
+/* USB-C plug orientation on the handset charger test */
+.hs-plug { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; transition: transform .26s ease; }
+.hs-plug-face { font-weight: 700; }
+.hs-plug-logo { font-size: calc(9.5px * var(--a11y-scale, 1)); font-weight: 500; opacity: .7; }
+.hs-plug.turning { transform: rotateX(180deg); }
+.hs-plugacts { margin: 2px 0 6px; }
+.hs-flip { background: none; border: 1px dashed var(--line); border-radius: 7px; color: var(--ink-2); padding: 3px 8px;
+  font: inherit; font-size: calc(11px * var(--a11y-scale, 1)); cursor: pointer; }
+.hs-flip:hover { border-style: solid; color: var(--ink); }
+.hs-bolt.slow, .hs-charge.slow b { color: var(--amber); }
+
+/* ── Browser: extensions page, search engine setting, hijacked results ── */
+.ext-list { display: flex; flex-direction: column; gap: 6px; }
+.ext-card { display: flex; gap: 10px; align-items: flex-start; padding: 9px 10px; border: 1px solid var(--line-soft);
+  border-radius: 9px; background: var(--bg); }
+.ext-card.open { border-color: var(--line); }
+.ext-card.gone { opacity: .5; }
+.ext-ic { color: var(--ink-2); flex: none; margin-top: 1px; }
+.ext-main { flex: 1; min-width: 0; font-size: calc(12.5px * var(--a11y-scale, 1)); }
+.ext-main b { display: block; }
+.ext-sub { color: var(--ink-3); font-size: calc(11.5px * var(--a11y-scale, 1)); }
+.ext-acts { display: flex; gap: 5px; flex: none; }
+.ext-details { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 8px 0 2px; font-size: calc(12px * var(--a11y-scale, 1)); }
+.ext-details dt { color: var(--ink-3); }
+.ext-details dd { margin: 0; }
+.ext-details ul { margin: 0; padding-left: 16px; }
+.ext-confirm { margin-top: 8px; font-size: calc(12px * var(--a11y-scale, 1)); }
+.ext-controlled { display: flex; gap: 8px; align-items: center; margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  background: var(--panel-2); color: var(--ink-2); font-size: calc(12px * var(--a11y-scale, 1)); }
+.web-landed { font-family: var(--mono); font-size: calc(11px * var(--a11y-scale, 1)); color: var(--ink-3); margin: -2px 0 6px; }
+.web-page.sz { background: #f7f7f2; color: #222; }
+.sz-head { font-weight: 700; font-size: calc(15px * var(--a11y-scale, 1)); color: #d0402b; }
+.sz-q { font-size: calc(12px * var(--a11y-scale, 1)); margin: 2px 0 8px; color: #555; }
+.sz-ad { padding: 6px 0; border-top: 1px solid #ddd; font-size: calc(12.5px * var(--a11y-scale, 1)); }
+.sz-ad span { display: inline-block; font-size: calc(10px * var(--a11y-scale, 1)); background: #f3d34a; color: #222; padding: 0 5px; border-radius: 3px; margin-right: 6px; }
+.push-toast { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: #2b2f38; border: 1px solid #454b58;
+  font-size: calc(12px * var(--a11y-scale, 1)); display: flex; flex-direction: column; }
+.push-toast span { color: var(--ink-3); font-size: calc(11px * var(--a11y-scale, 1)); }
+.hs-screen.hs-web { min-height: 0; }
+
+/* Returning customers on the counter */
+.reg-tag { display: inline-block; margin-top: 4px; padding: 1px 8px; border-radius: 999px; font-size: calc(11px * var(--a11y-scale, 1));
+  border: 1px solid var(--line); color: var(--ink-2); }
+.quote-bubble.returning { border-style: dashed; }
+/* Built at runtime as 'mood-' + mood, so a literal-name scan cannot see them. */
+.reg-tag.mood-happy { border-color: rgba(61,220,145,.5); color: var(--green); }
+.reg-tag.mood-sore { border-color: rgba(255,95,109,.5); color: var(--red); }
+.hs-plug:focus-visible, .hs-grid:focus-visible, .hs-side:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+
+/* ── Chip ID bench on the real iFixit photos ───────────────────────── */
+.cid-devs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.cid-dev { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 7px 11px; border-radius: 9px;
+  background: var(--panel); border: 1px solid var(--line-soft); color: var(--ink); font: inherit; cursor: pointer; text-align: left; }
+.cid-dev b { font-size: calc(12.5px * var(--a11y-scale, 1)); }
+.cid-dev span { font-size: calc(11px * var(--a11y-scale, 1)); color: var(--ink-3); }
+.cid-dev.on { border-color: var(--amber); }
+.cid-boards { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.cid-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; }
+@media (max-width: 860px) { .cid-grid { grid-template-columns: 1fr; } }
+.cid-photo { position: relative; border-radius: 10px; overflow: hidden; background: #fff; cursor: crosshair; user-select: none; touch-action: none; }
+.cid-photo img { display: block; width: 100%; height: auto; }
+.cid-photo:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+.cid-loupe { display: none; position: absolute; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%;
+  border: 2px solid var(--amber); box-shadow: 0 6px 22px rgba(0,0,0,.45); pointer-events: none; background-repeat: no-repeat; background-color: #fff; }
+.cid-cross { display: none; position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid var(--amber);
+  border-radius: 50%; pointer-events: none; }
+.cid-mark { position: absolute; border: 2px solid var(--c); border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,.4); pointer-events: none; }
+.cid-side { display: flex; flex-direction: column; gap: 10px; }
+.cid-task { background: var(--panel); border: 1px solid var(--amber); border-radius: 11px; padding: 11px 13px; }
+.cid-task.done { border-color: var(--green); }
+.cid-task-k { font-size: calc(10.5px * var(--a11y-scale, 1)); text-transform: uppercase; letter-spacing: .06em; color: var(--amber); }
+.cid-task.done .cid-task-k { color: var(--green); }
+.cid-task p { margin: 5px 0 8px; font-size: calc(13px * var(--a11y-scale, 1)); line-height: 1.5; }
+.cid-task-acts { display: flex; justify-content: space-between; align-items: center; }
+.cid-left { font-size: calc(11.5px * var(--a11y-scale, 1)); color: var(--ink-3); }
+.cid-say { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; font-size: calc(12.5px * var(--a11y-scale, 1)); line-height: 1.5; }
+.cid-say.good { border-color: var(--green); }
+.cid-say.bad { border-color: var(--red); }
+.cid-tell { margin-top: 6px; color: var(--ink-2); }
+.cid-hedge { color: var(--ink-3); }
+.cid-streak { font-family: var(--mono); font-size: calc(12px * var(--a11y-scale, 1)); color: var(--green); min-height: 1em; }
+.cid-credit { margin-top: 8px; font-size: calc(11.5px * var(--a11y-scale, 1)); color: var(--ink-3); }
+.cid-empty p { margin: 0; color: var(--ink-2); }

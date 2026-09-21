@@ -72,7 +72,12 @@
         fault: J.fault(t).title,
         stars: res.stars,
         paidFt: p,
-        wasOvercharged: res.axes && res.axes.budget < 50
+        wasOvercharged: !!(res.axes && res.axes.budget < 50),
+        soldUnneeded: !!(J.fault(t).noPartNeeded && t.installed.length),
+        late: !!(res.axes && res.axes.speed < 50),
+        accused: !!t.tension,
+        comeback: !!res.comeback,
+        warranty: !!t.warranty
       });
     }
 

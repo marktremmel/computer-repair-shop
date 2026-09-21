@@ -193,6 +193,27 @@
       pitch: 'Named brand, two-year cells, reports health properly, half the price of the genuine part.',
       catch: '92% of the original capacity. On a machine that lives on a desk nobody will ever meet that number.'
     },
+    // MacBook Neo. Prices are the shop's estimate; the facts about the parts
+    // (genuine parts calibrate in Repair Assistant, no pairing trouble) are
+    // from iFixit's teardown.
+    {
+      id: 'batt_neo_oem', cat: 'battery', vendor: 'oem_service',
+      name: 'MacBook Neo battery (genuine)',
+      priceFt: 32000, deliveryDays: 4, warrantyMonths: 12, risk: 0.02,
+      fits: ['mbneo'],
+      spec: { model: 'MacBook Neo', reportsHealth: true, capacityPct: 100 },
+      pitch: 'The factory pack. Repair Assistant calibrates it and Battery Health reads it properly.',
+      catch: 'The dearest option, and four days away.'
+    },
+    {
+      id: 'batt_neo_used', cat: 'battery', vendor: 'hardverapro',
+      name: 'MacBook Neo battery (pulled from a donor, 88%)',
+      priceFt: 14000, deliveryDays: 1, warrantyMonths: 0, risk: 0.18,
+      fits: ['mbneo'],
+      spec: { model: 'MacBook Neo', reportsHealth: true, capacityPct: 88 },
+      pitch: 'Genuine cell, tomorrow, less than half the price.',
+      catch: 'Somebody else\u2019s pack with somebody else\u2019s cycles on it, and no warranty if it is tired.'
+    },
     {
       id: 'batt_a2389_green', cat: 'battery', vendor: 'ipon',
       name: 'GreenCell MacBook Air M1 (branded, 93%)',
@@ -538,6 +559,24 @@
     },
 
     // ────────────────────────────── FLEX ───────────────────────────────
+    {
+      id: 'usbc_neo_oem', cat: 'flex', vendor: 'oem_service',
+      name: 'MacBook Neo USB-C port module (genuine, both ports)',
+      priceFt: 9500, deliveryDays: 4, warrantyMonths: 12, risk: 0.02,
+      fits: ['mbneo'],
+      spec: { fastCharge: true },
+      pitch: 'Both ports on one small board. Four screws and a press connector.',
+      catch: 'Nothing, really. Because the ports are a module, this never turns into logic-board work.'
+    },
+    {
+      id: 'usbc_neo_used', cat: 'flex', vendor: 'hardverapro',
+      name: 'MacBook Neo USB-C port module (used)',
+      priceFt: 4000, deliveryDays: 1, warrantyMonths: 0, risk: 0.2,
+      fits: ['mbneo'],
+      spec: { fastCharge: true },
+      pitch: 'From a machine with a cracked screen. Tomorrow, and cheap.',
+      catch: 'Ports wear out. This one has already had somebody\u2019s years of plugging in.'
+    },
     {
       id: 'flex_usbc_sz', cat: 'flex', vendor: 'sz_direct',
       name: 'iPhone 12 charge port flex (compatible)',

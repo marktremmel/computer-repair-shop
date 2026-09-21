@@ -69,7 +69,13 @@
     cpu:               { label: 'Raise the socket lever',       tool: null,            needs: ['interior', 'cooler'] },
     battery:           { label: 'Pull the battery adhesive',    tool: 'tweezers',      needs: ['interior', 'battery_off'] },
     display_flex:      { label: 'Unclip the display flex',      tool: 'spudger',       needs: ['interior', 'battery_off'] },
-    charge_port:       { label: 'Free the charge port flex',    tool: 'tripoint-y000', needs: ['interior', 'battery_off'] }
+    charge_port:       { label: 'Free the charge port flex',    tool: 'tripoint-y000', needs: ['interior', 'battery_off'] },
+    // MacBook Neo: the ports are a module on a press connector, and the
+    // battery is screwed down. No heat, no pull tabs, no prying.
+    usb_board:         { label: 'Unscrew the USB-C port module', tool: 'torx-t5',      needs: ['interior', 'battery_off'],
+                         why: 'Four Torx 5IP screws and a press connector under a two-screw cover. The ports are one small module, not part of the logic board.' },
+    battery_screws:    { label: 'Unscrew the battery',           tool: 'torx-t5',      needs: ['interior', 'battery_off'],
+                         why: 'Eighteen Torx 5IP screws and no adhesive at all. Leave the four tall standoff screws alone \u2014 they hold the frame, not the pack.' }
   };
 
   /** Bench actions that fix things without buying anything. */
@@ -94,6 +100,21 @@
       id: 'clean_port', label: 'Scrape the port out', icon: '🪵', tool: 'pick',
       needsOpen: false, labourHours: 0.3, costFt: 0,
       done: 'The lint comes out as one compacted grey disc. The plug now seats with an audible click and the port negotiates full wattage.',
+      // What the pick finds when the problem in the port is not lint.
+      doneByFault: {
+        usbc_cc_short: 'Nothing comes out. There is no lint in there \u2014 the plug was already going all the way in. Whatever is wrong with this port, a pick is not the tool.'
+      },
+      isFreeFix: true
+    },
+    // Corrosion on the contacts is not lint: it needs a solvent, not a pick.
+    clean_contacts: {
+      id: 'clean_contacts', label: 'Scrub the port contacts with IPA', icon: '🧻', tool: 'alcohol_wipe',
+      needsOpen: false, labourHours: 0.3, costFt: 0,
+      onlyMachines: ['thinkpad_t480', 'mba_m1', 'mbp14_m3', 'switch2', 'steamdeck', 'iphone17', 'ipad_air', 'mbneo'],
+      done: 'A few strokes with a fibre brush wet with isopropyl alcohol, and the green crust comes off the contact. It dries in a minute.',
+      doneByFault: {
+        port_lint: 'The contacts come up bright, but the plug still stops short. The alcohol cleaned what was already clean; the lint packed at the bottom is still there.'
+      },
       isFreeFix: true
     },
     clean_fins: {
@@ -303,6 +324,35 @@
     return typeof c === 'string' ? c : c.t;
   }
 
+  /*
+   * What each named shift code actually does. These notes are shown to
+   * students in the dossier, so a note that promises "phones and tablets" has
+   * to produce phones and tablets — they used to be plain seeds with
+   * descriptions nothing implemented. Any other word is still a plain seed.
+   *
+   * machine(m) → may this machine walk in; fault(f) → a preferred fault, taken
+   * `share` of the time; budget/urgency scale what the customer brings.
+   */
+  var SHIFT_PROFILES = {
+    BUDAPEST:  { note: 'The default. A broad mix \u2014 good for a first lesson.' },
+    DUNA:      { note: 'Tight deadlines. Delivery time becomes part of every price.',
+                 urgency: 0.5 },
+    FILLER:    { note: 'Low budgets throughout. Forces the cheap-versus-lasting argument.',
+                 budget: 0.6 },
+    PARLAMENT: { note: 'Older machines only (2019 and earlier). Lots of "is this even worth fixing?".',
+                 machine: function (m) { return m.year <= 2019; } },
+    METRO:     { note: 'Phones and tablets only. Glued-shut teardowns and screen choices.',
+                 machine: function (m) { return m.kind === 'phone' || m.kind === 'tablet'; } },
+    SZIGET:    { note: 'Money about, deadlines loose. Over-specification is the trap here.',
+                 budget: 1.6, urgency: 1.6 },
+    LANCHID:   { note: 'Mostly faults that need no parts at all. Tests whether you can say so.',
+                 fault: function (f) { return !!f.noPartNeeded; }, share: 0.8 },
+    KELETI:    { note: 'A second broad mix, for once the class knows the loop.' }
+  };
+  function profileFor(shop) {
+    return SHIFT_PROFILES[String((shop.state && shop.state.shiftCode) || '').toUpperCase()] || null;
+  }
+
   function newTicket(shop, opts) {
     opts = opts || {};
     var S = shop.state;
@@ -316,6 +366,14 @@
       pool = pool.concat(pool.filter(function (c) { return c.useCase === 'video' || c.useCase === 'office'; }));
     }
 
+    // Word of mouth, person by person: somebody who was happy last time comes
+    // back more often. (Somebody who was not still comes back — they are the
+    // ones who teach you something.)
+    var CM = window.TechOpsCustomers;
+    if (CM && CM.memory) {
+      pool = pool.concat(pool.filter(function (c) { var m = CM.memory(c, S); return m && m.mood === 'happy'; }));
+    }
+
     // Two in three walk-ins are assembled from the shared people vocabulary;
     // the written regulars keep turning up so the shop has familiar faces.
     var customer = opts.customer;
@@ -324,7 +382,17 @@
         ? window.TechOpsPeople.generate(shop)
         : shop.pick(pool);
     }
-    var machineId = opts.machineId || shop.pick(customer.machines);
+    var prof = profileFor(shop);
+    var machineId = opts.machineId;
+    if (!machineId && prof && prof.machine) {
+      // Keep the customer's own machine if it fits the shift; otherwise they
+      // bring one that does.
+      var M = window.TechOpsMachines;
+      var own = customer.machines.filter(function (id) { return prof.machine(M.get(id)); });
+      machineId = own.length ? shop.pick(own)
+        : shop.pick(M.list().filter(prof.machine).map(function (m) { return m.id; }));
+    }
+    machineId = machineId || shop.pick(customer.machines);
     var machine = window.TechOpsMachines.get(machineId);
 
     var faults = window.TechOpsFaults.forMachine(machine);
@@ -335,10 +403,24 @@
       machine = window.TechOpsMachines.get('inspiron15');
       faults = window.TechOpsFaults.forMachine(machine);
     }
-    var fault = opts.fault ? window.TechOpsFaults.get(opts.fault) : shop.pick(faults);
+    var fault = opts.fault ? window.TechOpsFaults.get(opts.fault) : null;
+    if (!fault && prof && prof.fault) {
+      var pref = faults.filter(prof.fault);
+      if (pref.length && shop.rng() < (prof.share || 1)) fault = shop.pick(pref);
+    }
+    fault = fault || shop.pick(faults);
 
     var budget = shop.range(customer.budgetFt[0], customer.budgetFt[1]);
     var urgency = shop.range(customer.urgencyDays[0], customer.urgencyDays[1]);
+    // What they remember changes what they bring: trust stretches a budget,
+    // a bad experience shortens the patience.
+    var mem = CM && CM.memory ? CM.memory(customer, S) : null;
+    if (mem && !opts.warranty) {
+      if (mem.mood === 'happy') budget = Math.round(budget * 1.15 / 500) * 500;
+      if (mem.mood === 'sore') urgency = Math.max(1, urgency - 1);
+    }
+    if (prof && prof.budget && !opts.warranty) budget = Math.round(budget * prof.budget / 500) * 500;
+    if (prof && prof.urgency && !opts.warranty) urgency = Math.max(1, Math.round(urgency * prof.urgency));
 
     return {
       id: 'J' + S.day + '-' + Math.floor(shop.rng() * 9000 + 1000),
@@ -418,6 +500,7 @@
     STEPS: STEPS,
     ACTIONS: ACTIONS,
     newTicket: newTicket,
+    SHIFT_PROFILES: SHIFT_PROFILES,
     flags: flags,
     canStep: canStep,
     complaintFits: complaintFits,

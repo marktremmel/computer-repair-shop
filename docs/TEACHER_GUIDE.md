@@ -1,134 +1,208 @@
-# TechOps Budapest — Teacher Guide & Classroom Lesson Handout
-**Target:** SEK Budapest & Digital Literacy Education (Grades 7–12 / Vocational IT)  
-**Uniform Shift Seed:** `SEKBUDAPEST2026`  
-**Standard Duration:** 45-minute lesson (or 90-minute double block)  
-**Deployment:** Zero-build offline resilience — works directly from USB thumbstick (`file://index.html`) or local web server.
+# TechOps Budapest — Teacher guide
+
+For a 45-minute lesson (or a double period) with students aged roughly 12–18.
+Every step below has been checked against the game as it is now. If the game
+and this guide ever disagree, the game is right and this page needs fixing.
 
 ---
 
-## 1. Pedagogical Philosophy
+## 1. What students do
 
-TechOps Budapest is **a simulator, not a quiz**. Students are not asked multiple-choice questions with obvious answers. Instead, they run an independent repair business in the 8th District of Budapest where:
-1. **Nobody tells them what is wrong.** They must ask the customer, run diagnostic tools, and inspect the physical hardware.
-2. **Customers are human narrators.** Customers may be embarrassed about spills, misdiagnose problems ("I need a whole new motherboard!"), or lack technical vocabulary.
-3. **Shortcuts carry real costs.** Rushing a repair strips screws, fitting cheap unverified parts creates angry comeback customers, and overcharging ruins word-of-mouth reputation.
-4. **Listening is cheaper than probing.** Asking an intake question takes 6 minutes (0.1h); running a memory test takes 90 minutes (1.5h).
+They run a small repair shop in Budapest. People walk in with a machine and a
+story. Nobody tells the student what is wrong: they **ask** at the sit-down,
+**measure** on the workbench and in the software lab, **buy** only what the
+readings justify, **fix it with their hands** (drag, trace, scrape, lift), **prove**
+the fix by re-testing, and **set a price**. The customer then judges the job on
+five things:
 
----
+| On screen | What it asks |
+|---|---|
+| Right part for this person | Did the part suit this machine and what this person actually does with it? |
+| Respected their money | Was the bill fair for the work — and was nothing sold that was not needed? |
+| Turnaround against the deadline | Did delivery time and bench time fit the day they needed it back? |
+| Still working next year | Warranty, part quality, and whether the repair comes back. |
+| Safe, tidy workmanship | ESD strap, matching drivers to screws, working on a powered-off board. |
 
-## 2. 45-Minute Lesson Blueprint
+**A job is only as good as its worst judgement** — five stars on four of them does
+not rescue a rounded-off screw or an unneeded part.
 
-```
-+-------------------------------------------------------------------------------+
-| TIMELINE: "The Cost of Shortcuts in Technology Repair"                        |
-| Uniform Shift Code: SEKBUDAPEST2026                                           |
-+-------------------------------------------------------------------------------+
-```
-
-### 00:00 – 00:08 | Briefing & The Five Evaluation Axes
-* Teacher projects the shop title screen (`index.html`).
-* Introduces the **Five Evaluation Axes** displayed on every job card:
-  1. **Right Part for This Person (Fit):** Did you fit what they actually need, or did you upsell a pensioner an esports NVMe SSD?
-  2. **Respected Their Money (Budget):** Did the repair stay inside what they could afford?
-  3. **Turnaround (Speed):** Did you deliver before their deadline without missing shifts?
-  4. **Durability & Parts Quality:** Did you buy genuine, OEM, or risky unbranded parts?
-  5. **Workmanship & Safety:** Did you unplug the battery? Did you match the screwdriver bit (PH00 vs Torx T5)? Did you clean the thermal paste?
-* Emphasizes the **Golden Rule of Diagnostics**:
-  > *"Listen before you touch. Asking a question costs 6 minutes. Opening the machine costs 30 minutes. Breaking a ribbon cable costs 3 days."*
-
-### 00:08 – 00:32 | Autonomous Shift Play (Uniform Seed: `SEKBUDAPEST2026`)
-* Every student enters `SEKBUDAPEST2026` as their Shift Code (or clicks `New shift` in Dossier).
-* **Guaranteed Uniform Flow:**
-  - Because PRNG is deterministic from the shift code, every student encounters the same sequence of customers and faults.
-  - **Job 1:** Marika néni's Inspiron 15 with a seized fan (or `disk_full` zero-part fix).
-  - **Job 2:** Gergő's gaming laptop or phone with a misleading complaint.
-  - **Job 3:** USB-C port lint or CC-pin short requiring careful port cleaning rather than expensive board replacement.
-* Students must finish at least 3 tickets, collect their earnings in the till, and watch their reputation meter.
-
-### 00:32 – 00:40 | Teacher Decoder & Class Roster Analysis
-* Students click **Dossier (Book icon)** → **Shift Report (SEK7K-)** → click **Copy Hand-in Code**.
-* Teacher opens **Teacher Decoder** (`dossier.html` or in-game Teacher view) on the projector.
-* Paste student codes in bulk.
-* The decoder displays a comparative table:
-  - Student Name
-  - Jobs Completed & Botched
-  - Final Till Balance (Ft) & Reputation
-  - Average Stars per Axis: `[Fit | Budget | Speed | Durability | Safety]`
-* Sort by lowest axis to identify class-wide misconceptions:
-  - If **Budget** is low: Students bought the most expensive part on iPon regardless of use-case.
-  - If **Safety** is low: Students forgot to disconnect the battery before probing or used the wrong driver size.
-  - If **Speed** is low: Students ran all 4 diagnostic instruments indiscriminately.
-
-### 00:40 – 00:45 | Guided Class Debrief
-Key discussion prompts:
-1. *"Why did fitting a 2TB Samsung 990 PRO NVMe drive to Marika néni's laptop lose you stars, even though it's technically a great SSD?"*
-2. *"Did anyone tell a customer that their device didn't need a replacement part? How did that affect your shop's reputation?"*
-3. *"What happens in real life when you replace an iPad screen without testing the ambient light sensor first?"*
+Two ideas carry the whole lesson:
+- *Listening is cheap.* A question costs 0.1 h of bench time; the memory test
+  costs 1.5 h.
+- *The honest answer is often "no part needed".* Over a whole shift, careful
+  work earns more than cutting corners, because reputation decides how busy the
+  shop is. (Measured by `tools/playthrough.js`: over 40 days a careful shop ends
+  around 370 000 Ft, a careless one around 317 000 Ft.)
 
 ---
 
-## 3. Teacher Decoder Reference
+## 2. Before the lesson
 
-The `SEK7K-` hand-in code is an authenticated, base-32 packed report of the student's shift. It encodes:
-* Student Name & Shop Name
-* Seed & RNG call count (guarantees the run was authentic and not hand-edited)
-* Number of jobs done, botched, and comebacks
-* Total cash in till (HUF)
-* Five-axis point breakdown (0–100 scale per axis)
-* Badges earned (e.g., *Honest Refusal*, *Clean Bench*, *Screwdriver Master*)
-
-### Decoder Axis Interpretation Table
-
-| Axis | What a Low Score (< 60) Means | How to Guide the Student |
-| :--- | :--- | :--- |
-| **Fit** | Overspecified hardware or recommended parts mismatched to customer's stated daily use. | *"Check their background during intake. A student writing essays does not need a Gen4 heatsink drive."* |
-| **Budget** | Exceeded customer's budget ceiling or added unjustified labor charges. | *"If the customer has 25,000 Ft, ordering an 18,000 Ft part plus 12,000 Ft labor will anger them."* |
-| **Speed** | Missed deadline or ordered parts with 5-day shipping when deadline was 2 days. | *"Check supplier lead times in the market. Local bike courier arrives in 2h; standard post takes 3 days."* |
-| **Durability** | Purchased unbranded or 'salvage bin' parts without warranty. | *"Cheap parts fail within a week. When they return, comebacks cost you free labor and reputation."* |
-| **Safety** | Stripped screw heads, pried battery with metal spudger, or skipped thermal paste. | *"Use the screw gauge. If a screw is PH00, never force a PH1 or Torx into it."* |
+- **Open it** at the GitHub Pages address, or open `index.html` straight from a
+  USB stick — it works offline, from `file://`, with no install.
+- **One browser per student.** The shop saves itself in that browser. The
+  **Save & load** tab (the floppy-disk button, top right) gives a save code for
+  carrying on at home or on another computer.
+- **Try the decoder on your own computer first.** On the title screen, click
+  *Teacher? Decode the class's hand-in codes* (also in the report window and in
+  Save & load). It needs no shift of its own.
+- **Pick a shift code** (section 3).
 
 ---
 
-## 4. Uniform Seed Guide: `SEKBUDAPEST2026`
+## 3. Shift codes
 
-When entered in `New shift` (`Shift code` input box):
+Everyone who types the same code meets **the same first customers**. After that,
+students' choices (who they take, how long they spend) make their shifts drift
+apart — which is the point: you can compare decisions on the same people.
 
-```
-Seed: SEKBUDAPEST2026
-Initial Cash: 150,000 Ft
-Initial Reputation: 50★
-Initial Day: Day 1 (Morning)
-```
+Students set it in **Goals & record** (the medal button, top right) → *Shift
+seed* → pick a code or type one → **Start a new shift**. (Starting a new shift
+wipes that browser's current shift; their face and name are kept.)
 
-### Expected Walk-in Progression:
-1. **Customer 1 (Marika néni):** Complains laptop is boiling and turning off.
-   - *Intake Clue:* Fan makes buzzing / grinding noise.
-   - *Honest Diagnostic:* Seized cooling fan.
-   - *Correct Action:* Clean heatsink fins + replace 54mm fan or lubricate bearing.
-2. **Customer 2 (Bence - University Student):** Laptop won't save files; says "drive broken".
-   - *Intake Clue:* "My sister downloaded 60GB of movies onto C: drive."
-   - *Honest Diagnostic:* Zero-part fix! Drive is simply 99.8% full.
-   - *Correct Action:* Disk cleanup / temp file wipe (Free fix).
-3. **Customer 3 (Eszter - Remote Worker):** Phone only charges when the cable is pulled sideways.
-   - *Intake Clue:* Carried in pocket of wool coat for 2 years.
-   - *Honest Diagnostic:* Compacted pocket lint in USB-C port, or corroded CC configuration channel pin.
-   - *Correct Action:* Clean port with wooden pick / alcohol swab.
+| Code | What it does |
+|---|---|
+| `BUDAPEST` | The default broad mix. Good for a first lesson. |
+| `DUNA` | Deadlines halved. Delivery time becomes part of every price. |
+| `FILLER` | Budgets about 40 % lower. Forces the cheap-versus-lasting argument. |
+| `PARLAMENT` | Only machines from 2019 and earlier. "Is this even worth fixing?" |
+| `METRO` | Only phones and tablets. Glued-shut teardowns and screen choices. |
+| `SZIGET` | Bigger budgets and looser deadlines. Over-specifying is the trap. |
+| `LANCHID` | Mostly faults that need no parts at all. Can they say so? |
+| `KELETI` | A second broad mix, once the class knows the loop. |
+
+Any other word works as a plain seed (a broad mix, same for everyone who types it).
+These codes are checked by the test suite: if a code stopped doing what its note
+says, `tools/coverage.js` would fail.
 
 ---
 
-## 5. Printable Student Handout Checklist
+## 4. A 45-minute lesson
 
-Cut or photocopy the slip below for each student workstation:
+**0–5 min · Brief.** Project the title screen. Name the five judgements and the
+two ideas above. Tell them the one rule: *ask before you open anything.*
+
+**5–12 min · Training ticket** (optional but recommended for a first lesson).
+On the title screen: **Training ticket**. One real job — Marika néni's laptop —
+with a coach in the corner that says what each station is *for* and moves on when
+the student has actually done it. It never names the answer. It runs on a copy of
+the shop: when it ends, their real shift comes back untouched and it does not
+count towards the hand-in code. The walk-round (**Show me around**) is the
+faster alternative: nine stops, where things are, nothing more.
+
+**12–35 min · Play.** Everyone on the same code. Aim for three or four jobs each.
+Things worth walking round and watching for:
+- Who opens the case before asking a single question.
+- Who buys a part before any instrument has pointed at it.
+- Who re-tests after fixing (the handover says *Fix confirmed on the bench*).
+- Who, faced with a fault that needs no part, still sells one.
+
+**35–40 min · Hand in.** Students click the **report** button (top right),
+type their name and class, and **Copy code**. They paste it into Google Classroom
+(or wherever you collect work). The code is a snapshot of the whole shift so far.
+
+**40–45 min · Debrief.** Paste the codes into the decoder (up to 50 at once) on the
+projector. It shows the class average for each judgement, the class's weakest one
+with a suggestion for what to discuss, a sortable roster, and a CSV export.
+
+---
+
+## 5. Discussion questions that land
+
+Pick the ones that match what you saw:
+
+1. *"Somebody's charger wouldn't charge. Did anyone replace the port? What did the
+   plug do when you turned it over?"* — the USB-C contact fault charges one way up
+   and not the other; a port replacement is money for nothing.
+2. *"The customer said it never got wet. What did the inside say — and how did you
+   put that to them?"* — the liquid-indicator conversation has a blunt and a
+   curious way to ask; only one gets the truth.
+3. *"Who sold a part on a job that needed none? What did the review say?"*
+4. *"The search engine kept going to a strange site. How did you work out which
+   add-on was doing it — its name, or its details?"* — broad permissions alone
+   prove nothing; an ad blocker needs them too.
+5. *"Why does waiting three weeks for the cheapest part lose stars even when it
+   works?"*
+6. *"What did the multimeter tell you that looking at the board could not?"*
+7. *"How did the battery come out of the MacBook Neo, compared with the other
+   MacBooks in the shop?"* — the Neo's battery is held by screws, with no glue at
+   all; the older MacBooks use adhesive that has to be pulled or pried. Nobody
+   *has* to glue a battery in: it is a design decision someone made (and new EU
+   rules will require user-replaceable batteries in portable devices by mid-2027).
+
+---
+
+## 6. What the hand-in code contains
+
+Name and class (as typed), the shift code, days played, jobs done, total stars,
+the five judgement averages, honest calls (jobs where they said no part was
+needed or declined), jobs that went badly, comebacks, reputation, the till, the
+goals reached, and the last twelve jobs with their stars.
+
+It carries a checksum that catches a code damaged by copy-paste. It is **not**
+tamper-proof: a determined student could craft one. Treat it as a report of the
+shift, and use what you saw in the room alongside it.
+
+---
+
+## 7. The goals students can work towards
+
+Twelve habits, shown with progress in **Goals & record**:
+
+| Goal | What to do |
+|---|---|
+| Open for business | Close your first job. |
+| Asked before opening | Fix a job after asking at least three questions and running no more than two instruments. |
+| Told them the truth | Fix a fault that needed no parts — and sell none. |
+| Grounded | Finish three jobs with the ESD strap on. |
+| As promised | Hand back three jobs on or before the day you promised. |
+| No upsell, twice | Be honest about needing no parts — or not being worth fixing — on two jobs. |
+| Said no | Turn down a repair that was not worth it, and charge only for the diagnosis. |
+| Measured, not guessed | Solve a job the multimeter helped you find. |
+| Five stars | Get one job right on every judgement at once. |
+| Five machines in | Close five jobs. |
+| Word gets round | Reach a reputation of 75. |
+| Reads boards | On the Chip ID bench, find five chips in a row on the real boards, each at the first try. |
+
+---
+
+## 8. Reading a weak judgement
+
+| Weakest judgement | What it usually means | What to do next lesson |
+|---|---|---|
+| Right part for this person | Over- or under-specced parts, or a fast part throttled by a slow bus. | Read one machine's spec sheet together, then ask what the customer actually does all day. |
+| Respected their money | Bills beyond what the work was worth, or parts sold for faults that needed none. | Replay a full-disk or lint-in-the-port job as a class. The fix is free; the temptation is a sale. |
+| Turnaround against the deadline | Slow shipping or long diagnostics against tight deadlines. | Compare the three-week part and the two-day part on the same job for a customer with a Friday deadline. Try code `DUNA`. |
+| Still working next year | No-warranty parts chosen repeatedly; repairs coming back. | Look at which cheap parts came back and what the rework cost. |
+| Safe, tidy workmanship | No ESD strap, rounded screws, work on a live board. | The strap costs nothing. Match the driver to the head before touching anything. |
+
+---
+
+## 9. Practicalities
+
+- **Accessibility:** the ♿ button sets text size, stronger contrast, a plainer
+  font and less movement. Every hand gesture on the bench can also be done from
+  the keyboard.
+- **Sound** can be muted from the title screen or the speaker button.
+- **Starting over:** Goals & record → *Start a new shift*.
+- **Chip ID bench** (the chip button in the navigation): iFixit's real board
+  photos with nothing marked on them. The bench describes a job — "the chip that
+  negotiates power over USB-C" — and students find it, with a magnifier to read
+  the markings. A good five-minute warm-up or a fast-finisher task.
+- **Credits:** character portraits by Lyime (Pixel Portrait Creator); board photos
+  and chip identifications from iFixit's public chip-ID teardowns, linked from
+  each board in the game.
+
+---
+
+## 10. Student slip
 
 ```
-+-------------------------------------------------------------------------------+
-|                      TECHOPS BUDAPEST — WORKBENCH RULES                       |
-+-------------------------------------------------------------------------------+
-| 1. ENTER SHIFT CODE: SEKBUDAPEST2026 before starting.                         |
-| 2. INTERVIEW FIRST: Ask at least 2 questions at the counter before unscrewing.|
-| 3. CHECK THE SCREWS: Match the bit size. Stripping a screw fails the job.     |
-| 4. BATTERY FIRST: Always isolate the battery before touching board components.|
-| 5. RESPECT THE BUDGET: Check customer's limit before ordering from iPon/Alza. |
-| 6. COPY HAND-IN: At the end of shift, open Dossier -> Copy SEK7K- code.       |
-+-------------------------------------------------------------------------------+
+TECHOPS BUDAPEST — BEFORE YOU START
+1. Medal button (top right) → Shift seed → type the code on the board → Start a new shift.
+2. Ask before you open anything. A question costs 6 minutes; a test can cost 90.
+3. Look at the screw head before you pick a driver. Strap on before you open.
+4. Buy only what a reading pointed at. Check the delivery date against their deadline.
+5. After the repair, run the test that found the fault again.
+6. At the end: report button (top right) → your name and class → Copy code → hand it in.
 ```

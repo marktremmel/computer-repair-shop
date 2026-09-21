@@ -193,7 +193,7 @@ const jobStepKeys = (() => {
   return (m[1].match(/^    ([a-z_]+):/gm) || []).map(x => x.trim().replace(':', ''));
 })();
 // Actions with a hand-built home of their own rather than a JOB_STEPS list.
-const DEDICATED_APPS = ['free_space', 'kill_process', 'card_recovery', 'fix_dns', 'confirm_isp'];
+const DEDICATED_APPS = ['free_space', 'kill_process', 'card_recovery', 'fix_dns', 'confirm_isp', 'remove_extension', 'revoke_notifications', 'clear_portal'];
 if (!jobStepKeys) {
   warn('Could not parse JOB_STEPS from ui-macos.js — software reachability unchecked.');
 } else {
@@ -218,8 +218,8 @@ if (!jobStepKeys) {
   const rb = {};
   (intakeCode.match(/var REVEALED_BY = \{([\s\S]*?)\n  \};/) || ['', ''])[1]
     .replace(/([a-z_]+):\s*\[([^\]]*)\]/g, (_, k, v) => { rb[k] = v.match(/[a-z_]+/g) || []; });
-  const HANDSET_RUNNABLE = ['visual', 'battery', 'power', 'thermal', 'memtest', 'meter', 'storage_used'];
-  const HANDSET_HOMES = ['free_space', 'card_recovery'];
+  const HANDSET_RUNNABLE = ['visual', 'battery', 'power', 'thermal', 'memtest', 'meter', 'storage_used', 'browser'];
+  const HANDSET_HOMES = ['free_space', 'card_recovery', 'revoke_notifications', 'clear_portal'];
   Object.values(Faults.all).forEach(f => {
     f.appliesTo.forEach(mid => {
       const m = Machines.get(mid);
@@ -270,7 +270,7 @@ if (!jobStepKeys) {
   const I = window.TechOpsInterview;
   if (!I || !I.FOLLOWUPS) return warn('No follow-ups exported from data-interview.js.');
   const qids = I.QUESTIONS.map(q => q.id);
-  const inst = ['visual', 'listen', 'memtest', 'thermal', 'battery', 'power', 'smart', 'bench', 'activity', 'storage_used', 'meter'];
+  const inst = ['visual', 'listen', 'memtest', 'thermal', 'battery', 'power', 'smart', 'bench', 'activity', 'storage_used', 'meter', 'browser', 'settings', 'network'];
   Object.keys(I.FOLLOWUPS).forEach(fid => {
     if (!Faults.get(fid)) err(`FOLLOW-UP for unknown fault "${fid}".`);
     const list = I.FOLLOWUPS[fid], ids = list.map(x => x.id);
@@ -335,6 +335,68 @@ if (!jobStepKeys) {
         }
       });
     });
+  }));
+})();
+
+// 4e. A shift code's note is a promise to the student. Deal 60 walk-ins from
+// each profile and check the promise holds. They used to be plain seeds
+// whose notes nothing implemented ("Phones and tablets" dealt MacBooks).
+(() => {
+  load('data-people.js'); load('sim-state.js');
+  const Shop = window.TechOpsShop, P = Jobs.SHIFT_PROFILES || {};
+  const deal = code => { Shop.state = Shop.fresh(code); Shop._rng = null; Shop.init(code);
+    const out = []; for (let i = 0; i < 60; i++) out.push(Jobs.newTicket(Shop, {})); return out; };
+  const mean = (a, k) => a.reduce((s, t) => s + t[k], 0) / a.length;
+  Object.keys(P).forEach(code => {
+    const p = P[code], ts = deal(code);
+    if (!p.note) err(`SHIFT ${code} has no note.`);
+    if (p.machine) ts.forEach(t => { if (!p.machine(Machines.get(t.machineId))) err(`SHIFT ${code} dealt ${t.machineId}, which its note excludes.`); });
+    if (p.fault) {
+      const share = ts.filter(t => p.fault(Faults.get(t.faultId))).length / ts.length;
+      if (share < (p.share || 1) - 0.2) err(`SHIFT ${code}: only ${Math.round(share * 100)}% of faults match its note.`);
+    }
+    // Same code, same seed, profile switched off: the only difference left is
+    // what the profile does.
+    if (p.budget || p.urgency) {
+      delete P[code]; const plain = deal(code); P[code] = p;
+      const ratio = k => mean(ts, k) / mean(plain, k);
+      if (p.budget && Math.abs(ratio('budgetFt') - p.budget) > 0.15) err(`SHIFT ${code}: budgets are ${ratio('budgetFt').toFixed(2)}x, its note promises ${p.budget}x.`);
+      if (p.urgency && Math.abs(ratio('urgencyDays') - p.urgency) > 0.25) err(`SHIFT ${code}: deadlines are ${ratio('urgencyDays').toFixed(2)}x, its note promises ${p.urgency}x.`);
+    }
+  });
+})();
+
+// 4f. An instrument that "reveals" a fault must show it. Each one listed in
+// REVEALED_BY needs a reading from the fault flagged `abnormal` (it shows the
+// fault) or `decisive` (a normal reading that settles the diagnosis, like a
+// healthy drive in a machine that will not boot). A plain rule-out ("Normal.")
+// used to open the diagnosis gate on its own.
+(() => {
+  const intakeCode = fs.readFileSync(path.join(__dirname, '..', 'js', 'ui-intake.js'), 'utf8');
+  const rb = {};
+  (intakeCode.match(/var REVEALED_BY = \{([\s\S]*?)\n  \};/) || ['', ''])[1]
+    .replace(/([a-z_0-9]+):\s*\[([^\]]*)\]/g, (_, k, v) => { rb[k] = v.match(/[a-z_]+/g) || []; });
+  Object.keys(rb).forEach(fid => {
+    const f = Faults.get(fid); if (!f) return;
+    rb[fid].forEach(inst => {
+      if (inst === 'meter') return;
+      const r = (f.readings || {})[inst];
+      if (!r) return err(`EVIDENCE: ${fid} is revealed by ${inst}, but the fault has no ${inst} reading.`);
+      if (r.abnormal !== true && r.decisive !== true)
+        err(`EVIDENCE: ${fid}/${inst} is listed as revealing the fault but is flagged neither abnormal nor decisive.`);
+    });
+  });
+})();
+
+// 4g. A complaint is picked on its own, so it has to stand on its own. Lines
+// written as the second half of another ("Quiet is good though, right?",
+// "It went like this after the storm") left the customer opening without
+// ever saying what was wrong.
+(() => {
+  const FOLLOW_ON = /^(also\b|it also\b|quiet is|the rest of it|it has done this|it went like this|it started after|it happened|i assume|the clock is wrong as well|i have tried turning|my (son|daughter|cousin) (said|set)|someone told me|a shop told me|the shop said|i think my)/i;
+  Object.values(Faults.all).forEach(f => f.complaints.forEach(c => {
+    const t = typeof c === 'string' ? c : c.t;
+    if (FOLLOW_ON.test(t)) err(`COMPLAINT: ${f.id} has a line that only works after another one: "${t.slice(0, 70)}"`);
   }));
 })();
 

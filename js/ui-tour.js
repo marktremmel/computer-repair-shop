@@ -157,34 +157,204 @@
     render();
   }
 
+  /*
+   * ── The training ticket ──────────────────────────────────────────────
+   * One real job, played by the student, with a coach that sets the goal of
+   * each station and points at where it happens. The coach never clicks, and
+   * it never names the instrument or the part: it asks the question a good
+   * technician asks, and moves on when the student has actually done it.
+   *
+   * It runs on a copy of the shop. The real shift is put aside, nothing is
+   * saved while practising, and leaving (or finishing) puts the shift back
+   * exactly as it was — including where the random sequence had got to, so a
+   * class still meets the same customers afterwards.
+   */
+  var practice = null;   // { snapshot, step, timer, card }
+
+  function J() { return window.TechOpsJobs; }
+  function tk() { return Shop.state.ticket; }
+  function has(arr, x) { return (arr || []).indexOf(x) !== -1; }
+
+  var COACH = [
+    { view: 'counter', sel: '#view-counter [data-go="intake"]',
+      title: 'Read the card first',
+      body: 'Marika néni is at the counter. Her <b>budget</b> and how many <b>days</b> she can wait decide which parts '
+          + 'you may even consider — read those before the complaint. Then sit down with her.',
+      done: function () { return window.TechOpsApp.current === 'intake'; } },
+    { view: 'intake', sel: '#view-intake .ask-list',
+      title: 'Ask before you open anything',
+      body: 'Every question costs six minutes; the slowest test costs ninety. Keep asking until an answer '
+          + '<b>points at something you can measure</b> — it will say so under her reply.',
+      done: function () {
+        var t = tk(); if (!t) return false;
+        return window.TechOpsInterview.leads(t, t.faultId, J().useCase(t)).length > 0;
+      } },
+    { view: 'intake', sel: '#view-intake .theory-list',
+      title: 'Write your theory down',
+      body: 'Pick what you think is wrong. Writing it before you test is what turns a guess into a diagnosis — '
+          + 'and the game will tell you whether the machine agrees.',
+      done: function () { return !!(tk() && tk().theory); } },
+    { view: 'bench', sel: '#view-bench .instruments',
+      title: 'Measure before you open',
+      body: 'On the workbench, run the instrument her answer pointed at. Some tests work with the case closed — '
+          + 'start with one of those.',
+      done: function () {
+        var t = tk(); if (!t) return false;
+        return window.TechOpsIntake.diagnosed(t);
+      } },
+    { view: 'bench', sel: '#view-bench .rack',
+      title: 'Open it safely',
+      body: 'Strap on the ESD band first. Then look at a screw head, pick the driver that matches it, '
+          + 'and take the screws out. The wrong driver rounds them off.',
+      done: function () { var t = tk(); return !!(t && J().flags(t).interior); } },
+    { view: 'bench', sel: '#view-bench .board-stage',
+      title: 'Power off the board',
+      body: 'Before your hands go near anything inside, lift the battery connector off the board. '
+          + 'Straight up — levering it sideways bends the pins.',
+      done: function () { var t = tk(); return !!(t && (t.batteryDisconnected || has(t.openSteps, 'battery_connector'))); } },
+    { view: 'bench', sel: '#view-bench .instruments',
+      title: 'Now look at it',
+      body: 'With the case open you can inspect what the first test suggested. Does what you see match your theory?',
+      done: function () { var t = tk(); return !!(t && has(t.testsRun, 'visual')); } },
+    { view: 'market', sel: '#view-market .market-cats',
+      title: 'Buy only what the readings justify',
+      body: 'You know what failed. Find a replacement that <b>fits this machine</b>, fits <b>her budget</b>, '
+          + 'and arrives before her deadline. She has to agree to the price and the wait.',
+      done: function () {
+        var S = Shop.state;
+        return (S.shelf || []).concat(S.onOrder || []).some(function (e) {
+          var p = window.TechOpsParts.get(e.partId); return p && p.cat === 'fan';
+        }) || (tk() && tk().installed.some(function (i) { return i.cat === 'fan'; }));
+      } },
+    { view: 'bench', sel: '#view-bench .shelf-col',
+      title: 'Fit it',
+      body: 'If it is still in transit, the parts market lets you wait for the delivery. Then drag it from the '
+          + 'shelf onto the part you are replacing.',
+      done: function () { var t = tk(); return !!(t && t.installed.some(function (i) { return i.cat === 'fan'; })); } },
+    { view: 'bench', sel: '#view-bench .instruments',
+      title: 'Prove it worked',
+      body: 'A repair you have not re-tested is a repair you are taking on trust. Run the test that found '
+          + 'the fault again and see whether it reads normal now.',
+      done: function () { var t = tk(); return !!(t && t.fixConfirmed); } },
+    { view: 'handover', sel: '#view-handover .card',
+      title: 'Hand it back',
+      body: 'Set a price that describes the work you did — the part and your time — not what she can afford. '
+          + 'Then find out what she thought.',
+      done: function () { return !tk() && (Shop.state.history || []).length > practice.historyAt; } }
+  ];
+
+  function coachEl() {
+    if (practice.card) return practice.card;
+    var c = document.createElement('div');
+    c.className = 'coach';
+    c.setAttribute('role', 'status');
+    document.body.appendChild(c);
+    practice.card = c;
+    return c;
+  }
+
+  function paintCoach() {
+    if (!practice) return;
+    var s = COACH[practice.step];
+    document.querySelectorAll('.coach-target').forEach(function (e) { e.classList.remove('coach-target'); });
+    var here = window.TechOpsApp.current === s.view;
+    var tgt = here ? document.querySelector(s.sel) : document.querySelector('[data-view="' + s.view + '"]');
+    if (tgt) tgt.classList.add('coach-target');
+    coachEl().innerHTML = '<div class="coach-head"><span class="coach-tag">Training ticket</span>'
+      + '<span class="coach-count">' + (practice.step + 1) + ' of ' + COACH.length + '</span></div>'
+      + '<h4>' + esc(s.title) + '</h4><p>' + s.body + '</p>'
+      + (here ? '' : '<p class="coach-where">This happens in <b>' + esc(viewName(s.view)) + '</b> — the highlighted tab.</p>')
+      + '<div class="coach-acts"><button class="btn btn-xs" data-coach="leave">Leave practice</button></div>';
+    practice.card.querySelector('[data-coach="leave"]').addEventListener('click', function () { endTraining(false); });
+  }
+
+  function viewName(v) {
+    return { counter: 'the Counter', intake: 'the Sit-down', bench: 'the Workbench', mac: 'the Software lab',
+             market: 'the Parts market', handover: 'the Handover' }[v] || v;
+  }
+
+  function tick() {
+    if (!practice) return;
+    // Finished: wait until the handover's own code has run to the end and the
+    // student has read (and closed) the debrief. Swapping the real shift back
+    // from inside the handover's change event let its remaining lines — the
+    // next day, the quiet-day queue clear — land on the real shift.
+    if (practice.finished) {
+      if (!document.querySelector('.modal-veil')) endTraining(true);
+      return;
+    }
+    var moved = false;
+    while (practice.step < COACH.length && COACH[practice.step].done()) { practice.step++; moved = true; }
+    if (practice.step >= COACH.length) {
+      practice.finished = true;
+      if (practice.card) practice.card.style.display = 'none';
+      return;
+    }
+    if (moved && window.sekAudio && window.sekAudio.playKeyPop) window.sekAudio.playKeyPop();
+    paintCoach();
+  }
+
   function startTraining() {
+    if (practice) return;
     try { window.localStorage.setItem(KEY, '1'); } catch (e) {}
-    var S = Shop.state;
-    var cust = window.TechOpsCustomers.get('marika');
-    var t = window.TechOpsJobs.newTicket(Shop, {
-      customer: cust,
-      machineId: 'inspiron15',
-      fault: 'fan_seized'
-    });
+    var real = Shop.state;
+    var copy = JSON.parse(JSON.stringify(real));
+    copy.practice = true;
+    copy.queue = []; copy.shelf = []; copy.onOrder = []; copy.pendingComebacks = [];
+    practice = { snapshot: real, step: 0, historyAt: (copy.history || []).length, card: null };
+    Shop.state = copy;
+
+    var t = J().newTicket(Shop, { customer: window.TechOpsCustomers.get('marika'), machineId: 'inspiron15', fault: 'fan_seized' });
     t._training = true;
     t.budgetFt = 40000;
     t.urgencyDays = 7;
-    S.ticket = t;
-    S.queue = [];
+    t.priorRepair = null;
+    Shop.state.ticket = t;
     Shop.emit('change');
     window.TechOpsApp.go('counter');
-    UI.modal('<div class="modal-head"><h3>Training Ticket · Guided First Repair</h3>'
-      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Step 1 of 4: The Counter</div></div>'
+
+    UI.modal('<div class="modal-head"><h3>Training ticket</h3></div>'
       + '<div class="modal-body"><p style="font-size:calc(13.5px * var(--a11y-scale, 1));line-height:1.6">'
-      + 'Welcome! <b>Marika néni</b> has brought in her Dell Inspiron 15 with a cooling problem. '
-      + 'Notice her constraints: budget is <b>40.000 Ft</b> and she can wait up to <b>7 days</b>.'
-      + '<br><br>Click <b>“Talk to them →”</b> to sit down and ask questions before taking a screwdriver to anything.</p></div>'
-      + '<div class="modal-foot"><button class="btn btn-primary" data-close>Let us do it</button></div>');
+      + 'One real job, done by you, with a coach in the corner that says what each station is for and moves on when you have '
+      + 'actually done it. It will not tell you the answer.</p>'
+      + '<p style="font-size:calc(13px * var(--a11y-scale, 1));line-height:1.6;color:var(--ink-2)">'
+      + 'This is practice. Your shift is put aside and comes back exactly as it was when you finish or leave — '
+      + 'the till, the queue, your reputation and your hand-in code are not touched.</p></div>'
+      + '<div class="modal-foot"><button class="btn btn-primary" data-close>Start</button></div>');
+
+    // Never act inside someone else's change event; look after it has finished.
+    Shop.on('change', function () { setTimeout(tick, 0); });
+    practice.timer = setInterval(tick, 700);
+    paintCoach();
+  }
+
+  function endTraining(finished) {
+    if (!practice) return;
+    var p = practice, last = (Shop.state.history || [])[0];
+    practice = null;
+    clearInterval(p.timer);
+    if (p.card) p.card.remove();
+    document.querySelectorAll('.coach-target').forEach(function (e) { e.classList.remove('coach-target'); });
+    // Put the real shift back, including the random sequence position.
+    Shop.state = p.snapshot;
+    Shop.reseed();
+    Shop.emit('change');
+    window.TechOpsApp.go('counter');
+    if (window.TechOpsApp.refreshAll) window.TechOpsApp.refreshAll();
+    UI.modal('<div class="modal-head"><h3>' + (finished ? 'Training ticket done' : 'Practice left') + '</h3></div>'
+      + '<div class="modal-body"><p style="font-size:calc(13.5px * var(--a11y-scale, 1));line-height:1.6">'
+      + (finished && last
+          ? 'Marika néni gave it <b>' + '★'.repeat(last.stars) + '</b>. That was the whole loop: ask, measure, open safely, '
+            + 'buy only what the readings justify, fit it, prove it, price it. '
+          : '')
+      + 'Your real shift is back exactly as you left it.</p></div>'
+      + '<div class="modal-foot"><button class="btn btn-primary" data-close>Back to the counter</button></div>');
   }
 
   window.TechOpsTour = {
     start: start,
     startTraining: startTraining,
+    inTraining: function () { return !!practice; },
     seen: function () {
       try { return window.localStorage.getItem(KEY) === '1'; } catch (e) { return false; }
     },

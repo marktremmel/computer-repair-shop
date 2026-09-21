@@ -1,0 +1,41 @@
+{
+  "_about": "Connectors the bench needs that iFixit's chip-ID boxes do not cover (they box chips, not sockets). Coordinates are fractions of the board itself, not of the photo. Read by hand from iFixit's teardown photos; each entry says which one. Everything else on these boards is generated from the chip-ID boxes.",
+  "mbneo": {
+    "board": 0,
+    "stretch": 2.4,
+    "family": "laptop_logic",
+    "note": "The MacBook Neo's logic board, drawn from iFixit's chip-ID photo (and 2.4 times taller than life, so the parts are big enough to work on). A long strip along the hinge, like every modern MacBook: the A18 Pro with its memory stacked on top in the middle, soldered storage beside it. What is different is around it: the USB-C ports are their own little board on a press connector, and the battery connector sits front and centre under a two-screw cover.",
+    "connectors": [
+      {
+        "id": "battc",
+        "role": "battery",
+        "label": "Battery connector (under a two-screw cover)",
+        "x": 0.555,
+        "y": 0.72,
+        "w": 0.075,
+        "h": 0.22,
+        "from": "Article: 'The battery connector is front and center'; MacBook_Neo_77 shows the press-connector pads on the battery-facing edge."
+      },
+      {
+        "id": "usbcp",
+        "role": "usbc",
+        "label": "USB-C port module connector",
+        "x": 0.012,
+        "y": 0.22,
+        "w": 0.028,
+        "h": 0.36,
+        "from": "iFixit's chip-ID boxes put both USB-C port controllers (SN2012027) and the USB hub at this end, beside the vertical press connector seen in MacBook_Neo_77. (MacBook_Neo_71 shows the board flipped, which is why the ports appear at the other end there.)"
+      },
+      {
+        "id": "disp",
+        "role": "display",
+        "label": "Display connector",
+        "x": 0.925,
+        "y": 0.2,
+        "w": 0.03,
+        "h": 0.6,
+        "from": "MacBook_Neo_77: the vertical flex connector at the end away from the ports."
+      }
+    ]
+  }
+}

@@ -80,6 +80,7 @@
       + '<div class="title-foot">'
       +   '<div>A repair shop, not a quiz. Nobody tells you what is wrong '
       +   '— you ask, you measure, and you live with what you chose.</div>'
+      +   '<button class="title-teacher" id="t-teacher" type="button">Teacher? Decode the class\u2019s hand-in codes</button>'
       +   (window.TECHOPS_BUILD ? '<div class="title-build-tag">build <code>' + esc(window.TECHOPS_BUILD) + '</code></div>' : '')
       + '</div>'
       + '</div>';
@@ -179,6 +180,12 @@
 
     document.getElementById('t-how').addEventListener('click', function () {
       window.TechOpsDossier.book('guide');
+    });
+
+    // The teacher's own browser has no shift, so the decoder has to be
+    // reachable before anyone plays.
+    document.getElementById('t-teacher').addEventListener('click', function () {
+      window.TechOpsReport.teacher();
     });
 
     document.getElementById('t-play').focus();

@@ -221,6 +221,14 @@
   };
 
 
+  // Boards drawn from real photos (tools/build-chipid.py) replace the family
+  // layout for their machine.
+  var REAL = window.TechOpsRealBoards;
+  if (REAL) {
+    Object.keys(REAL.layouts || {}).forEach(function (k) { LAYOUTS[k] = REAL.layouts[k]; });
+    Object.keys(REAL.forMachine || {}).forEach(function (m) { FOR_MACHINE[m] = REAL.forMachine[m]; });
+  }
+
   window.TechOpsBoards = {
     LAYOUTS: LAYOUTS,
     forMachine: function (m) { return LAYOUTS[FOR_MACHINE[m.id] || 'laptop_logic']; },

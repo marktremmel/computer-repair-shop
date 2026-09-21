@@ -215,49 +215,6 @@
       draw();
     },
 
-    /** Flip the right switches; leaving one on is the whole point. */
-    toggles: function (done) {
-      var items = [
-        { id: 'watch',  label: 'Apple Watch still paired',        must: true },
-        { id: 'wifi',   label: 'Home Wi-Fi remembered',           must: true },
-        { id: 'bt',     label: 'Car Bluetooth remembered',        must: true },
-        { id: 'bright', label: 'Screen brightness set to 60%',    must: false },
-        { id: 'wall',   label: 'Custom wallpaper',                must: false }
-      ];
-      var state = {};
-      var m = UI.modal(frame('Clear what should not follow the phone',
-        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Some of this has to go before the phone changes hands. Some of it is none of your business.</p>'
-        + '<div class="mg-toggles">' + items.map(function (it) {
-            return '<button class="mg-toggle" data-tg="' + it.id + '"><span class="tg-box"></span>' + esc(it.label) + '</button>';
-          }).join('') + '</div>'
-        + '<button class="btn btn-primary" id="mg-confirm" style="margin-top:12px">Done</button>'
-        + '<div id="mg-say" class="mg-say"></div>'));
-      m.el.querySelectorAll('[data-tg]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          var id = b.getAttribute('data-tg');
-          state[id] = !state[id];
-          b.classList.toggle('on', state[id]);
-          audio('playKeyPop');
-        });
-      });
-      document.getElementById('mg-confirm').addEventListener('click', function () {
-        var say = document.getElementById('mg-say');
-        var missed = items.filter(function (it) { return it.must && !state[it.id]; });
-        var extra  = items.filter(function (it) { return !it.must && state[it.id]; });
-        if (!missed.length && !extra.length) {
-          say.className = 'mg-say ok';
-          say.textContent = 'Pairings cleared, personal settings left alone.';
-          audio('playSuccessChime');
-          setTimeout(function () { m.close(); done(); }, 1100);
-        } else {
-          say.className = 'mg-say bad';
-          say.textContent = missed.length
-            ? 'Still paired: ' + missed.map(function (x) { return x.label.toLowerCase(); }).join(', ') + '. Those follow the phone to its next owner.'
-            : 'You have cleared things that were just how they liked it. Wiping preferences you were not asked to touch is not thoroughness.';
-          audio('playErrorBuzz');
-        }
-      });
-    },
 
     /** Reinstall: the one choice that decides whether they keep their files. */
     reinstall: function (done) {
@@ -427,51 +384,6 @@
      * except the tree. What matters is recognising which entry does not
      * belong in the list and knowing that removing it is the whole fix.
      */
-    notifications: function (done, step) {
-      var win = step && step.windows;
-      var SITES = NOTIFICATION_SITES;
-      var removed = {}, wrong = 0;
-      var m = UI.modal(frame((win ? 'Edge' : 'Safari') + ' \u203a Settings \u203a Websites \u203a Notifications',
-        '<p style="font-size:calc(13px * var(--a11y-scale, 1));color:var(--ink-2)">Every site here was allowed by somebody clicking a button once. '
-        + 'One of them is sending the fake warnings. Remove that one and nothing else \u2014 the others were asked for.</p>'
-        + '<div class="mg-perms" id="mg-perms"></div>'
-        + '<div id="mg-say" class="mg-say"></div>'));
-
-      function draw() {
-        document.getElementById('mg-perms').innerHTML = SITES.map(function (x, i) {
-          if (removed[i]) {
-            return '<div class="mg-perm gone"><span class="mg-fav">\u2013</span>'
-              + '<div><b>' + esc(x.d) + '</b><span>removed</span></div></div>';
-          }
-          return '<div class="mg-perm"><span class="mg-fav">' + esc(x.d.charAt(0).toUpperCase()) + '</span>'
-            + '<div><b>' + esc(x.d) + '</b><span>' + esc(x.why) + '</span></div>'
-            + '<span class="mg-allow ' + (x.a === 'Allow' ? 'yes' : 'no') + '">' + x.a + '</span>'
-            + '<button class="btn btn-sm" data-rm="' + i + '">Remove</button></div>';
-        }).join('');
-        document.getElementById('mg-perms').querySelectorAll('[data-rm]').forEach(function (b) {
-          b.addEventListener('click', function () {
-            var i = +b.getAttribute('data-rm');
-            var say = document.getElementById('mg-say');
-            removed[i] = true;
-            if (SITES[i].rogue) {
-              say.className = 'mg-say ok';
-              say.textContent = 'That is the one. Nothing was installed, so nothing had to be uninstalled \u2014 one permission, gone.';
-              audio('playSuccessChime');
-              draw();
-              setTimeout(function () { m.close(); done(); }, 1500);
-              return;
-            }
-            wrong++;
-            say.className = 'mg-say bad';
-            say.textContent = 'That was a site they actually wanted. ' + SITES[i].why
-              + ' Read the address, not the list \u2014 the odd one out is the one nobody would type on purpose.';
-            audio('playErrorBuzz');
-            draw();
-          });
-        });
-      }
-      draw();
-    },
 
     keycombo: function (done, step) {
       var combo = step.combo, held = {};

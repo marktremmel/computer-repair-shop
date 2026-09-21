@@ -78,6 +78,14 @@
     window.TechOpsApp.go('intake');
   }
 
+  /** A returning customer, and how the last visit went. */
+  function regTag(c) {
+    var m = window.TechOpsCustomers.memory(c, Shop.state);
+    if (!m) return '';
+    return '<div class="reg-tag mood-' + m.mood + '">Returning \u00b7 visit ' + (m.visits + 1)
+      + ' \u00b7 last time ' + '\u2605'.repeat(m.last.stars) + '</div>';
+  }
+
   function render() {
     var host = document.getElementById('view-counter');
     var t = Shop.state.ticket;
@@ -90,7 +98,8 @@
         + '<h3 class="clickable-name" data-person="' + esc(c.id || c.name) + '">' + esc(c.name) + '</h3>'
         + '<div style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3);margin-bottom:10px">' + esc(c.tag) + '</div>'
         + '<div class="speech">“' + esc(t.complaint) + '”</div>'
-        + '<div class="speech">“' + esc(window.TechOpsCustomers.greet(c, Shop.state)) + '”</div>'
+        + regTag(c)
+        + '<div class="speech">“' + esc(window.TechOpsCustomers.greet(c, Shop.state, t)) + '”</div>'
         + '<div class="speech">“' + esc(c.lines.budget) + '”</div>'
         + '<div class="note teach" style="margin-top:14px"><b>What they think is wrong:</b> ' + esc(f.customerTheory)
         + '<br><br>They are describing a symptom. Go and measure the machine before you believe any of it.</div>'
@@ -118,8 +127,10 @@
       return '<div class="card"><div class="cust-row"><div class="cust-avatar">' + UI.face(c, 44) + '</div><div style="flex:1">'
         + '<div class="cust-name clickable-name" data-person="' + esc(c.id || c.name) + '">' + esc(c.name) + '</div>'
         + '<div class="cust-tag">' + esc(c.tag) + '</div>'
-        + '<div class="cust-usecase">' + esc(uc.label) + '</div></div></div>'
+        + '<div class="cust-usecase">' + esc(uc.label) + '</div>' + regTag(c) + '</div></div>'
         + '<div class="quote-bubble">“' + esc(q.complaint) + '”</div>'
+        + (window.TechOpsCustomers.memory(c, Shop.state)
+            ? '<div class="quote-bubble returning">“' + esc(window.TechOpsCustomers.greet(c, Shop.state, q)) + '”</div>' : '')
         + '<div class="machine-strip"><span class="ico">' + m.icon + '</span><div>'
         + '<div class="nm">' + esc(m.name) + '</div><div class="sp">' + esc(m.year + ' · ' + m.kind) + '</div></div></div>'
         + '<div class="constraint-grid">'

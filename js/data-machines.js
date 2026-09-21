@@ -67,6 +67,34 @@
       teardown: ['bottom_case', 'battery_connector', 'battery', 'display_flex']
     },
 
+    // The repairable Mac. Facts from iFixit's MacBook Neo teardown and repair
+    // guides: eight P5 pentalobes and two clips on the bottom case, a battery
+    // held by eighteen Torx Plus 5IP screws instead of glue, the USB-C ports on
+    // their own module, memory and storage still soldered to the A18 Pro board.
+    mbneo: {
+      id: 'mbneo',
+      os: 'macos',
+      name: 'MacBook Neo',
+      kind: 'laptop',
+      icon: '💻',
+      year: 2026,
+      blurb: 'The most repairable MacBook in years: the bottom lifts off by hand once eight pentalobes are out, the battery is screwed in instead of glued, and the USB-C ports are their own little module. Memory and storage are still soldered.',
+      storageBuses: ['soldered'],
+      storageForm: 'soldered',
+      storageSoldered: true,
+      ramType: 'unified-soldered',
+      ramForm: 'soldered',
+      ramSlots: 0,
+      ramMaxGB: 8,
+      ramSoldered: true,
+      screws: ['pentalobe-p5'],
+      caseScrews: 8,
+      display: { size: 13, res: 'Retina', hz: 60, panel: 'LCD' },
+      battery: { model: 'MacBook Neo', designCycles: 1000 },
+      thermal: { tdpW: 8, pasteAllowed: [] },
+      teardown: ['bottom_case', 'battery_connector', 'usb_board', 'battery_screws']
+    },
+
     thinkpad_t480: {
       id: 'thinkpad_t480',
       os: 'windows',
@@ -157,7 +185,6 @@
       battery: null,
       thermal: { tdpW: 20, pasteAllowed: ['standard', 'premium'] },
       teardown: ['cut_adhesive', 'lift_display', 'display_flex', 'fan', 'heatsink'],
-      openTool: 'cutting_wheel'
     },
 
     ipad_air: {
@@ -181,7 +208,6 @@
       battery: { model: 'A2779', designCycles: 1000 },
       thermal: { tdpW: 8, pasteAllowed: [] },
       teardown: ['heat_edges', 'pick_seam', 'lift_display', 'battery_connector', 'display_flex', 'battery', 'charge_port'],
-      openTool: 'thin_picks'
     },
 
     mbp14_m3: {

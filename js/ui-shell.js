@@ -32,6 +32,17 @@
     // Has its own panel on the board, so it is not listed with the bench
     // instruments — but it is still an instrument, and the evidence rail
     // has to know what to call it.
+    // Recorded by opening a pane in System Settings, and by walking the chain
+    // in the Network app. For faults that live in a setting or a connection,
+    // the app is the instrument.
+    settings:     { id: 'settings',     name: 'Settings check',      icon: '⚙️', where: 'mac',   hours: 0.1,
+                    blurb: 'Open the settings the complaint is about and read what they are actually set to.' },
+    network:      { id: 'network',      name: 'Network chain',       icon: '🔗', where: 'mac',   hours: 0.1,
+                    blurb: 'Ping hop by hop: this machine, the router, the provider, DNS, a real site.' },
+    // Recorded by using the browser in the software lab (or Safari on a
+    // handset): load a site, search for something, see where it goes.
+    browser:      { id: 'browser',      name: 'Browser check',       icon: '🌐', where: 'mac',   hours: 0.1,
+                    blurb: 'Load a site and search for something. Where does it actually go, and what pops up?' },
     meter:        { id: 'meter',        name: 'Multimeter',          icon: '📟', where: 'board', hours: 0.4,
                     blurb: 'Rail voltages and continuity to ground, one test point at a time.' }
   };
@@ -84,7 +95,11 @@
       case 'battery':
         if (r.condition === 'N/A') { d = 'no battery — desktop'; break; }
         hit = r.condition !== 'Normal' || r.healthPct < 80;
-        d = n(r.cycles, r.cycles > 900, '') + ' cycles · ' + n(r.healthPct, r.healthPct < 80, '%') + ' of design · ' + n(r.condition, hit);
+        // Worn is relative to this pack: a phone cell is rated for about 500
+        // cycles, a laptop pack for about 1000.
+        var design = r.designCycles || 1000;
+        if (r.cycles > design) hit = true;
+        d = n(r.cycles, r.cycles > design, '') + ' of ' + design + ' cycles · ' + n(r.healthPct, r.healthPct < 80, '%') + ' of design · ' + n(r.condition, hit);
         break;
       case 'power':
         hit = !r.seats || r.watts === 0;
@@ -100,12 +115,22 @@
           + ' · top: ' + esc(r.topProc) + ' (' + r.topProcMemGB + ' GB'
           + (r.topProcCpuPct ? ', ' + n(r.topProcCpuPct, r.topProcCpuPct > 150, '% CPU') : '') + ')';
         break;
+      case 'browser':
+      case 'settings':
+      case 'network':
+        d = r.abnormal ? 'shows the problem' : 'as expected';
+        break;
       case 'visual':
       case 'listen':
-        hit = /swollen|domed|seized|cracked|lint|dust|burnt|click|grind|spiderweb/i.test(r.note || '');
-        d = hit ? 'abnormal' : 'nothing obviously wrong';
+        d = r.abnormal ? 'abnormal' : 'nothing obviously wrong';
         break;
     }
+    // The fault data says which of its readings are evidence. Guessing it from
+    // keywords missed corrosion, bent pins and a splayed port, and told the
+    // student "nothing obviously wrong" above a note describing the damage.
+    if (r.abnormal === true) hit = true;
+    else if (r.abnormal === false || toolId === 'visual' || toolId === 'listen'
+             || toolId === 'browser' || toolId === 'settings' || toolId === 'network') hit = false;
     return { data: d, note: r.note || '', hit: hit };
   }
 

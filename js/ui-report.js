@@ -83,10 +83,21 @@
   // ── student side ───────────────────────────────────────────────────
   function showShiftReport() {
     var S = Shop.state;
+    if (S.practice) {
+      UI.modal('<div class="modal-head"><h3>This is a practice job</h3></div><div class="modal-body">'
+        + '<p style="color:var(--ink-2)">The training ticket does not count towards your shift or your hand-in code. '
+        + 'Finish it or leave it, and your real shift comes back.</p></div>'
+        + '<div class="modal-foot"><button class="btn" data-close>Close</button></div>');
+      return;
+    }
     if (!S.jobsDone) {
       UI.modal('<div class="modal-head"><h3>No shift to report yet</h3></div><div class="modal-body">'
         + '<p style="color:var(--ink-2)">Close at least one job first — the report is built from what you actually did at the counter.</p>'
-        + '</div><div class="modal-foot"><button class="btn" data-close>Close</button></div>');
+        + '<p style="color:var(--ink-3);font-size:calc(12.5px * var(--a11y-scale, 1))">Teacher on a fresh computer? The class decoder does not need a shift of its own.</p>'
+        + '</div><div class="modal-foot"><button class="btn" id="btn-open-decoder">Teacher: decode the class</button>'
+        + '<button class="btn" data-close>Close</button></div>');
+      var od = document.getElementById('btn-open-decoder');
+      if (od) od.addEventListener('click', function () { showTeacherDecoder(); });
       return;
     }
     var avg = (S.starsTotal / S.jobsDone);
@@ -133,10 +144,16 @@
           : '')
       + '</div>'
       + '<div class="modal-foot">'
+      + '<button class="btn" id="btn-open-decoder" style="margin-right:auto">Teacher: decode the class</button>'
       + '<button class="btn" id="btn-print-report">🖨️ Print</button>'
       + '<button class="btn btn-primary" id="btn-copy-code">Copy code</button>'
       + '<button class="btn" data-close>Close</button></div>');
 
+    // The decoder lost its only entry point in a tab restructure once, which
+    // made the whole hand-in step of a lesson impossible. Keep it reachable
+    // from here, the Save tab and the title screen.
+    var odb = document.getElementById('btn-open-decoder');
+    if (odb) odb.addEventListener('click', function () { showTeacherDecoder(); });
     var nameIn = document.getElementById('student-name');
     nameIn.addEventListener('input', function () {
       Shop.state.studentName = nameIn.value;

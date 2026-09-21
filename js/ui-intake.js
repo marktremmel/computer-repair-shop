@@ -85,26 +85,26 @@
     battery_swollen: ['battery', 'visual'], port_lint: ['power', 'visual', 'meter'],
     cracked_screen: ['visual'], runaway_process: ['activity'],
     sd_formatted: ['storage_used', 'smart'], os_wrecked: ['smart', 'bench'],
-    migration: ['storage_used', 'visual'], no_backup: ['smart', 'listen'],
+    migration: ['storage_used'], no_backup: ['smart', 'listen'],
     water_damage: ['visual', 'power', 'thermal', 'meter'], dead_no_power: ['power', 'battery', 'meter'],
-    no_internet: ['activity'], router_down: ['activity'],
+    no_internet: ['network'], router_down: ['network'],
     smc_confused: ['thermal', 'visual'], nvram_lost: ['visual', 'smart'],
-    locked_out: ['storage_used', 'visual'], sticky_keys: ['visual', 'thermal'],
+    locked_out: ['storage_used'], sticky_keys: ['visual'],
     bent_socket_pins: ['visual', 'power', 'meter'], blown_caps: ['visual', 'power'],
-    kernel_task_panic: ['activity', 'thermal'], browser_push_spam: ['activity', 'storage_used'],
-    captive_portal_loop: ['activity', 'visual'], console_full: ['storage_used', 'bench'],
+    kernel_task_panic: ['activity', 'thermal'], browser_push_spam: ['browser'],
+    captive_portal_loop: ['browser'], console_full: ['storage_used'],
     charge_port_dead: ['power', 'visual', 'battery', 'meter'],
-    gpu_cable_wrong_port: ['visual', 'bench'],
+    gpu_cable_wrong_port: ['visual'],
     ps5_liquid_metal: ['thermal', 'visual'],
     // Only the meter finds this one. Looking shows nothing, and the charge
     // test says what a latched controller would say too.
     ps5_rail_short: ['meter'],
     laptop_rail_short: ['meter'],
-    keyboard_layout_swap: ['activity', 'visual'],
-    display_brightness_zero: ['visual', 'power'],
-    audio_device_swapped: ['activity', 'visual'],
+    keyboard_layout_swap: ['settings'],
+    display_brightness_zero: ['visual', 'settings', 'power'],
+    audio_device_swapped: ['settings'],
     usbc_cc_short: ['power', 'visual', 'meter'],
-    browser_rogue_extension: ['activity', 'storage_used']
+    browser_rogue_extension: ['browser']
   };
 
   function theoryStatus(t) {

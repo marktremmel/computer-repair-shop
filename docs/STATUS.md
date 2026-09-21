@@ -117,8 +117,8 @@ fixed; the rail now skips anything it does not recognise.
 | PS5 liquid-metal dry-out | ✅ | `ps5_liquid_metal`. Swab the old metal out (a scrape gesture that punishes pushing beads toward the barrier), brush a new film on (a trace). Liquid metal is correct here and is not penalised as unsafe; paste resolves it but costs fit and can come back. The laptop-written `thermal_paste_dead` no longer lands on the PS5. |
 | Shorted decoupling cap on a power rail | ✅ | `ps5_rail_short` on the PS5's 12 V rail, and `laptop_rail_short` on the ThinkPad's 20 V DC-in rail. Only the multimeter reveals it: looking shows nothing, and a power reset changes nothing. Fixed by lifting the part with hot tweezers; an unmarked capacitor of unknown voltage rating costs fit and can fail again. Verified across both machines. |
 | Notification abuse, captive portal | ✅ | `browser_push_spam`, `captive_portal_loop`. |
-| Deceptive browser extensions | ✅ | `browser_rogue_extension`. Settings › Extensions tab in the browser app; rogue search hijacker removal simulated alongside clean web redirects. Zero parts needed. |
-| Corroded USB-C configuration pin | ✅ | `usbc_cc_short`. Orientation-dependent charging / slow trickle mode caused by bridged CC1 pin; multimeter and visual diagnostics; resolved with precision pick clean. |
+| Deceptive browser extensions | ✅ | `browser_rogue_extension`. Searching in the Browser bounces through searchzone.top; *Settings › Search engine* says which add-on controls it. The Extensions page is the same four add-ons on every machine with one neutral icon — the culprit is only visible in its details (added last Tuesday, by another program, allowed to change search settings). Removing a wanted add-on is explained and counts against workmanship. Searching again confirms the fix. |
+| Corroded USB-C configuration pin | ✅ | `usbc_cc_short`, on machines that really charge over USB-C. On a phone or iPad, turn the plug over: one way reads *Slow charger connected*, the other charges. The fix is its own action — scrub the contacts with IPA — so "lint or corrosion?" is a real decision; a pick in a port with no lint comes out empty. |
 
 ---
 
@@ -130,8 +130,8 @@ fixed; the rail now skips anything it does not recognise.
 | Multi-turn interviews | ✅ | Answers open follow-ups, which can chain. Bench findings open things to put to the customer, with curious vs blunt choices affecting `t.tension`, now reflected directly in customer reviews and debriefings. Nine faults have them. |
 | Multi-job juggling | ⬜ | |
 | Swipe mode for phones | ⬜ | |
-| HU / EN localisation | ⬜ | |
-| 45-minute lesson plan | ⬜ | Written in the doc; not yet a printable handout. |
+| HU / EN localisation | 🟡 | `js/i18n.js` is scaffolding only: loaded, but no view uses it and there is no switch. Deliberately parked — lessons are taught in English. Comes after multi-job juggling. |
+| 45-minute lesson plan | ✅ | `docs/TEACHER_GUIDE.md`, checked against the game line by line (the first version promised customers, vendors and pages that did not exist). |
 
 ---
 
@@ -139,7 +139,7 @@ fixed; the rail now skips anything it does not recognise.
 
 | Proposed | Status | Notes |
 |---|---|---|
-| Recurring characters & persistent memory | ✅ | `customerMemory` persists across the shift. Handover records visit history, stars, and budget fairness; returning regulars (Béla bácsi, Marika néni, Eszter, Dávid, etc.) dynamically reference their last repair and bill in their greeting. |
+| Recurring characters & persistent memory | 🟡 | `customerMemory` records what actually happened at each handover (overcharged, sold an unneeded part, late, accused over the spill, came back under warranty). Returning customers say so, carry a *Returning* tag on the counter, and it changes things: a happy regular comes back more often with a bigger budget, a sore one with less patience. The named story characters (Béla bácsi, János, Kovács úr) are not built yet. |
 | Dialogue tree: the pink liquid indicator | ✅ | Unless they confessed at the counter, the customer now denies any spill. Visual inspection unlocks the confrontation. Blunt gets "it must be the humidity" and nothing useful; curious gets "my son, a glass of cola" — and sugar is why it cannot wait. Adapted to our fault (board corrosion, not a trackpad flex). |
 | Dialogue tree: the counterfeit charger | ✅ | On `dead_no_power` and `laptop_rail_short`: unbranded charger lead, click, faint pop, and smell. |
 | Seasonal interludes | ⬜ | |
@@ -159,16 +159,37 @@ fixed; the rail now skips anything it does not recognise.
 | Capacitors could not be bought | ✅ | No market tab, so the tower's capacitor job was unwinnable. A "Board parts" tab now exists, and coverage fails if a fix needs something the market does not sell. |
 | Does the iPad have screws? | ✅ | No — the glass is glued to the frame. That is correct, and the bench says so. |
 | Visible build version number missing | ✅ | Stamped in fixed footer (`#build-tag`), title screen, and in-game dossier. Auto-updated via `rebuild.sh`. |
-| First-time onboarding learn-by-drowning | ✅ | Added "Training ticket" (guided first repair with Marika néni on the Inspiron 15) alongside the 9-stop tour. |
-| Classroom Lesson Handout & Teacher Decoder Reference | ✅ | Created comprehensive guide in `docs/TEACHER_GUIDE.md` for SEK Budapest: 45-min lesson timeline, shift seed `SEKBUDAPEST2026`, decoder axis diagnostics, and student workstation checklist. |
-| Hungarian / English Localization Scaffolding | ✅ | Implemented `js/i18n.js` (`TechOpsI18n`) with persistence in `localStorage`, dictionary strings for navigation, evaluation axes, HUD, title, and bench actions. |
+| First-time onboarding | ✅ | The training ticket was rebuilt: it promised four steps and showed one, threw away the job on the bench and the whole queue, and counted towards the hand-in code. Now it runs on a copy of the shop, a coach card sets the goal of each of eleven stations and moves on when the student has actually done it (never naming the answer), and the real shift comes back byte-for-byte. |
+| Teacher guide | ✅ | Rewritten. The first version described a customer order, vendors, goal names and a `dossier.html` that did not exist. |
+| Hungarian / English scaffolding | 🟡 | See §5. |
 
-## 8. What to do next, in order
+## 8. Review round (21 September)
 
-1. **Swipe mode for phones** (mobile triage mini-game, 390px view).
-2. **Interactive Multimeter & Rail Probing Subsystem** (DC volts, ohms, continuity beep via audio engine).
-3. **Multi-turn intake follow-ups** (challenging customer contradictions).
+A review of the build as Antigravity left it, then fixes. Everything below was
+found by reading the code and playing it, not from a harness.
 
-*Verification for everything marked ✅: `tools/coverage.js` (13 machines, 38 faults),
-`tools/scoring.js` (31 scenarios), `tools/playthrough.js` (2,700 simulated plays, 0 errors),
-and browser verification of character persistence, i18n dictionary, and training tickets.*
+| Problem | Status | Notes |
+|---|---|---|
+| The class decoder could not be opened | ✅ | Its only button lost its markup in a tab restructure. Reachable again from the title screen, the report window (including the empty one a teacher sees on a fresh computer) and Save & load. |
+| Shift codes promised content they did not deliver | ✅ | "Phones and tablets", "low budgets", "faults that need no parts" were plain seeds. Each code now has a profile that does what its note says, and coverage deals 60 walk-ins per code to check it. |
+| Evidence summary said "nothing obviously wrong" above damage | ✅ | Abnormal was guessed from keywords. Readings now carry `abnormal` / `decisive` flags from the fault data. |
+| Diagnosis opened on readings that showed nothing | ✅ | Every instrument in `REVEALED_BY` must now be flagged abnormal or decisive (coverage 4f). Faults whose evidence lives in an app got the app as the instrument: **Browser check**, **Settings check**, **Network chain**. Safari was added to the handset screen for the iPad's browser faults. |
+| Customers opened with lines that did not say what was wrong | ✅ | 31 complaints written as second halves of another line. Rewritten; coverage 4g catches the pattern. |
+| Returning customers said the wrong thing | ✅ | See §6. |
+| Old tick-the-answer procedures beside the real apps | ✅ | The notification and captive-portal quiz panels are gone; the Browser does the job, the evidence and the verification. |
+| Dead code | ✅ | 69 CSS selectors for the old hand-drawn board parts, badge row and queue list; the bench's drifting copy of `REVEALED_BY`; two unused mini-games; `severity`, `openTool`, `needsProof`, `ripplemV`. Battery wear is now judged against each pack's own design cycles instead of a flat 900. |
+| Handset gestures had no keyboard route | ✅ | Plug (Enter), restart (hold Space/Enter for the same time), touch test (walk every square with the arrow keys). |
+
+| Chip ID data was mis-parsed and the board was fake | ✅ | The old data had part number and maker swapped and the Steam Deck's processor missing, and chips were placed randomly on a drawn board. Rebuilt by `tools/build-chipid.py` from the saved iFixit pages: 13 real board photos, 149 chips located from iFixit's own coloured boxes. The bench names a job and you find the chip on the clean photo, with a loupe; every click says what that chip really is. Keyboard route: crosshair and Enter. |
+| MacBook Neo | ✅ | 14th machine. Its bench board is drawn from the chip-ID photo (chips exact, connectors from the teardown photos). Eight P5 screws; the USB-C ports are a module (four T5 screws, press connector) — a worn port is a ~10 000 Ft module (iFixit: the same modular design as recent MacBooks); the battery is screwed down (T5, a trace along the row of screws) instead of glued. Twelve faults apply. Facts from iFixit's repair guides and teardown article. |
+| Fitting a part by clicking its chip failed when the chip was two regions | ✅ | A battery connector is also the battery bay. With a part in hand, the click now goes to the bay. (Affected the MacBook Air too.) |
+
+## 9. What to do next, in order
+
+1. **Redraw the Steam Deck, Switch 2, PS5 and iMac boards from their photos** — the chips are ready; the battery/fan/SSD connector positions need the repair-guide photos, which were not saved (the pages lazy-load). Needs a download of those images first.
+2. Saved for later, in this order: scenario codes with fixed job lists, the phone parcel-scam triage, find-the-short with a thermal camera, backups as a habit, the meter's V/Ω dial and probing a closed machine at its port, multi-job juggling, the 390 px phone layout, then Hungarian.
+
+*Verification for this round: `tools/coverage.js` (14 machines, 38 faults, new
+checks 4b'', 4e, 4f, 4g), `tools/scoring.js` (31 scenarios), `tools/playthrough.js`,
+a click sweep of all 194 machine × fault pairs including every board region and every Chip ID board (13,855 clicks, no errors), and each
+fixed job played by hand in the browser.*
