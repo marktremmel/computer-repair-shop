@@ -61,6 +61,21 @@
       resolved: res.resolved, soldUnneeded: !!(J.fault(t).noPartNeeded && t.installed.length)
     });
 
+    var custId = t.customerId || (J.customer(t) && J.customer(t).id) || (J.customer(t) && J.customer(t).name);
+    if (custId) {
+      var mem = Shop.state.customerMemory = Shop.state.customerMemory || {};
+      mem[custId] = mem[custId] || { visits: 0, repairs: [] };
+      mem[custId].visits++;
+      mem[custId].repairs.push({
+        day: Shop.state.day,
+        machine: J.machine(t).name,
+        fault: J.fault(t).title,
+        stars: res.stars,
+        paidFt: p,
+        wasOvercharged: res.axes && res.axes.budget < 50
+      });
+    }
+
     if (res.comeback) {
       Shop.state.pendingComebacks = Shop.state.pendingComebacks || [];
       Shop.state.pendingComebacks.push({

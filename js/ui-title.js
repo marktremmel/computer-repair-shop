@@ -68,6 +68,7 @@
       +   '<button class="btn" id="t-access">♿ Text size &amp; contrast</button>'
       +   '<button class="btn" id="t-sound">' + (window.sekAudio && window.sekAudio.muted ? '🔇 Sound off' : '🔊 Sound on') + '</button>'
       +   '<button class="btn" id="t-tour">Show me around</button>'
+      +   '<button class="btn" id="t-training">🧑‍🔧 Training ticket</button>'
       +   '<button class="btn" id="t-how">How the shop works</button>'
       + '</div>'
 
@@ -153,6 +154,19 @@
         if (veil) veil.remove();
         window.TechOpsTour.start(function () {});
       }, 420);
+    });
+
+    var trn = document.getElementById('t-training');
+    if (trn) trn.addEventListener('click', function () {
+      close();
+      if (onPlay) onPlay();
+      setTimeout(function () {
+        var veil = document.querySelector('.modal-veil');
+        if (veil) veil.remove();
+        if (window.TechOpsTour && window.TechOpsTour.startTraining) {
+          window.TechOpsTour.startTraining();
+        }
+      }, 350);
     });
 
     document.getElementById('t-how').addEventListener('click', function () {

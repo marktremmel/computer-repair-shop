@@ -104,7 +104,8 @@
       thermal_paste_dead: ['thermal', 'visual'],
       battery_swollen: ['battery', 'visual'],
       cracked_screen: ['visual'],
-      port_lint: ['power', 'visual']
+      port_lint: ['power', 'visual'],
+      usbc_cc_short: ['power', 'visual']
     };
     var found = (REVEALED_BY[f.id] || []).some(function (x) { return ticket.testsRun.indexOf(x) !== -1; });
     var faulty = (f.fixedBy.kind === 'part' && f.fixedBy.cat === cat) ||
@@ -133,7 +134,8 @@
       ps5_liquid_metal:   'liquid metal dried to one edge, die part-bare',
       battery_swollen:    'pack visibly domed — swollen',
       cracked_screen:     'glass shattered, digitiser dead',
-      port_lint:          'port packed with compacted lint'
+      port_lint:          'port packed with compacted lint',
+      usbc_cc_short:      'USB-C CC pin corroded/bridged'
     }[f.id];
 
     if (faulty && found && faultText) return { fault: true, text: faultText };
@@ -1360,7 +1362,7 @@
           || t.openSteps.indexOf('reconnect_power') !== -1)) return;
       if (aid === 'lever_battery' && !((t.snappedTabs || 0) >= 2 && t.openSteps.indexOf('battery') === -1)) return;
       if (!J.hasStepFor(a, m)) return;
-      if (aid === 'clean_port' && ['port_lint'].indexOf(J.fault(t).id) === -1 && m.kind !== 'phone' && m.teardown.indexOf('charge_port') === -1) {
+      if (aid === 'clean_port' && ['port_lint', 'usbc_cc_short'].indexOf(J.fault(t).id) === -1 && m.kind !== 'phone' && m.teardown.indexOf('charge_port') === -1) {
         // still offer it — cleaning a port is never wrong, just sometimes pointless
       }
       var done = !a.repeatable && t.actionsDone.indexOf(aid) !== -1;

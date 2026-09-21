@@ -157,8 +157,34 @@
     render();
   }
 
+  function startTraining() {
+    try { window.localStorage.setItem(KEY, '1'); } catch (e) {}
+    var S = Shop.state;
+    var cust = window.TechOpsCustomers.get('marika');
+    var t = window.TechOpsJobs.newTicket(Shop, {
+      customer: cust,
+      machineId: 'inspiron15',
+      fault: 'fan_seized'
+    });
+    t._training = true;
+    t.budgetFt = 40000;
+    t.urgencyDays = 7;
+    S.ticket = t;
+    S.queue = [];
+    Shop.emit('change');
+    window.TechOpsApp.go('counter');
+    UI.modal('<div class="modal-head"><h3>Training Ticket · Guided First Repair</h3>'
+      + '<div style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3)">Step 1 of 4: The Counter</div></div>'
+      + '<div class="modal-body"><p style="font-size:calc(13.5px * var(--a11y-scale, 1));line-height:1.6">'
+      + 'Welcome! <b>Marika néni</b> has brought in her Dell Inspiron 15 with a cooling problem. '
+      + 'Notice her constraints: budget is <b>40.000 Ft</b> and she can wait up to <b>7 days</b>.'
+      + '<br><br>Click <b>“Talk to them →”</b> to sit down and ask questions before taking a screwdriver to anything.</p></div>'
+      + '<div class="modal-foot"><button class="btn btn-primary" data-close>Let us do it</button></div>');
+  }
+
   window.TechOpsTour = {
     start: start,
+    startTraining: startTraining,
     seen: function () {
       try { return window.localStorage.getItem(KEY) === '1'; } catch (e) { return false; }
     },
@@ -166,21 +192,28 @@
     offer: function (after) {
       UI.modal('<div class="modal-head"><h3>First time behind the counter?</h3></div>'
         + '<div class="modal-body"><p style="font-size:calc(13.5px * var(--a11y-scale, 1));line-height:1.65">'
-        + 'Two minutes, nine stops, and it only shows you where things are — '
-        + 'what is actually wrong with each machine is yours to work out.</p></div>'
-        + '<div class="modal-foot">'
+        + 'Two ways to start: take the two-minute walk round to see where everything is, '
+        + 'or jump straight into a guided training ticket with Marika néni.</p></div>'
+        + '<div class="modal-foot" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'
         + '<button class="btn" data-close id="tour-no">I will find my way</button>'
-        + '<button class="btn btn-primary" id="tour-yes">Show me around</button></div>');
-      var yes = document.getElementById('tour-yes');
+        + '<button class="btn" id="tour-walk">Walk round (9 stops)</button>'
+        + '<button class="btn btn-primary" id="tour-training">Start Training Ticket</button></div>');
+      var walk = document.getElementById('tour-walk');
+      var train = document.getElementById('tour-training');
       var no  = document.getElementById('tour-no');
       if (no) no.addEventListener('click', function () {
         try { window.localStorage.setItem(KEY, '1'); } catch (e) {}
         if (after) after();
       });
-      if (yes) yes.addEventListener('click', function () {
+      if (walk) walk.addEventListener('click', function () {
         var veil = document.querySelector('.modal-veil');
         if (veil) veil.remove();
         start(after);
+      });
+      if (train) train.addEventListener('click', function () {
+        var veil = document.querySelector('.modal-veil');
+        if (veil) veil.remove();
+        startTraining();
       });
     }
   };

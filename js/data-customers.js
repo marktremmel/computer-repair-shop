@@ -238,6 +238,21 @@
       for (var i = 0; i < CUSTOMERS.length; i++) if (CUSTOMERS[i].id === id) return CUSTOMERS[i];
       return null;
     },
-    useCase: function (id) { return USE_CASES[id]; }
+    useCase: function (id) { return USE_CASES[id]; },
+    greet: function (c, state) {
+      if (!c) return '';
+      var mem = state && state.customerMemory && (state.customerMemory[c.id] || state.customerMemory[c.name]);
+      if (mem && mem.repairs && mem.repairs.length) {
+        var last = mem.repairs[mem.repairs.length - 1];
+        if (last.stars >= 4) {
+          return 'Good to see you again! That ' + last.machine + ' you worked on on Day ' + last.day + ' is running like new. But today...';
+        }
+        if (last.wasOvercharged || last.stars <= 2) {
+          return 'I am back because your shop is on my way home, but I remember that steep bill on Day ' + last.day + '. Let us keep it fair today.';
+        }
+        return 'Back again! You helped me out with my ' + last.machine + ' a few days back.';
+      }
+      return (c.lines && c.lines.greet) || '';
+    }
   };
 })(window);

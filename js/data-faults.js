@@ -222,6 +222,37 @@
       explain: 'Lint does not block the port by being dirty; it compacts into a solid pad that physically stops the plug seating the last two millimetres. The contacts never touch. Every replacement cable fails identically, which is exactly why the customer bought three.'
     },
 
+    usbc_cc_short: {
+      id: 'usbc_cc_short',
+      title: 'Corroded USB-C configuration pin',
+      appliesTo: ['thinkpad_t480', 'inspiron15', 'switch2', 'mbp14_m3', 'iphone17'],
+      severity: 'medium',
+      noPartNeeded: true,
+      complaints: [
+        'It only charges if I plug the USB-C cable in upside down. In one direction nothing happens, in the other it charges.',
+        'It says "Slow charger connected" even when using the original high-power brick.'
+      ],
+      customerTheory: 'They think their wall socket or battery is dead.',
+      readings: {
+        visual: { note: 'Magnifier into the socket: pin A5 (CC1) has green copper corrosion crust bridging against the shield. Pin B5 (CC2) is clean and shiny.' },
+        power: { watts: 2, negotiated: '5V / 0.5A trickle', seats: true, note: 'Cable seats fully, but Power Delivery CC communication handshake fails on one orientation; falls back to 5V trickle mode.' },
+        battery: { healthPct: 88, cycles: 290, condition: 'Normal', note: 'Cell health is good. Issue is charge negotiation.' },
+        meter: {
+          vbus: { label: 'USB in', v: '5.08 V', note: 'Only standard 5V USB standby rail present. The 20V/15V PD rail never triggers.' },
+          dcin: { label: 'DC in', v: '5.05 V', note: 'Trickle 5V reaching board; Power Delivery handshake missing.' }
+        }
+      },
+      after: {
+        power: 'clean 20V/3.25A USB-PD handshake negotiated in both plug orientations. Fast charging restored.',
+        battery: 'charging rapidly under normal Power Delivery wattage.'
+      },
+      fixedBy: { kind: 'action', id: 'clean_port' },
+      wrongFix: {
+        battery: 'A new battery changes nothing. The issue is the communication pin negotiating wattage, not the cell storing it.'
+      },
+      explain: 'USB-C is reversible for users, but internally uses Configuration Channel (CC1 and CC2) pins to negotiate orientation and high-voltage USB-PD. If one pin is bridged by corrosion or lint, the machine defaults to safe 5V trickle charging or only works in one orientation. Cleaning the pins restores full fast charging in seconds for zero parts.'
+    },
+
     cracked_screen: {
       id: 'cracked_screen',
       title: 'Shattered display',
@@ -714,6 +745,32 @@
         flex: 'A new wireless card for a connection that was working the whole time.'
       },
       explain: 'The network is not hacked — it is holding them at the door. A public hotspot intercepts the first request the machine makes and answers with its own login page. That works fine over plain HTTP. Over HTTPS it cannot: the browser asks for the caf\u00e9\'s bank and gets an answer signed by the caf\u00e9\'s router instead, which is precisely the situation a certificate warning exists to report. So the warning is correct and the network is not malicious, and the way out is to make one deliberate unencrypted request so the gateway has something to redirect. The lesson worth leaving them with is the opposite of "ignore the warning": it is *why* it appeared, and that clicking through it on a page that actually matters is the dangerous half.'
+    },
+
+    browser_rogue_extension: {
+      id: 'browser_rogue_extension',
+      title: 'Deceptive browser extension redirecting search',
+      appliesTo: ['mbp13_2012', 'mba_m1', 'thinkpad_t480', 'inspiron15', 'imac_m1', 'tower_pc', 'mbp14_m3'],
+      severity: 'medium',
+      noPartNeeded: true,
+      complaints: [
+        'Every time I try to search Google, it redirects to "SearchZone Pro" and fills the screen with shady adverts.',
+        'Random shopping discount tabs keep opening by themselves while I am trying to work.'
+      ],
+      customerTheory: 'They think they have a nasty rootkit virus and need an expensive SSD wipe or new network card.',
+      readings: {
+        activity: { memPressurePct: 28, swapGB: 0.1, topProc: 'Browser', topProcMemGB: 1.1, topProcCpuPct: 6, note: 'System load is completely normal. No rogue operating system processes.' },
+        smart: { health: 'GOOD', reallocated: 0, pending: 0, hours: 3400, note: 'Drive healthy.' },
+        storage_used: { usedPct: 45, freeGB: 260, biggest: 'Documents — 18 GB', note: 'Disk space normal.' },
+        visual: { note: 'Hardware is pristine. Nothing physically wrong.' },
+        thermal: { idleC: 38, loadC: 69, fanRpm: 2400, note: 'Normal.' }
+      },
+      fixedBy: { kind: 'action', id: 'remove_extension' },
+      wrongFix: {
+        storage: 'Wiping or replacing the drive to remove a browser add-on is like demolishing a house to change a lightbulb.',
+        ram: 'Adding memory does not stop an extension from hijacking search queries.'
+      },
+      explain: 'Deceptive browser extensions masquerade as "Free PDF Tools" or "Coupon Finders", but request broad webRequest permissions to intercept search queries and redirect traffic through affiliate search engines for ad revenue. Uninstalling the rogue extension cleans the browser instantly for 0 Ft without touching any customer files or hardware.'
     },
 
     console_full: {

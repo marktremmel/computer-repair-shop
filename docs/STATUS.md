@@ -117,7 +117,8 @@ fixed; the rail now skips anything it does not recognise.
 | PS5 liquid-metal dry-out | ✅ | `ps5_liquid_metal`. Swab the old metal out (a scrape gesture that punishes pushing beads toward the barrier), brush a new film on (a trace). Liquid metal is correct here and is not penalised as unsafe; paste resolves it but costs fit and can come back. The laptop-written `thermal_paste_dead` no longer lands on the PS5. |
 | Shorted decoupling cap on a power rail | ✅ | `ps5_rail_short` on the PS5's 12 V rail, and `laptop_rail_short` on the ThinkPad's 20 V DC-in rail. Only the multimeter reveals it: looking shows nothing, and a power reset changes nothing. Fixed by lifting the part with hot tweezers; an unmarked capacitor of unknown voltage rating costs fit and can fail again. Verified across both machines. |
 | Notification abuse, captive portal | ✅ | `browser_push_spam`, `captive_portal_loop`. |
-| Deceptive browser extensions | ⬜ | |
+| Deceptive browser extensions | ✅ | `browser_rogue_extension`. Settings › Extensions tab in the browser app; rogue search hijacker removal simulated alongside clean web redirects. Zero parts needed. |
+| Corroded USB-C configuration pin | ✅ | `usbc_cc_short`. Orientation-dependent charging / slow trickle mode caused by bridged CC1 pin; multimeter and visual diagnostics; resolved with precision pick clean. |
 
 ---
 
@@ -138,7 +139,7 @@ fixed; the rail now skips anything it does not recognise.
 
 | Proposed | Status | Notes |
 |---|---|---|
-| Recurring characters (Béla bácsi, Eszter, Gábor, János, Kovács úr, Tamás) | ⬜ | Needs the "consequences with names" system from `REVIEW.md`. |
+| Recurring characters & persistent memory | ✅ | `customerMemory` persists across the shift. Handover records visit history, stars, and budget fairness; returning regulars (Béla bácsi, Marika néni, Eszter, Dávid, etc.) dynamically reference their last repair and bill in their greeting. |
 | Dialogue tree: the pink liquid indicator | ✅ | Unless they confessed at the counter, the customer now denies any spill. Visual inspection unlocks the confrontation. Blunt gets "it must be the humidity" and nothing useful; curious gets "my son, a glass of cola" — and sugar is why it cannot wait. Adapted to our fault (board corrosion, not a trackpad flex). |
 | Dialogue tree: the counterfeit charger | ✅ | On `dead_no_power` and `laptop_rail_short`: unbranded charger lead, click, faint pop, and smell. |
 | Seasonal interludes | ⬜ | |
@@ -157,13 +158,15 @@ fixed; the rail now skips anything it does not recognise.
 | iPad with a full disk could not be fixed | ✅ | The fix lived in the Mac storage app. The iPad's Storage page now does it: you choose what goes, and their only copy of the photos is refused on the spot. |
 | Capacitors could not be bought | ✅ | No market tab, so the tower's capacitor job was unwinnable. A "Board parts" tab now exists, and coverage fails if a fix needs something the market does not sell. |
 | Does the iPad have screws? | ✅ | No — the glass is glued to the frame. That is correct, and the bench says so. |
+| Visible build version number missing | ✅ | Stamped in fixed footer (`#build-tag`), title screen, and in-game dossier. Auto-updated via `rebuild.sh`. |
+| First-time onboarding learn-by-drowning | ✅ | Added "Training ticket" (guided first repair with Marika néni on the Inspiron 15) alongside the 9-stop tour. |
 
 ## 8. What to do next, in order
 
-1. **A scripted first job** before the walk round ends.
-2. **Recurring characters** with named persistent memory across shifts.
-3. **Deceptive browser extensions** (`browser_rogue_extension`).
+1. **Classroom Lesson Handout & Teacher Decoder Reference** (SEK Budapest).
+2. **Hungarian / English dictionary toggle** (`TechOpsI18n`).
+3. **Swipe mode for phones** (mobile triage mini-game).
 
-*Verification for everything marked ✅: `tools/coverage.js` (13 machines, 36 faults),
-`tools/scoring.js` (31 scenarios), `tools/playthrough.js` (2,520 simulated plays, 0 errors),
-and browser testing of Character Builder creation, modification, saving, and persistence.*
+*Verification for everything marked ✅: `tools/coverage.js` (13 machines, 38 faults),
+`tools/scoring.js` (31 scenarios), `tools/playthrough.js` (2,700 simulated plays, 0 errors),
+and browser verification of character persistence and training tickets.*

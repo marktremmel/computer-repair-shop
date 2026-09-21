@@ -73,6 +73,7 @@
         dayStart: 0.05,
         axisTotals: { fit: 0, budget: 0, speed: 0, durability: 0, safety: 0 },
         axisCount: 0,
+        customerMemory: {},
         studentName: '',
         log: []
       };

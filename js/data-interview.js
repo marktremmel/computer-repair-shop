@@ -103,6 +103,16 @@
       heat:    { w: 'cold', t: 'It does not get hot.' },
       history: { w: 'cold', t: 'Nobody has opened it.' }
     },
+    usbc_cc_short: {
+      power:   { w: 'hot',  t: 'It charges if the USB-C plug is one way round, but flip it over and nothing happens. And when it does charge, it says "Slow charger connected".', s: ['power', 'visual'] },
+      trigger: { w: 'hot',  t: 'It only negotiates charging in one orientation. I bought two new cables thinking the wire broke, but both do the exact same thing.', s: ['power', 'visual'] },
+      when:    { w: 'warm', t: 'Started a couple of weeks ago. It has been getting slower and slower to charge.' },
+      drop:    { w: 'warm', t: 'It rides in my backpack every day. It might have picked up some damp or grit in the socket.' },
+      noise:   { w: 'cold', t: 'Quiet as normal.' },
+      heat:    { w: 'cold', t: 'Not overheating.' },
+      storage: { w: 'cold', t: 'Plenty of drive space.' },
+      history: { w: 'cold', t: 'Nobody has ever opened it.' }
+    },
     cracked_screen: {
       drop:    { w: 'hot',  t: 'Straight out of my pocket onto the tram tracks. I picked the glass out of my thumb afterwards.', s: ['visual'] },
       when:    { w: 'hot',  t: 'Tuesday. Very precisely Tuesday.', s: ['visual'] },
@@ -174,6 +184,17 @@
       storage: { w: 'cold', t: 'Plenty free.' },
       drop:    { w: 'cold', t: 'Never dropped.' },
       history: { w: 'cold', t: 'Nobody has ever opened it.' }
+    },
+
+    browser_rogue_extension: {
+      trigger: { w: 'hot',  t: 'Every time I search Google for recipes or homework, the page blinks and sends me to "SearchZone Pro" with massive flashing ads.', s: ['activity'] },
+      installed: { w: 'hot',  t: 'I only added a free PDF reader tool and an online coupon finder from the web last Tuesday. They said they were completely safe.', s: ['activity'] },
+      when:    { w: 'warm', t: 'Started right after I downloaded that PDF converter tool last week.' },
+      usage:   { w: 'warm', t: 'Just everyday web browsing, searching and studying.' },
+      heat:    { w: 'cold', t: 'Not overheating at all. It runs quiet and cool.' },
+      noise:   { w: 'cold', t: 'Completely silent.' },
+      storage: { w: 'cold', t: 'Plenty of space left on the drive.' },
+      drop:    { w: 'cold', t: 'Never dropped, never wet.' }
     },
 
     console_full: {

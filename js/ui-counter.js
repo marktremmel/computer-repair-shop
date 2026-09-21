@@ -90,7 +90,7 @@
         + '<h3 class="clickable-name" data-person="' + esc(c.id || c.name) + '">' + esc(c.name) + '</h3>'
         + '<div style="font-size:calc(12px * var(--a11y-scale, 1));color:var(--ink-3);margin-bottom:10px">' + esc(c.tag) + '</div>'
         + '<div class="speech">“' + esc(t.complaint) + '”</div>'
-        + '<div class="speech">“' + esc(c.lines.greet) + '”</div>'
+        + '<div class="speech">“' + esc(window.TechOpsCustomers.greet(c, Shop.state)) + '”</div>'
         + '<div class="speech">“' + esc(c.lines.budget) + '”</div>'
         + '<div class="note teach" style="margin-top:14px"><b>What they think is wrong:</b> ' + esc(f.customerTheory)
         + '<br><br>They are describing a symptom. Go and measure the machine before you believe any of it.</div>'

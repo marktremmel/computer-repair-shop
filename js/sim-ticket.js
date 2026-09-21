@@ -243,6 +243,12 @@
       done: 'Rogue origin found in the notification list and removed, and the customer shown where that list lives so they can check it themselves. Nothing was installed, so nothing had to be uninstalled.',
       isFreeFix: true
     },
+    remove_extension: {
+      id: 'remove_extension', label: 'Remove the deceptive browser extension', icon: '🧩',
+      software: true, labourHours: 0.3, costFt: 0,
+      done: 'Rogue shopping assistant / PDF converter extension uninstalled from the browser. Search provider restored to normal, unauthorized webRequest traffic intercepts removed. No hardware or costly antivirus needed.',
+      isFreeFix: true
+    },
     clear_portal: {
       id: 'clear_portal', label: 'Open the hotspot gateway over plain HTTP', icon: '🚪',
       software: true, labourHours: 0.3, costFt: 0,

@@ -484,6 +484,30 @@
           { id: 'drive',   label: 'Replace the drive',                                pick: false }
         ] }
     ],
+    remove_extension: [
+      { id: 'prove', t: 'Show them system processes are clean',
+        d: 'Open Activity Monitor first. No rogue background processes or system rootkits. The operating system itself is healthy \u2014 the problem is inside the browser.',
+        game: 'settings', verb: 'Check running processes', path: ['Activity Monitor', 'CPU', 'All Processes'] },
+      { id: 'inspect', t: 'Inspect installed browser extensions',
+        d: 'Browser settings maintain a list of add-ons with permission to read and alter web traffic. Look under Settings › Extensions for add-ons claiming to be "Search Helpers" or "PDF Tools".',
+        verb: 'Open Browser extensions' },
+      { id: 'explain', t: 'Remove the rogue extension and explain permissions',
+        d: 'Remove the search-hijacking extension. Explain how webRequest permissions work so they avoid downloading random web toolbars in the future.',
+        game: 'toggles3', verb: 'Finish the repair',
+        tgTitle: 'How do you resolve extension search hijacking?',
+        tgPrompt: 'Tick the actions that belong in an honest repair. Leave the unnecessary upsells.',
+        tgVerb: 'Apply these',
+        tgOk: 'Spot on. Rogue extension uninstalled, search engine restored, and zero hardware or antivirus upsells.',
+        tgMiss: 'You missed a key step: ',
+        tgExtra: 'Selling a drive replacement or antivirus subscription for a browser extension is predatory.',
+        items: [
+          { id: 'rm',      label: 'Remove the rogue search hijacker from Extensions', pick: true },
+          { id: 'restore', label: 'Verify default search engine is restored',         pick: true },
+          { id: 'explain', label: 'Explain how extension permissions work',           pick: true },
+          { id: 'drive',   label: 'Replace the SSD drive',                            pick: false },
+          { id: 'av',      label: 'Sell a 20.000 Ft antivirus subscription',          pick: false }
+        ] }
+    ],
     clear_portal: [
       { id: 'chain', t: 'Prove the connection itself is fine',
         d: 'Ping along the chain first. Address, router, gateway, DNS \u2014 all answer. It is only the last step that fails, which already rules out the wireless card they were about to pay for.',
@@ -645,7 +669,30 @@
     var nav = '<div class="app-tabs">'
       + '<button class="app-tab' + (tab === 'web' ? ' on' : '') + '" data-btab="web">Web</button>'
       + '<button class="app-tab' + (tab === 'perms' ? ' on' : '') + '" data-btab="perms">Settings › Notifications</button>'
+      + '<button class="app-tab' + (tab === 'exts' ? ' on' : '') + '" data-btab="exts">Settings › Extensions</button>'
       + '</div>';
+
+    if (tab === 'exts') {
+      var exts = [
+        { id: 'ublock', name: 'uBlock Origin', desc: 'Content blocker for advertising scripts.', rogue: false },
+        { id: 'dark_reader', name: 'Dark Reader', desc: 'Inverts web page brightness for night use.', rogue: false },
+        { id: 'search_zone', name: 'SearchZone & PDF Express', desc: 'Intercepts web searches and redirects queries to affiliate shopping engines.', rogue: true }
+      ].filter(function (x) {
+        return !x.rogue || f.id === 'browser_rogue_extension';
+      });
+      var removed = t._extRemoved || {};
+      var rows = exts.map(function (x) {
+        var gone = removed[x.id] || (x.rogue && t.actionsDone.indexOf('remove_extension') !== -1);
+        return '<div class="mg-perm' + (gone ? ' gone' : '') + '"><span class="mg-fav">' + (x.rogue ? '⚠️' : '🧩') + '</span>'
+          + '<div><b>' + esc(x.name) + '</b><span>' + (gone ? 'uninstalled' : esc(x.desc)) + '</span></div>'
+          + (gone ? '' : '<button class="btn btn-sm" data-ext-rm="' + esc(x.id) + '">Remove</button>')
+          + '</div>';
+      }).join('');
+      return nav
+        + '<div class="app-crumb">Extensions — browser add-ons with permission to inspect and alter visited pages.</div>'
+        + '<div class="mg-perms">' + rows + '</div>'
+        + '<div id="ext-say" class="mg-say"></div>';
+    }
 
     if (tab === 'perms') {
       var sites = window.TechOpsMiniGames.NOTIFICATION_SITES.filter(function (x) {
@@ -669,9 +716,14 @@
     // Web tab: an address bar and whatever the network actually does with it.
     var url = t._browserUrl || '';
     var portal = f.id === 'captive_portal_loop' && t.actionsDone.indexOf('clear_portal') === -1;
+    var extHijack = f.id === 'browser_rogue_extension' && t.actionsDone.indexOf('remove_extension') === -1;
     var page;
     if (!url) {
       page = '<div class="web-page muted">Type an address, or pick one. Try more than one kind.</div>';
+    } else if (extHijack && /google|search|bing|yahoo/i.test(url)) {
+      page = '<div class="web-page cert"><b>⚠️ Redirected to SearchZone Pro (searchzone.top)</b>'
+        + '<p>Your search for <code>' + esc(url) + '</code> was intercepted by an installed extension and redirected to an ad-filled sponsored portal.</p>'
+        + '<p class="muted">Check installed extensions under <b>Settings › Extensions</b>.</p></div>';
     } else if (portal && /^https:/i.test(url)) {
       var host = url.replace(/^https?:\/\//i, '').split('/')[0];
       page = '<div class="web-page cert"><b>Your connection is not private</b>'
@@ -1384,6 +1436,26 @@
           say.className = 'mg-say bad';
           say.textContent = 'That was a site they actually wanted. ' + (site ? site.why : '')
             + ' Read the address, not the list — the odd one out is the one nobody would type on purpose.';
+        }
+        audio('playErrorBuzz');
+      });
+    });
+    host.querySelectorAll('[data-ext-rm]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var t = Shop.state.ticket;
+        var id = b.getAttribute('data-ext-rm');
+        t._extRemoved = t._extRemoved || {};
+        t._extRemoved[id] = true;
+        if (id === 'search_zone') {
+          completeAct('remove_extension');
+          render();
+          return;
+        }
+        render();
+        var say = host.querySelector('#ext-say') || document.getElementById('ext-say');
+        if (say) {
+          say.className = 'mg-say bad';
+          say.textContent = 'That was a standard extension they installed on purpose. Read the description — the rogue extension is the one intercepting searches.';
         }
         audio('playErrorBuzz');
       });

@@ -102,7 +102,9 @@
     laptop_rail_short: ['meter'],
     keyboard_layout_swap: ['activity', 'visual'],
     display_brightness_zero: ['visual', 'power'],
-    audio_device_swapped: ['activity', 'visual']
+    audio_device_swapped: ['activity', 'visual'],
+    usbc_cc_short: ['power', 'visual', 'meter'],
+    browser_rogue_extension: ['activity', 'storage_used']
   };
 
   function theoryStatus(t) {
