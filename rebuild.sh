@@ -36,6 +36,7 @@ s = open('index.html').read()
 s = re.sub(r'(<script src="(?!http)[^"?]+)(\?v=[0-9a-f]+)?"', lambda m: m.group(1) + '?v=' + stamp + '"', s)
 s = re.sub(r'(<link rel="stylesheet" href="(?!http)[^"?]+)(\?v=[0-9a-f]+)?"', lambda m: m.group(1) + '?v=' + stamp + '"', s)
 s = re.sub(r'window\.TECHOPS_BUILD="[0-9a-f]*"', 'window.TECHOPS_BUILD="%s"' % stamp, s)
+s = re.sub(r'<code id="build-tag">[0-9a-f]*</code>', '<code id="build-tag">%s</code>' % stamp, s)
 open('index.html', 'w').write(s)
 print('build', stamp)
 PY

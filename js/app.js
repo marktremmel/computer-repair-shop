@@ -320,6 +320,7 @@
     },
 
     boot: function () {
+      console.info('TechOps Budapest build ' + (window.TECHOPS_BUILD || 'dev'));
       Shop.init();
       if (window.TechOpsJobs.repairComplaints(Shop)) Shop.save();
       Shop.state.pendingComebacks = Shop.state.pendingComebacks || [];

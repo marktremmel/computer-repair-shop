@@ -71,8 +71,11 @@
       +   '<button class="btn" id="t-how">How the shop works</button>'
       + '</div>'
 
-      + '<div class="title-foot">A repair shop, not a quiz. Nobody tells you what is wrong '
+      + '<div class="title-foot">'
+      +   '<div>A repair shop, not a quiz. Nobody tells you what is wrong '
       +   '— you ask, you measure, and you live with what you chose.</div>'
+      +   (window.TECHOPS_BUILD ? '<div class="title-build-tag">build <code>' + esc(window.TECHOPS_BUILD) + '</code></div>' : '')
+      + '</div>'
       + '</div>';
 
     if (window.TechOpsApp) window.TechOpsApp.paintFaces(host);

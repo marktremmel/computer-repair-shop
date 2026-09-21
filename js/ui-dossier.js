@@ -87,7 +87,10 @@
       + '<div class="note"><b>Unplugging the battery turns the machine off.</b> Read the disk, the memory and the storage '
       + '<i>before</i> you open it, or you throw that away until you plug it back in.</div>'
 
-      + '<div class="card-head" style="margin-top:16px">Credits</div>'
+      + '<div class="card-head" style="margin-top:16px">About &amp; Build</div>'
+      + '<p style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-2)">TechOps Budapest &middot; SEK Budapest'
+      + (window.TECHOPS_BUILD ? ' &middot; build <code style="font-family:var(--mono);color:var(--amber);background:var(--panel-2);padding:2px 5px;border-radius:4px;border:1px solid var(--line-soft)">' + esc(window.TECHOPS_BUILD) + '</code>' : '')
+      + '</p>'
       + '<p style="font-size:calc(12.3px * var(--a11y-scale, 1));color:var(--ink-2)">Character portraits are built from the '
       + '<a href="https://lyime.itch.io/pixel-portrait-creator" target="_blank" rel="noopener">Pixel Portrait Creator</a> by <b>Lyime</b>.</p>';
   }
@@ -145,9 +148,11 @@
           return '<button class="book-tab' + (TAB === t[0] ? ' on' : '') + '" data-tab="' + t[0] + '">' + t[1] + '</button>';
         }).join('') + '</div>'
       + body
-      + '<div class="modal-foot">'
+      + '<div class="modal-foot" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'
+      + (window.TECHOPS_BUILD ? '<span style="font-family:var(--mono);font-size:calc(11px * var(--a11y-scale, 1));color:var(--ink-3)">build <code style="color:var(--amber);background:rgba(255,255,255,.05);padding:1px 5px;border-radius:3px;border:1px solid var(--line-soft)">' + esc(window.TECHOPS_BUILD) + '</code></span>' : '<span></span>')
+      + '<div style="display:flex;gap:8px">'
       + '<button class="btn" id="dossier-report">Teacher report &amp; hand-in code</button>'
-      + '<button class="btn btn-primary" data-close>Close</button></div>';
+      + '<button class="btn btn-primary" data-close>Close</button></div></div>';
   }
 
   function saveBody() {

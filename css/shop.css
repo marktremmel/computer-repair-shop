@@ -662,6 +662,11 @@ body[data-phase="morning"] #shopdrop::after {
 .credits a { color: var(--ink-2); }
 .credits a:hover { color: var(--amber); }
 .credits .sep { opacity: .5; }
+.credits .build-ver code {
+  font-family: var(--mono); color: var(--amber);
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; border: 1px solid var(--line-soft);
+}
 .workspace { padding-bottom: 26px; }
 @media (max-width: 720px) { .credits .sep, .credits > span:first-child { display: none; } }
 .pface { cursor: pointer; transition: transform .14s, box-shadow .14s; }
@@ -1117,6 +1122,14 @@ html[data-typeface="readable"] .ps-d { line-height: 1.75; }
 .title-foot {
   max-width: 54ch; font-size: calc(12.8px * var(--a11y-scale, 1)); color: var(--ink-2); line-height: 1.6;
   text-shadow: 0 1px 8px rgba(0,0,0,.9);
+}
+.title-build-tag {
+  margin-top: 8px; font-family: var(--mono); font-size: calc(11px * var(--a11y-scale, 1));
+  color: var(--ink-3); letter-spacing: .04em;
+}
+.title-build-tag code {
+  color: var(--amber); background: rgba(255,255,255,.06);
+  padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line-soft);
 }
 
 /* Less movement: the sign stays lit and still. */
