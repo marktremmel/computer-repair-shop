@@ -22,9 +22,9 @@
   function show(onDone, opts) {
     opts = opts || {};
     var cur = (Shop.state && Shop.state.player) || {};
-    if (opts.reset || !draft.name) {
+    if (opts.reset || (!draft.name && !draft.avatar)) {
       draft = { name: cur.name || draft.name || '',
-                avatar: cur.avatar || draft.avatar || (P.FACE_PRESETS && P.FACE_PRESETS[0]) || 'ava-1',
+                avatar: draft.avatar || cur.avatar || (P.FACE_PRESETS && P.FACE_PRESETS[0]) || 'ava-1',
                 shopColour: cur.shopColour || draft.shopColour, shopMark: cur.shopMark || draft.shopMark,
                 background: cur.background || draft.background || null, shop: cur.shop || draft.shop || '' };
     }
@@ -44,7 +44,7 @@
 
     var avatars = P.FACE_PRESETS.map(function (a) {
       return '<button class="av-pick' + (draft.avatar === a ? ' picked' : '') + '" data-av="' + a + '">'
-        + '<div class="pface" data-seed="' + esc(a) + '" data-size="54"></div></button>';
+        + '<div class="pface" data-seed="' + esc(a) + '" data-size="54" data-noclick="1"></div></button>';
     }).join('')
       + '<button class="av-pick reroll" data-reroll title="Roll new faces">' + window.TechOpsIcons.icon('gear', 20) + '</button>'
       + '<button class="av-pick build" data-build title="Build one from scratch, part by part">'
@@ -98,7 +98,8 @@
           modal.el.style.display = '';
           return;
         }
-        var key = 'custom-' + Math.random().toString(36).slice(2, 8);
+        var curKey = draft.avatar;
+        var key = (curKey && curKey.indexOf('custom-') === 0) ? curKey : ('custom-' + Math.random().toString(36).slice(2, 8));
         window.TechOpsPixel.remember(key, built);
         Shop.state.customFaces = Shop.state.customFaces || {};
         Shop.state.customFaces[key] = built;

@@ -1109,6 +1109,9 @@ html[data-typeface="readable"] .ps-d { line-height: 1.75; }
   backdrop-filter: blur(3px);
 }
 .title-you:hover { border-color: var(--amber); }
+.title-you-new { border-style: dashed; border-color: rgba(240,168,48,.45); }
+.title-you-new .title-you-edit { opacity: .85; }
+.title-you-new:hover { border-style: solid; border-color: var(--amber); }
 .title-face { width: 132px; height: 132px; image-rendering: pixelated; }
 .title-you-name { font-weight: 700; font-size: calc(15px * var(--a11y-scale, 1)); margin-top: 8px; }
 .title-you-shop { font-family: var(--mono); font-size: calc(11.5px * var(--a11y-scale, 1)); color: var(--ink-3); }

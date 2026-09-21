@@ -46,11 +46,21 @@
   function audio(fn) { if (window.sekAudio && window.sekAudio[fn]) window.sekAudio[fn](); }
 
   function ensure() {
-    if (!ch) ch = P().generate('build-' + Math.random().toString(36).slice(2, 8), {});
-    if (!ch) ch = { seed: 'build-1', archetype: 'normie', age: 25, parts: {}, numVariant: {}, tints: {} };
+    if (!ch || !ch.parts || !Object.keys(ch.parts).length) {
+      ch = P().generate('build-' + Math.random().toString(36).slice(2, 8), {});
+    }
+    if (!ch || !ch.parts || !ch.parts.body) {
+      ch = P().generate('ava-1', {}) || {
+        seed: 'build-1', archetype: 'normie', age: 25,
+        parts: { body: '1', ears: 'human', eyes: 'calm', eyebrows: 'calm', nose: 'straight', mouth: 'smile', basehair: 'bob', inner: 'crew' },
+        numVariant: { ears: 'n1', eyes: 'n1', nose: 'n1' },
+        tints: { skin: '#ffe0bd', hair: '#3a2312', iris: '#4a2f13', lip: '#c97a7e', inner: '#2b3b52', outer: '#1c2430' }
+      };
+    }
     ch.parts = ch.parts || {};
     ch.tints = ch.tints || {};
     if (P().normaliseTints) P().normaliseTints(ch);
+    if (P().matchSkinTones) P().matchSkinTones(ch);
     return ch;
   }
 
@@ -59,6 +69,7 @@
     var clone = JSON.parse(JSON.stringify(ch));
     if (variant === null) delete clone.parts[cat]; else clone.parts[cat] = variant;
     if (clone.numVariant) delete clone.numVariant[cat];
+    if (P().matchSkinTones) P().matchSkinTones(clone);
     P().draw(clone, 108).then(function (c) {
       c.className = 'pixel-portrait';
       el.innerHTML = ''; el.appendChild(c);
@@ -68,11 +79,15 @@
   function paintPreview() {
     var host = modal ? modal.el.querySelector('#cb-preview') : document.getElementById('cb-preview');
     if (!host) return;
+    if (!host.querySelector('.pixel-portrait') && !host.querySelector('.cb-loading')) {
+      host.innerHTML = '<div class="cb-loading" style="display:flex;height:100%;align-items:center;justify-content:center;color:var(--ink-3);font-size:calc(12px * var(--a11y-scale, 1))">Drawing portrait…</div>';
+    }
     P().draw(ch, 320).then(function (c) {
       c.className = 'pixel-portrait';
       host.innerHTML = ''; host.appendChild(c);
     }).catch(function (e) {
       console.warn('CharBuild preview draw error:', e);
+      host.innerHTML = '<div style="display:flex;height:100%;align-items:center;justify-content:center;color:var(--amber);font-size:calc(11px * var(--a11y-scale, 1))">Preview unavailable</div>';
     });
   }
 
@@ -278,7 +293,13 @@
       return;
     }
     try {
-      ch = start ? JSON.parse(JSON.stringify(start)) : null;
+      if (typeof start === 'string') {
+        ch = P().editable(start) || P().generate(start, {});
+      } else if (start) {
+        ch = JSON.parse(JSON.stringify(start));
+      } else {
+        ch = null;
+      }
     } catch (e) {
       ch = start || null;
     }

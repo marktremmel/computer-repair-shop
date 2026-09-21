@@ -56,12 +56,17 @@
 
       +   (p
             ? '<button class="title-you" id="t-you" title="Have another look at your character">'
-              + '<span class="pface title-face" data-seed="' + esc(p.avatar || 'ava-1') + '" data-size="132"></span>'
+              + '<span class="pface title-face" data-seed="' + esc(p.avatar || 'ava-1') + '" data-size="132" data-noclick="1"></span>'
               + '<span class="title-you-name">' + esc(p.name || 'you') + '</span>'
               + (shopName ? '<span class="title-you-shop">' + esc(shopName) + '</span>' : '')
               + '<span class="title-you-edit">change</span>'
               + '</button>'
-            : '')
+            : '<button class="title-you title-you-new" id="t-you" title="Create your technician and shop">'
+              + '<span class="pface title-face" data-seed="ava-1" data-size="132" data-noclick="1"></span>'
+              + '<span class="title-you-name">Build technician</span>'
+              + '<span class="title-you-shop">Set up shop</span>'
+              + '<span class="title-you-edit">create</span>'
+              + '</button>')
       + '</div>'
 
       + '<div class="title-acts">'
@@ -104,27 +109,30 @@
 
     var you = document.getElementById('t-you');
     if (you) you.addEventListener('click', function () {
+      if (!Shop.state.player) {
+        window.TechOpsCharacter.show(function () {
+          show(onPlay);
+        });
+        return;
+      }
       var curAv = (Shop.state.player && Shop.state.player.avatar) || 'ava-1';
       var existing = window.TechOpsPixel.editable(curAv);
       window.TechOpsCharBuild.open(
         existing,
         function (ch) {
           if (!ch) return;
-          var key = 'custom-' + Date.now().toString(36);
+          var key = (curAv && curAv.indexOf('custom-') === 0) ? curAv : ('custom-' + Date.now().toString(36));
           window.TechOpsPixel.remember(key, ch);
           Shop.state.customFaces = Shop.state.customFaces || {};
           Shop.state.customFaces[key] = ch;
           Shop.state.player.avatar = key;
-          Shop.save();
-          var slot = document.querySelector('#t-you .pface');
-          if (slot) {
-            slot.dataset.seed = key;
-            slot.dataset.painted = '1';
-            window.TechOpsPixel.mount(slot, ch, 264);
+          if (window.TechOpsPeople && window.TechOpsPeople.FACE_PRESETS.indexOf(key) === -1) {
+            window.TechOpsPeople.FACE_PRESETS.unshift(key);
           }
-          var nameEl = document.querySelector('.title-you-name');
-          if (nameEl) nameEl.textContent = Shop.state.player.name || 'you';
+          Shop.save();
+          Shop.emit('change');
           if (window.TechOpsApp) window.TechOpsApp.refreshAll();
+          show(onPlay);
         });
     });
 

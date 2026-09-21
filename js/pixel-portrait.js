@@ -159,6 +159,9 @@
   /** Point the skin-toned parts at the tone that matches this face. */
   function matchSkinTones(ch) {
     if (!ch || !ch.parts) return ch;
+    if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
+      manifest = window.TechOpsPixelManifest;
+    }
     ch.numVariant = ch.numVariant || {};
     Object.keys(SKIN_TONED).forEach(function (cat) {
       if (ch.toneLocked && ch.toneLocked[cat]) return;   // the player chose
@@ -233,6 +236,9 @@
    */
   function generate(seed, opts) {
     opts = opts || {};
+    if (!manifest && typeof window !== 'undefined' && window.TechOpsPixelManifest) {
+      manifest = window.TechOpsPixelManifest;
+    }
     if (!manifest) return null;
     var rnd = rngFrom(seed);
     var archName = opts.archetype || pick(rnd, Object.keys(ARCH));

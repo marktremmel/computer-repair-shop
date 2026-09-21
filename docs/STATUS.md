@@ -150,7 +150,7 @@ fixed; the rail now skips anything it does not recognise.
 
 | Problem | Status | Notes |
 |---|---|---|
-| Character Builder blank at start / menu save issues | ✅ | Manifest was null until promise microtask completed, ignoring synchronous offline manifest; initial emoji placeholder `'🧑‍🔧'` corrupted seed generation; title screen refreshed while async mount raced; and dossier `openBuilder()` missed calling `Shop.save()`. All fixed and verified. |
+| Character Builder blank at start / menu save issues | ✅ | Fixed manifest sync fallback in `pixel-portrait.js`, robust `ensure()` fallback in `ui-charbuild.js`, re-matched skin tones on thumbnails so noses/makeup don't vanish, added `.title-you-new` to title screen so fresh players can create technician/shop directly from menu, fixed existing `custom-*` key updating rather than spamming duplicate random keys, and prevented Dossier click interception on `#t-you`. |
 | Waiting for the next customer usually brought nobody new | ✅ | The old queue was kept and topped up. Waiting now sends them away first. |
 | Only one customer to choose from | ✅ | Three wait from reputation 25 upward. A bad name now costs quiet days after every job instead. The careful shop still out-earns the careless one over 40 and 90 days. |
 | Phone and tablet lab showed card recovery and a resale wipe whatever the fault | ✅ | Replaced by the device itself: Battery & charging (drag the cable in, hold the button to restart), a touch test you paint with a finger, and Storage. The same three pages for every fault, so opening them gives nothing away. Card recovery appears only once its fault is diagnosed. |
@@ -160,13 +160,15 @@ fixed; the rail now skips anything it does not recognise.
 | Does the iPad have screws? | ✅ | No — the glass is glued to the frame. That is correct, and the bench says so. |
 | Visible build version number missing | ✅ | Stamped in fixed footer (`#build-tag`), title screen, and in-game dossier. Auto-updated via `rebuild.sh`. |
 | First-time onboarding learn-by-drowning | ✅ | Added "Training ticket" (guided first repair with Marika néni on the Inspiron 15) alongside the 9-stop tour. |
+| Classroom Lesson Handout & Teacher Decoder Reference | ✅ | Created comprehensive guide in `docs/TEACHER_GUIDE.md` for SEK Budapest: 45-min lesson timeline, shift seed `SEKBUDAPEST2026`, decoder axis diagnostics, and student workstation checklist. |
+| Hungarian / English Localization Scaffolding | ✅ | Implemented `js/i18n.js` (`TechOpsI18n`) with persistence in `localStorage`, dictionary strings for navigation, evaluation axes, HUD, title, and bench actions. |
 
 ## 8. What to do next, in order
 
-1. **Classroom Lesson Handout & Teacher Decoder Reference** (SEK Budapest).
-2. **Hungarian / English dictionary toggle** (`TechOpsI18n`).
-3. **Swipe mode for phones** (mobile triage mini-game).
+1. **Swipe mode for phones** (mobile triage mini-game, 390px view).
+2. **Interactive Multimeter & Rail Probing Subsystem** (DC volts, ohms, continuity beep via audio engine).
+3. **Multi-turn intake follow-ups** (challenging customer contradictions).
 
 *Verification for everything marked ✅: `tools/coverage.js` (13 machines, 38 faults),
 `tools/scoring.js` (31 scenarios), `tools/playthrough.js` (2,700 simulated plays, 0 errors),
-and browser verification of character persistence and training tickets.*
+and browser verification of character persistence, i18n dictionary, and training tickets.*

@@ -292,11 +292,15 @@
           openBook();
           return;
         }
-        var key = 'custom-' + Math.random().toString(36).slice(2, 8);
+        var curKey = cur.avatar;
+        var key = (curKey && curKey.indexOf('custom-') === 0) ? curKey : ('custom-' + Math.random().toString(36).slice(2, 8));
         window.TechOpsPixel.remember(key, built);
         Shop.state.customFaces = Shop.state.customFaces || {};
         Shop.state.customFaces[key] = built;
         Shop.state.player.avatar = key;
+        if (window.TechOpsPeople && window.TechOpsPeople.FACE_PRESETS.indexOf(key) === -1) {
+          window.TechOpsPeople.FACE_PRESETS.unshift(key);
+        }
         Shop.save();
         Shop.emit('change');
         // Repaint everything, so the new face is live without a reload.
@@ -396,8 +400,8 @@
     var slot = e.target.closest && e.target.closest('.pface');
     if (!slot) return;
     // Inside the character builder the click means "pick this face"; on the
-    // edit button it means "change my face" and that button handles itself.
-    if (slot.closest('.av-pick') || slot.dataset.noclick) return;
+    // title menu and edit buttons it means "change my face" and handles itself.
+    if (slot.closest('.av-pick') || slot.closest('#t-you') || slot.closest('.title-you') || slot.dataset.noclick) return;
     e.stopPropagation();
     open(slot.dataset.seed);
   });
