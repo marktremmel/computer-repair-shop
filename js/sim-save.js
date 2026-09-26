@@ -59,6 +59,7 @@
     }
 
     var S = Shop.state;
+    if (window.TechOpsBackup) window.TechOpsBackup.snapshot('before a save code was loaded', true);
     if (d.p) S.player = d.p;
     if (d.f && window.TechOpsPixel) {
       S.customFaces = S.customFaces || {};

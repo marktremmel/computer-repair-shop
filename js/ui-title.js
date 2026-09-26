@@ -164,8 +164,9 @@
               + (who ? ' \u2014 <b>' + esc(who) + '</b>' + (shopName ? ', ' + esc(shopName) : '') : '')
               + ': day ' + S.day + ', ' + jobs + ' job' + (jobs === 1 ? '' : 's') + ' done, ' + fmt(S.cashFt) + ' in the till.</p>'
               + '<p style="color:var(--ink-2)">A new game clears all of that on this machine and gives you your own technician, '
-              + 'your own shop and a new set of customers. If it belongs to somebody who wants to carry on with it, they can '
-              + 'copy their save code first from the floppy-disk button.</p>'
+              + 'your own shop and a new set of customers.</p>'
+              + '<p style="color:var(--ink-3)">It is not gone for good: this computer keeps the last few shifts, and '
+              + '<b>Save &amp; load</b> (the floppy-disk button) can bring this one back.</p>'
             : '<p>Nothing is saved on this computer yet. This builds your technician and your shop, and then shows you round.</p>')
         + '</div>'
         + '<div class="modal-foot">'
@@ -175,6 +176,9 @@
         + '</div>');
       m.el.querySelector('#t-new-go').addEventListener('click', function () {
         m.close();
+        // Put the shift being cleared on the shelf first: the student who
+        // clicked this by mistake is exactly who the shelf is for.
+        if (window.TechOpsBackup) window.TechOpsBackup.snapshot('before a new game was started', true);
         Shop.reset();                       // fresh shift and a fresh code; the saved game goes with it
         // The last student's hand-made faces are out of the save now; take them
         // out of the picker too, or they are still on offer until a reload.

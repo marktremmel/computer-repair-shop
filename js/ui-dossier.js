@@ -155,6 +155,39 @@
       + '<button class="btn btn-primary" data-close>Close</button></div></div>';
   }
 
+  /**
+   * The shifts this browser still has on the shelf. A student who started a new
+   * game on top of somebody else's shop — or their own — gets it back here.
+   */
+  function shelfBody() {
+    var B = window.TechOpsBackup;
+    if (!B) return '';
+    var list = B.list();
+    if (!list.length) {
+      return '<div class="card-head" style="margin-top:22px">Shifts saved on this computer</div>'
+        + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3);line-height:1.5">'
+        + 'Nothing on the shelf yet. As you play, this computer keeps the last few shifts here, '
+        + 'so one can be brought back if it gets started over by mistake.</p>';
+    }
+    var rows = list.map(function (e) {
+      var who = (e.name || 'Unnamed technician') + (e.shop ? ' \u00b7 ' + e.shop : '');
+      return '<div class="shelf-row' + (e.keep ? ' pinned' : '') + '">'
+        + '<div class="shelf-main"><b>' + esc(who) + '</b>'
+        + '<span>day ' + e.day + ' \u00b7 ' + e.jobs + ' job' + (e.jobs === 1 ? '' : 's') + ' \u00b7 ' + fmt(e.cash)
+        + ' \u00b7 reputation ' + e.rep + '</span>'
+        + '<span class="shelf-when">' + esc(B.when(e.at)) + ' \u2014 ' + esc(e.why) + '</span></div>'
+        + '<button class="btn btn-xs" data-shelf-go="' + esc(e.id) + '">Bring it back</button>'
+        + '<button class="btn btn-xs btn-danger" data-shelf-rm="' + esc(e.id) + '" title="Remove this one from the shelf">\u00d7</button>'
+        + '</div>';
+    }).join('');
+    return '<div class="card-head" style="margin-top:22px">Shifts saved on this computer</div>'
+      + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.5;margin-bottom:9px">'
+      + 'A safety net, kept in this browser only. Bringing one back puts the shift you are in now on the shelf too, '
+      + 'so nothing is lost either way. To move a shop to <i>another</i> computer, use the save code above.</p>'
+      + '<div class="shelf-list">' + rows + '</div>'
+      + '<div id="d-shelfmsg" style="margin-top:8px"></div>';
+  }
+
   function saveBody() {
     return '<div class="modal-body">'
       + '<div class="card-head">Carry this shift to another computer (Save Code)</div>'
@@ -170,6 +203,8 @@
       + '<button class="btn btn-sm" id="d-saveload">Paste a save code and continue</button>'
       + '</div>'
       + '<div id="d-savemsg" style="margin-top:8px"></div>'
+
+      + shelfBody()
 
       + '<div class="card-head" style="margin-top:22px">Handing in to your teacher?</div>'
       + '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-2);line-height:1.5;margin-bottom:10px">'
@@ -357,6 +392,35 @@
       });
     }
 
+    // ── the backup shelf ──
+    m.el.querySelectorAll('[data-shelf-go]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var res = window.TechOpsBackup.restore(b.getAttribute('data-shelf-go'));
+        var msg = m.el.querySelector('#d-shelfmsg');
+        if (!res.ok) { if (msg) msg.innerHTML = '<div class="note danger">' + esc(res.error) + '</div>'; return; }
+        m.close();
+        window.TechOpsApp.refreshAll();
+        window.TechOpsApp.go(Shop.state.ticket ? 'bench' : 'counter');
+        UI.toast('Back on day ' + res.day, esc(res.name) + '\u2019s shift is on the bench again. '
+          + 'The shift you were in a moment ago is on the shelf, if you want it back.', 'good');
+      });
+    });
+    m.el.querySelectorAll('[data-shelf-rm]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        window.TechOpsBackup.forget(b.getAttribute('data-shelf-rm'));
+        // Take the row out where it stands. Reopening the book from in here
+        // stacks a second copy of it on top of this one.
+        var row = b.parentNode;
+        while (row && row.className !== 'shelf-row' && row.className.indexOf('shelf-row') === -1) row = row.parentNode;
+        if (row) row.parentNode.removeChild(row);
+        var listEl = m.el.querySelector('.shelf-list');
+        if (listEl && !listEl.querySelector('.shelf-row')) {
+          listEl.outerHTML = '<p style="font-size:calc(12.5px * var(--a11y-scale, 1));color:var(--ink-3);line-height:1.5">'
+            + 'The shelf is empty now.</p>';
+        }
+      });
+    });
+
     var build = m.el.querySelector('#d-build');
     if (build) build.addEventListener('click', openBuilder);
     var faceBtn = m.el.querySelector('#d-face');
@@ -385,6 +449,7 @@
     });
     var ns = m.el.querySelector('#btn-newshift');
     if (ns) ns.addEventListener('click', function () {
+      if (window.TechOpsBackup) window.TechOpsBackup.snapshot('before a new shift was started', true);
       var keep = Shop.state.player, faces = Shop.state.customFaces;
       var code = ((m.el.querySelector('#shift-in') || {}).value || 'BUDAPEST').toUpperCase().trim();
       Shop.reset(code);

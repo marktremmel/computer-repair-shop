@@ -124,6 +124,9 @@
       // overwrite the real shift in storage.
       if (this.state && this.state.practice) return;
       try { localStorage.setItem(SAVE_KEY, JSON.stringify(this.state)); } catch (e) { /* private mode */ }
+      // A second line of defence for a shared classroom machine: keep the last
+      // few shifts on the shelf so a wiped one can be brought back.
+      if (window.TechOpsBackup) { try { window.TechOpsBackup.maybe(); } catch (e) {} }
     },
 
     reset: function (shiftCode) {
