@@ -358,6 +358,10 @@
     seen: function () {
       try { return window.localStorage.getItem(KEY) === '1'; } catch (e) { return false; }
     },
+    /** A new game on a shared computer should be offered the walk round again. */
+    forget: function () {
+      try { window.localStorage.removeItem(KEY); } catch (e) {}
+    },
     /** The one-line offer shown to somebody opening the shop for the first time. */
     offer: function (after) {
       UI.modal('<div class="modal-head"><h3>First time behind the counter?</h3></div>'

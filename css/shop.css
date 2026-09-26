@@ -1438,3 +1438,8 @@ html[data-motion="reduced"] .tour-card { transition: none; }
 .cid-streak { font-family: var(--mono); font-size: calc(12px * var(--a11y-scale, 1)); color: var(--green); min-height: 1em; }
 .cid-credit { margin-top: 8px; font-size: calc(11.5px * var(--a11y-scale, 1)); color: var(--ink-3); }
 .cid-empty p { margin: 0; color: var(--ink-2); }
+
+/* "New game" on the title screen: the first thing a student needs on a shared
+   computer, so it reads a shade louder than the settings beside it. */
+.btn-newgame { border-color: rgba(240,168,48,.55); color: var(--ink); font-weight: 600; }
+.btn-newgame:hover { background: rgba(240,168,48,.12); border-color: var(--amber); }

@@ -76,6 +76,7 @@
       + '</div>'
 
       + '<div class="title-acts">'
+      +   '<button class="btn btn-newgame" id="t-new" title="Clear the shift saved on this computer and set up your own shop">✨ New game</button>'
       +   '<button class="btn" id="t-access">♿ Text size &amp; contrast</button>'
       +   '<button class="btn" id="t-sound">' + (window.sekAudio && window.sekAudio.muted ? '🔇 Sound off' : '🔊 Sound on') + '</button>'
       +   '<button class="btn" id="t-tour">Show me around</button>'
@@ -141,6 +142,66 @@
           if (window.TechOpsApp) window.TechOpsApp.refreshAll();
           show(onPlay);
         });
+    });
+
+    /*
+     * A classroom computer usually still has the last student's shop on it, and
+     * "start a new shift" lives three clicks deep in the dossier. This says the
+     * same thing plainly on the way in, and then runs the first-time sequence:
+     * build a technician and a shop, then the walk round or the training ticket.
+     */
+    document.getElementById('t-new').addEventListener('click', function () {
+      var S = Shop.state;
+      var who = (S.player && (S.player.name || '').trim()) || '';
+      var shopName = (S.player && (S.player.shop || '').trim()) || '';
+      var used = !!S.player || (S.jobsDone || 0) > 0 || S.day > 1;
+      var fmt = window.techOpsFmt || function (n) { return n + ' Ft'; };
+      var jobs = S.jobsDone || 0;
+      var m = UI.modal('<div class="modal-head"><h3>' + (used ? 'Start a new game?' : 'Set up your shop') + '</h3></div>'
+        + '<div class="modal-body" style="font-size:calc(13.5px * var(--a11y-scale, 1));line-height:1.6">'
+        + (used
+            ? '<p>There is already a shop saved on this computer'
+              + (who ? ' \u2014 <b>' + esc(who) + '</b>' + (shopName ? ', ' + esc(shopName) : '') : '')
+              + ': day ' + S.day + ', ' + jobs + ' job' + (jobs === 1 ? '' : 's') + ' done, ' + fmt(S.cashFt) + ' in the till.</p>'
+              + '<p style="color:var(--ink-2)">A new game clears all of that on this machine and gives you your own technician, '
+              + 'your own shop and a new set of customers. If it belongs to somebody who wants to carry on with it, they can '
+              + 'copy their save code first from the floppy-disk button.</p>'
+            : '<p>Nothing is saved on this computer yet. This builds your technician and your shop, and then shows you round.</p>')
+        + '</div>'
+        + '<div class="modal-foot">'
+        + '<button class="btn" data-close>' + (used ? 'Leave it as it is' : 'Not now') + '</button>'
+        + '<button class="btn ' + (used ? 'btn-danger' : 'btn-primary') + '" id="t-new-go">'
+        + (used ? 'Clear it and start fresh' : 'Build my technician') + '</button>'
+        + '</div>');
+      m.el.querySelector('#t-new-go').addEventListener('click', function () {
+        m.close();
+        Shop.reset();                       // fresh shift and a fresh code; the saved game goes with it
+        // The last student's hand-made faces are out of the save now; take them
+        // out of the picker too, or they are still on offer until a reload.
+        if (window.TechOpsPeople && window.TechOpsPeople.FACE_PRESETS) {
+          var faces = window.TechOpsPeople.FACE_PRESETS;
+          for (var i = faces.length - 1; i >= 0; i--) {
+            if (String(faces[i]).indexOf('custom-') === 0) faces.splice(i, 1);
+          }
+        }
+        if (window.TechOpsTour && window.TechOpsTour.forget) window.TechOpsTour.forget();
+        if (window.TechOpsIdentity) window.TechOpsIdentity.apply();
+        close();
+        if (onPlay) onPlay();
+        setTimeout(function () {
+          var veil = document.querySelector('.modal-veil');
+          if (veil) veil.remove();
+          if (window.TechOpsApp) window.TechOpsApp.go('counter');
+          window.TechOpsCharacter.show(function () {
+            if (window.TechOpsApp) window.TechOpsApp.refreshAll();
+            if (window.TechOpsTour) {
+              window.TechOpsTour.offer(function () { if (window.TechOpsApp) window.TechOpsApp.briefing(); });
+            } else if (window.TechOpsApp) {
+              window.TechOpsApp.briefing();
+            }
+          }, { reset: true });
+        }, 320);
+      });
     });
 
     document.getElementById('t-access').addEventListener('click', function () {
