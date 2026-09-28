@@ -70,6 +70,18 @@ Two of those deserve a note:
   them is the expensive mistake the whole material is built to catch. The
   honest answer has to be available to get wrong.
 
+## Handing in
+
+The **Hand in** button in the top bar opens `TechOpsReport.show()` — the full
+shop's own shift report, loaded from `js/ui-report.js` and not reimplemented.
+A `SEK7K-` code produced in Lite decodes in the teacher's browser exactly like
+any other, and is still rejected by the save-code loader, so it stays one-way.
+
+The only thing Lite adds for it is somewhere for that markup to live: a block
+at the end of `css/lite.css` mapping the classic colour tokens and the handful
+of classes that module draws with onto Lite's palette. Nothing else from
+`css/shop.css` comes across.
+
 ## Sharing the shift with the full shop
 
 One save, one shift code, one reputation, one hand-in code. Grading is
@@ -130,6 +142,8 @@ Last full run (September 2026):
 | random player | 360 | 0 errors, 0 stalls. Stars spread 1–5 |
 | careful player | 192 | **4.51★ mean, 79% five-star**, 0 errors, 0 gaps |
 
+Both were also run in a 430px-tall window (see bug 5 below): 4.56★, 0 errors.
+
 The careful figure is the one that matters. If it drops below about four stars
 something has become unwinnable, and that is a worse bug than a crash: nobody
 can see it, and it lands on the one student who was paying attention.
@@ -155,7 +169,15 @@ Worth recording, because none of them would have shown up in hand testing:
 3. **Two-stage repairs closed after the first stage.** The PS5's cooler needs
    cleaning *and* fresh liquid metal. A careful player did half a repair and
    got one star for it, which is not a lesson, it is a trick.
-4. **The keyboard path was dead.** The drag engine re-bound its listeners on
+4. **The machine scrolled off the top on a short window.** Every render
+   scrolled the stage to the bottom, which is right while somebody is
+   talking and wrong once there is a machine to drop things onto: on a
+   430px-tall window you got a tray of tools and no machine in sight. The
+   working beats now scroll to the mat, keep two lines of conversation
+   rather than all of it, and the mat is sized off the window's height as
+   well as its width. **You should never have to scroll between the tool in
+   your hand and the thing you are putting it on.**
+5. **The keyboard path was dead.** The drag engine re-bound its listeners on
    every render; Enter on a tool ran every stacked handler in turn, toggling
    the same thing in and out of your hand. The pointer survived it by luck.
    The only people affected were the ones who could not use a mouse.

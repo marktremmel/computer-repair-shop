@@ -267,9 +267,20 @@
 
   // ─────────────────────────────── pieces ─────────────────────────────
 
-  function bubbles(t) {
+  /*
+   * How much of the conversation to keep on screen.
+   *
+   * All of it, while you are talking to them. Two lines once you are working
+   * on the machine — the whole exchange stays in the ticket, but a growing
+   * wall of it pushes the thing you have to drop something onto off the top
+   * of a short laptop window, and leaves a student looking at a tray of
+   * tools with no machine in sight.
+   */
+  function bubbles(t, keep) {
     var c = J.customer(t);
-    return '<div class="bubbles">' + L(t).said.map(function (b) {
+    var said = L(t).said;
+    if (keep && said.length > keep) said = said.slice(-keep);
+    return '<div class="bubbles">' + said.map(function (b) {
       return b.who === 'you'
         ? '<div class="bub you">' + esc(b.text) + '</div>'
         : '<div class="bub them"><span class="bub-who">' + esc(c.name.split(' ')[0]) + '</span>'
@@ -383,7 +394,7 @@
       if (!next) {
         if (flags.interior && !flags.battery_off) {
           return {
-            scene: bubbles(t) + mat(t, { connector: true, caption: 'The board is live until this comes off.' }),
+            scene: bubbles(t, 2) + mat(t, { connector: true, caption: 'The board is live until this comes off.' }),
             tray: '<div class="rack">'
               + '<button class="lcard tool" data-drag="tool" data-tool="spudger">'
               + '<span class="lcard-art">' + Art.tool('spudger') + '</span>'
@@ -400,7 +411,7 @@
       // wall is the whole safety lesson and it needs no equipment at all.
       if (!def.tool) {
         return {
-          scene: bubbles(t) + mat(t, { caption: def.why || 'Before anything else.' }),
+          scene: bubbles(t, 2) + mat(t, { caption: def.why || 'Before anything else.' }),
           tray: '<button class="big" data-step="' + esc(next) + '">' + esc(def.label) + '</button>'
         };
       }
@@ -425,7 +436,7 @@
           return BEATS.open(t);
         }
         return {
-          scene: bubbles(t) + mat(t, { caption: left + (left === 1 ? ' screw left' : ' screws left') }),
+          scene: bubbles(t, 2) + mat(t, { caption: left + (left === 1 ? ' screw left' : ' screws left') }),
           tray: '<div class="rack">' + drivers(t).map(function (id) {
               return '<button class="lcard tool" data-drag="tool" data-tool="' + id + '">'
                 + '<span class="lcard-art">' + Art.tool(id) + '</span>'
@@ -439,7 +450,7 @@
       // Everything else — heat, picks, suction, a spudger — is one tool onto
       // one place on the machine.
       return {
-        scene: bubbles(t) + mat(t, { step: next, caption: def.why || '' }),
+        scene: bubbles(t, 2) + mat(t, { step: next, caption: def.why || '' }),
         tray: '<div class="rack">' + toolsFor(t, next).map(function (id) {
             var tl = J.TOOLS[id];
             return '<button class="lcard tool" data-drag="tool" data-tool="' + esc(id) + '">'
@@ -454,7 +465,7 @@
     // 4. Measuring. The complaint is a symptom; this is where it becomes a fault.
     test: function (t) {
       var l = L(t), m = J.machine(t);
-      var scene = bubbles(t);
+      var scene = bubbles(t, 2);
       if (l.reading) {
         var rd = l.reading;
         scene += '<div class="readout ' + (rd.hit ? 'hit' : 'clear') + '">'
@@ -486,7 +497,7 @@
 
       if (l.closed) {
         return {
-          scene: bubbles(t) + (l.reading
+          scene: bubbles(t, 2) + (l.reading
             ? '<div class="readout clear"><div class="ro-head">' + Art.instrument(l.reading.id)
               + '<b>' + esc(UI.INSTRUMENTS[l.reading.id].name) + '</b></div>'
               + (l.reading.data ? '<div class="ro-data">' + l.reading.data + '</div>' : '')
@@ -528,7 +539,7 @@
       else tray += '<div class="tray-hint">Drop what it needs onto the machine. Some jobs need two things; some need none.</div>';
 
       return {
-        scene: bubbles(t) + mat(t, { drop: 'fix', dropLabel: 'the open machine',
+        scene: bubbles(t, 2) + mat(t, { drop: 'fix', dropLabel: 'the open machine',
                                      caption: applied.length ? 'Anything else?' : 'Drop what it needs onto it.' }),
         tray: tray
       };
@@ -824,7 +835,21 @@
     bar.innerHTML = (l.slip ? '<div class="slip">' + esc(l.slip) + '</div>' : '') + out.tray;
     l.slip = null;
 
-    stage.scrollTop = stage.scrollHeight;
+    /*
+     * Where to leave the view.
+     *
+     * At the bottom while they are talking, so the newest line is the one you
+     * read. On the machine once you are working on it: scrolling to the
+     * bottom of a tall scene put the mat above the top of the window on a
+     * short one, and dropping a tool on something you cannot see is not a
+     * skill anybody should need.
+     */
+    var focus = stage.querySelector('.mat, .readout, .solo');
+    if (focus && ['open', 'test', 'fix'].indexOf(l.beat) !== -1) {
+      stage.scrollTop = Math.max(0, focus.offsetTop - 8);
+    } else {
+      stage.scrollTop = stage.scrollHeight;
+    }
     if (window.TechOpsLite.paintFaces) window.TechOpsLite.paintFaces(stage);
     bindAll(t);
   }

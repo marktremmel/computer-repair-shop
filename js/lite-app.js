@@ -44,6 +44,10 @@
 
       Flow.mount(document.getElementById('lite-stage'), document.getElementById('lite-bar'));
 
+      document.getElementById('lite-handin').addEventListener('click', function () {
+        if (window.TechOpsReport) window.TechOpsReport.show();
+      });
+
       document.getElementById('lite-classic').addEventListener('click', function (e) {
         if (Shop.state.ticket && !confirm('The job on the mat stays here — the full shop will not know where you got to on it.\n\nOpen the full shop anyway?')) {
           e.preventDefault();
