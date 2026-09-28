@@ -58,6 +58,18 @@ TechOps Budapest is deliberately engineered with **zero external runtime depende
 * [`js/precision.js`](file:///Users/marktremmel/computer-repair-shop/js/precision.js): Physics-based gesture mini-game engine. Evaluates speed, lateral drift, and torque for delicate procedures (lifting ribbon cables, peeling battery adhesive, tracing chassis glue, scraping USB lint). Includes full keyboard accessibility fallback.
 * [`js/pixel-portrait.js`](file:///Users/marktremmel/computer-repair-shop/js/pixel-portrait.js): Dynamic canvas compositor layering pixel-art hair, eyes, skin, and clothing sprites into unique customer portraits.
 
+### 2.4b Lite — the second front door (`lite.html`, `js/lite-*.js`, `css/lite.css`)
+A complete alternative interface over the same engine, for students who found
+the full shop's eight stations and twenty-tool rack more than they wanted on a
+first morning. It loads every `data-*.js` and `sim-*.js` **unchanged** and not
+one `ui-*.js` except `ui-shell.js` (for the instrument catalogue and the
+reading formatter), so nothing it does can affect the full shop. One job runs
+down a fixed corridor — meet, ask, open, test, fix, price — with at most three
+choices a screen, drawn tools that are dragged onto the machine, and the same
+`TechOpsScore` grading. Full write-up, including how the catalogues are
+filtered down and the one piece of duplicated bookkeeping to watch, in
+[`LITE.md`](LITE.md).
+
 ### 2.5 User Interface Views (`js/ui-*.js`, `js/app.js`)
 * [`js/ui-counter.js`](file:///Users/marktremmel/computer-repair-shop/js/ui-counter.js): Job intake counter and triage ticket selection.
 * [`js/ui-intake.js`](file:///Users/marktremmel/computer-repair-shop/js/ui-intake.js): The Sit-Down interview screen and diagnostic theory logger.

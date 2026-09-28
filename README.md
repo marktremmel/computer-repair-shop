@@ -6,6 +6,16 @@ web server, from a USB stick, or offline.
 
 **Play it:** https://marktremmel.github.io/computer-repair-shop/
 
+There are two ways in, sharing one shift, one save and one hand-in code:
+
+- **`index.html`** — the full shop. Eight stations, twenty tools, sixty-eight
+  parts, and you find your own way round.
+- **`lite.html`** — the same shop, one decision at a time. Big type, big speech
+  bubbles, drawn tools you drag onto the machine, and never more than three
+  choices on a screen. Built after the full shop proved too hard for a class;
+  the diagnosis is every bit as hard, the interface is not. See
+  [`docs/LITE.md`](docs/LITE.md).
+
 ---
 
 ## What it is

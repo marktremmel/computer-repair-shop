@@ -32,11 +32,18 @@ stamp = hashlib.md5(b''.join(
     for d in ('js', 'css') for f in sorted(os.listdir(d))
     if f.endswith(('.js', '.css', '.json'))
 )).hexdigest()[:8]
-s = open('index.html').read()
-s = re.sub(r'(<script src="(?!http)[^"?]+)(\?v=[0-9a-f]+)?"', lambda m: m.group(1) + '?v=' + stamp + '"', s)
-s = re.sub(r'(<link rel="stylesheet" href="(?!http)[^"?]+)(\?v=[0-9a-f]+)?"', lambda m: m.group(1) + '?v=' + stamp + '"', s)
-s = re.sub(r'window\.TECHOPS_BUILD="[0-9a-f]*"', 'window.TECHOPS_BUILD="%s"' % stamp, s)
-s = re.sub(r'<code id="build-tag">[0-9a-f]*</code>', '<code id="build-tag">%s</code>' % stamp, s)
-open('index.html', 'w').write(s)
+# Both front doors share the same js/ and css/, so both get the same stamp.
+# Missing one out means a student who came in through it is running last
+# week's code against this week's data.
+for page in ('index.html', 'lite.html'):
+    if not os.path.exists(page):
+        continue
+    s = open(page).read()
+    s = re.sub(r'(<script src="(?!http)[^"?]+)(\?v=[0-9a-f]+)?"', lambda m: m.group(1) + '?v=' + stamp + '"', s)
+    s = re.sub(r'(<link rel="stylesheet" href="(?!http)[^"?]+)(\?v=[0-9a-f]+)?"', lambda m: m.group(1) + '?v=' + stamp + '"', s)
+    s = re.sub(r'window\.TECHOPS_BUILD="[0-9a-f]*"', 'window.TECHOPS_BUILD="%s"' % stamp, s)
+    s = re.sub(r'<code id="build-tag">[0-9a-f]*</code>', '<code id="build-tag">%s</code>' % stamp, s)
+    open(page, 'w').write(s)
+    print('stamped', page)
 print('build', stamp)
 PY

@@ -1,3 +1,6 @@
 .DS_Store
 *.log
 claude
+
+# local editor/agent scratch
+.claude/

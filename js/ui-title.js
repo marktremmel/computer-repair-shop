@@ -76,6 +76,16 @@
       + '</div>'
 
       + '<div class="title-acts">'
+      /*
+       * The other door.
+       *
+       * Lite is the same shift — same code, same save, same hand-in — walked
+       * down a corridor one decision at a time, for anybody who found eight
+       * rooms and a twenty-tool rack more than they wanted on a first
+       * morning. It is a link and not a mode, so nothing in here has to know
+       * it exists beyond this line.
+       */
+      +   '<a class="btn btn-lite" href="./lite.html" title="The same shop, one step at a time: bigger, fewer choices, drag and drop">🧭 Simple mode</a>'
       +   '<button class="btn btn-newgame" id="t-new" title="Clear the shift saved on this computer and set up your own shop">✨ New game</button>'
       +   '<button class="btn" id="t-access">♿ Text size &amp; contrast</button>'
       +   '<button class="btn" id="t-sound">' + (window.sekAudio && window.sekAudio.muted ? '🔇 Sound off' : '🔊 Sound on') + '</button>'
