@@ -98,16 +98,19 @@
   // ── hand tools ─────────────────────────────────────────────────────
   var TOOL = {
     esd_strap: function () {
+      /* A band with a metal plate, a lead, and a crocodile clip on the end.
+         Drawn flat rather than as a loop: a loop at this size reads as a
+         doughnut, and the point of the picture is that it connects you to
+         something. */
       return wrap(
-        // band
-        path('M22 30a28 14 0 0 0 56 0a28 14 0 0 0-56 0z', C.dark)
-        + path('M22 30v10a28 14 0 0 0 56 0V30', C.darkD)
-        + rect(40, 20, 20, 14, 4, C.steel)
-        + shine('M45 24h10')
-        // lead and crocodile clip
-        + path('M50 54c0 14-26 10-26 24', null)
-        + path('M14 76l14 6-4 8-14-6z', C.green)
-        + path('M20 79l8 3', null, 2.4)
+        rect(4, 26, 74, 30, 14, C.dark)
+        + path('M4 41h74', null, 2.6, '#4a566b')
+        + rect(30, 20, 26, 42, 7, C.steel)
+        + shine('M37 28v26')
+        + circ(43, 41, 5, C.steelD)
+        + path('M70 56c10 8 2 16 12 22', null, 4)
+        + path('M70 82l22 5-2 11-22-5z', C.green)
+        + path('M76 85l12 3M75 91l12 3', null, 2.2)
       );
     },
     spudger: function () {
@@ -119,10 +122,9 @@
     },
     tweezers: function () {
       return wrap(
-        path('M36 12l10 50 4 26 4-26 10-50', null, 4.2)
-        + path('M36 12l10 50 4 26', C.steel)
-        + path('M64 12L54 62l-4 26', C.steel)
-        + rect(43, 30, 14, 9, 4, C.blue)
+        path('M30 8l12 4 8 58 2 22-6-22-16-58z', C.steel)
+        + path('M70 8l-12 4-8 58-2 22 6-22 16-58z', C.steel)
+        + rect(38, 34, 24, 11, 5, C.blue)
       );
     },
     micro_tweezers: function () {
@@ -259,10 +261,14 @@
       );
     },
     listen: function () {
+      /* A drive with sound coming off it, rather than an ear. The instrument
+         is "listen to the drive", and a drawn ear at 60px is a pink blob. */
       return wrap(
-        path('M30 84c0-14-14-18-14-38a24 24 0 0 1 48 0c0 10-10 12-10 20s-8 10-14 10z', C.pink)
-        + path('M40 36a10 10 0 0 1 14 8', null, 3)
-        + path('M74 30c6 6 6 34 0 40M84 22c9 10 9 46 0 56', null, 3.2)
+        rect(8, 30, 54, 44, 6, C.steel)
+        + circ(35, 52, 15, C.dark)
+        + circ(35, 52, 4, C.steelL)
+        + path('M46 44l8 6-8 6', null, 3, C.steelD)
+        + path('M70 36c7 8 7 32 0 40M84 26c11 12 11 48 0 60', null, 4, C.pink)
       );
     },
     memtest: function () {
